@@ -1,0 +1,29 @@
+{
+ "schema": "release-gates-v1",
+ "note": "Human and legal gates. Only the maintainer changes a status. AI reviews are recorded separately and never close a human gate.",
+ "gates": {
+  "EXTERNAL_PLUGIN_PILOT": {
+   "status": "NOT_RUN",
+   "evidence": null
+  },
+  "THIRD_EYE_HUMAN_REVIEW": {
+   "status": "NOT_RUN",
+   "evidence": null
+  },
+  "LICENSE_SIGNOFF": {
+   "status": "NOT_OBTAINED",
+   "evidence": "legal/LICENSE_SIGNOFF.md"
+  }
+ },
+ "ai_reviews": {
+  "AI_THIRD_EYE_REVIEW": {
+   "status": "NOT_RUN",
+   "counts_toward_human_gate": false
+  },
+  "AI_EXTERNAL_PILOT": {
+   "status": "NOT_RUN",
+   "counts_toward_human_gate": false
+  }
+ },
+ "published": false
+}

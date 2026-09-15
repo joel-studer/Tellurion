@@ -1,0 +1,9 @@
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule: {interval: weekly}
+    open-pull-requests-limit: 5
+    # No auto-merge. Every dependency PR needs: test run green,
+    # licence review (permissive only in-process), security review,
+    # and optional-integration review (heavy extras stay optional).
