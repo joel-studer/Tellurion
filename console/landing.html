@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GOD'S EYE — open-source world-intelligence platform</title>
+<style>
+:root{--bg:#0d1117;--panel:#161b22;--line:#2a3342;--txt:#e6edf3;--mut:#8b949e;--acc:#58a6ff;--ok:#3fb950}
+body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:880px;margin:0 auto;padding:40px 20px}
+.hero{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:28px}
+.hero h1{margin:0 0 8px;font-size:30px}
+.hero p{color:var(--mut);margin:6px 0}
+.cta{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.cta a{background:#1f6feb;color:#fff;text-decoration:none;padding:8px 16px;border-radius:8px;font-weight:600}
+.cta a.ghost{background:transparent;border:1px solid var(--line);color:var(--txt)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.card{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:14px}
+.card b{display:block;margin-bottom:4px}
+.card span{color:var(--mut);font-size:13px}
+pre{background:#010409;border:1px solid var(--line);border-radius:8px;padding:12px;overflow:auto;font-size:13px}
+footer{color:var(--mut);font-size:12px;margin-top:20px}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>GOD'S EYE</h1>
+    <p><b style="color:var(--txt)">Open-source, local-first world intelligence.</b></p>
+    <p>Aircraft · Ships · Satellites · Weather · Earth events · Infrastructure · Evidence · Time machine · Plugins — on one localhost world surface, from lawful public sources, with provenance on everything.</p>
+    <div class="cta">
+      <a href="/ultra?demo=hero">Open the Ultra demo</a>
+      <a class="ghost" href="/gallery">Plugin gallery</a>
+      <a class="ghost" href="/api/ultra">/api/ultra</a>
+    </div>
+    <pre>pip install -e .
+godseye doctor   # PASS, no keys
+godseye ultra --hero   # localhost-only world surface</pre>
+  </div>
+  <div class="grid">
+    <div class="card"><b>World context</b><span>Every event lands on the map with nearby vessels, weather, cameras, roads, and satellite footprints attached.</span></div>
+    <div class="card"><b>Evidence</b><span>What / where / when / who reported / raw vs normalized / corroboration / contradictions — on every object.</span></div>
+    <div class="card"><b>Time</b><span>Current world, historical belief, current replay: see what the system knew <i>then</i>.</span></div>
+    <div class="card"><b>Provenance</b><span>Source, rights, fetch time, observation state. UNKNOWN stays UNKNOWN. Blind spots are drawn, not hidden.</span></div>
+    <div class="card"><b>Extensibility</b><span>Rights-first plugin SDK: scaffold a sensor in a minute, qualify it, list it in the gallery.</span></div>
+    <div class="card"><b>Replay / demo</b><span>Synthetic CC0 dataset runs fully offline. No credentials, no telemetry, no live execution.</span></div>
+  </div>
+  <footer>
+    Community edition: localhost only · no live execution · no telemetry · public/licensed/owned/authorized sources only.<br>
+    No market-beating claims; infrastructure only. Open-source core: map, evidence, time machine, plugin SDK.
+  </footer>
+</div>
+</body>
+</html>

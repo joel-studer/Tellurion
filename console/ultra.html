@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GOD'S EYE ULTRA — local world intelligence</title>
+<link rel="stylesheet" href="./vendor/leaflet.css">
+<style>
+:root{
+  --bg:#0b0e14; --panel:#11161f; --raised:#181e29; --line:#26303f;
+  --txt:#e8edf5; --mut:#9aa4b2; --dim:#5f6b7d; --acc:#5aa9ff;
+  --ok:#4fd1a5; --warn:#ffc857; --bad:#ff6b4a; --blind:#6b7280;
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font:13px/1.5 var(--font)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+header.cmd{display:flex;align-items:center;gap:10px;height:48px;padding:0 14px;
+  background:#070a10;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:600}
+header.cmd b{font-size:15px;letter-spacing:1px}
+.pill{font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px}
+.pill.local{background:#1c3f7a}.pill.demo{background:#1d5c34}.pill.nolive{background:#3a3f4a}
+#clock{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--mut)}
+#search{background:#0b0e14;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:5px 10px;width:220px}
+.layout{display:grid;gap:10px;padding:10px;max-width:2400px;margin:0 auto;
+  grid-template-columns:300px minmax(0,1fr) 350px;
+  grid-template-areas:"left center right" "time time time";}
+#left{grid-area:left}#center{grid-area:center}#right{grid-area:right}#time{grid-area:time}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px}
+.card h2{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--mut);margin:0 0 8px}
+#map{width:100%;height:58vh;min-height:380px;background:#080c15;border:1px solid var(--line);border-radius:8px}
+.leaflet-container{background:#080c15;font:12px var(--font)}
+.layrow{display:flex;align-items:center;gap:8px;padding:4px 2px;font-size:12.5px}
+.layrow .sw{width:11px;height:11px;border-radius:3px;flex:none}
+.layrow .ct{margin-left:auto;font-family:var(--mono);color:var(--mut);font-size:11px}
+.layrow input{accent-color:var(--acc)}
+.grp{font-size:10.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;margin:10px 0 2px}
+#feed{display:flex;flex-direction:column;gap:6px;max-height:30vh;overflow:auto;margin-top:8px}
+.ev{background:var(--raised);border:1px solid var(--line);border-left:4px solid var(--acc);
+  border-radius:0 8px 8px 0;padding:6px 9px;cursor:pointer;color:var(--txt);text-align:left;font-size:12.5px}
+.ev small{color:var(--mut)}.ev[aria-selected="true"]{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+#drawer{max-height:calc(58vh + 60px);overflow:auto}
+.kv{display:grid;grid-template-columns:110px 1fr;gap:3px 8px;font-size:12.5px}
+.kv dt{color:var(--mut)}.kv dd{margin:0}
+.chip{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:10px;border:1px solid var(--line)}
+.chip.obs{border-color:var(--acc)}.chip.inf{border-style:dashed;border-color:var(--warn)}
+.chip.cor{border-color:var(--ok)}.chip.unk{border-style:dashed;color:var(--mut)}
+.blind{border:1px dashed var(--blind);border-radius:8px;padding:7px 9px;margin:6px 0;font-size:12.5px;color:var(--mut)}
+.tm{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button{background:#1b2230;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:5px 11px;cursor:pointer;font-size:12.5px}
+button:hover{border-color:var(--acc)}button[aria-pressed="true"]{border-color:var(--acc)}
+input[type=range]{accent-color:var(--acc)}
+.mono{font-family:var(--mono)}
+#sysbar{color:var(--mut);font-size:12px;margin-top:8px}
+.hero{border:1px solid var(--warn);border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:12.5px}
+.hero b{color:var(--warn)}
+.glyph{background:none;border:none}
+.glyph svg{display:block;filter:drop-shadow(0 0 3px rgba(0,0,0,.7))}
+.glyph.sel svg{filter:drop-shadow(0 0 6px var(--acc))}
+.sev{font-size:10px;font-weight:700;padding:1px 7px;border-radius:8px;margin-left:6px}
+.sev.info{background:#1c3f7a}.sev.watch{background:#3d2f10;color:var(--warn)}.sev.crit{background:#3d1712;color:var(--bad)}
+.oprow{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--mut);padding:2px}
+.oprow input[type=range]{width:90px}
+.rel{font-size:12.5px;padding:3px 0;border-top:1px dotted var(--line)}
+.snap{width:100%;border:1px solid var(--line);border-radius:8px;background:#080c15}
+#palette{position:fixed;top:64px;left:50%;transform:translateX(-50%);width:520px;max-width:92vw;
+  background:var(--raised);border:1px solid var(--acc);border-radius:10px;z-index:900;display:none;
+  box-shadow:0 12px 40px rgba(0,0,0,.6)}
+#palette input{width:100%;background:transparent;border:none;color:var(--txt);font-size:14px;padding:10px 14px;outline:none}
+#palette .rows{max-height:300px;overflow:auto;padding:4px}
+#palette .prow{padding:7px 12px;border-radius:6px;font-size:13px;cursor:pointer}
+#palette .prow small{color:var(--mut)}
+#palette .prow.hot{background:#1b2230}
+.tmmode{font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px}
+.tmmode.on{border-color:var(--acc);color:var(--txt)}
+@media(max-width:1100px){.layout{grid-template-columns:1fr;grid-template-areas:"center" "right" "left" "time"}#map{height:44vh}}
+@media(prefers-reduced-motion:reduce){.pulse{animation:none}#map.tickfade .leaflet-marker-icon,#map.tickfade path{transition:none}}
+#map.tickfade .leaflet-marker-icon,#map.tickfade path{transition:opacity .25s ease}
+#map.tickfade .leaflet-marker-icon,#map.tickfade path{opacity:.25}
+@media(min-width:2000px){#map{height:62vh}#drawer{max-height:calc(62vh + 60px)}}
+@media(prefers-reduced-motion:reduce){.pulse{animation:none}}
+</style>
+</head>
+<body>
+<header class="cmd">
+  <b>GOD'S EYE</b><span style="color:var(--mut);font-size:11px">ULTRA</span>
+  <span class="pill local">LOCAL</span><span class="pill demo" id="modepill">REPLAY</span>
+  <span class="pill nolive">NO LIVE EXECUTION</span>
+  <span id="counts" class="mono" style="color:var(--mut);font-size:11px"></span>
+  <span id="healthdot" title="source health">●</span>
+  <input id="search" type="search" placeholder="search events, entities, ports…  ( / )" aria-label="search">
+  <span id="clock" class="mono"></span>
+</header>
+<div class="layout">
+  <aside id="left" class="card" aria-label="layers and events">
+    <h2>Layer stack</h2>
+    <div id="layers"></div>
+    <h2 style="margin-top:10px">Sources <span id="srchealth" class="mono" style="color:var(--mut)"></span></h2>
+    <details><summary class="mono" style="font-size:11px;color:var(--mut);cursor:pointer">source detail</summary>
+    <div id="healthmini" class="mono" style="font-size:11px;color:var(--mut)"></div></details>
+    <h2 style="margin-top:10px">Event stream</h2>
+    <div id="feed" role="listbox" aria-label="events"></div>
+  </aside>
+  <section id="center" class="card" aria-label="world surface">
+    <h2 id="maptitle">World surface · synthetic replay (approximate)</h2>
+    <div id="map" role="application" aria-label="ultra world map"></div>
+    <div id="sysbar"><span id="sys">connecting…</span>
+      <span style="float:right"><a href="/api/ultra">/api/ultra</a> · <a href="/api/health">/api/health</a> · <a href="/">classic</a></span>
+    </div>
+  </section>
+  <aside id="right" class="card" aria-label="evidence drawer">
+    <h2>Evidence drawer</h2>
+    <div id="drawer"><i style="color:var(--mut)">Select any object: what · where · when · source · rights · confidence · corroboration · blind spots.</i></div>
+  </aside>
+  <section id="time" class="card" aria-label="time machine">
+    <h2>Time machine — <span id="tmode">CURRENT REPLAY</span></h2>
+    <div class="tm">
+      <button class="tmmode" data-m="world">CURRENT WORLD</button>
+      <button class="tmmode" data-m="belief">HISTORICAL BELIEF</button>
+      <button class="tmmode on" data-m="replay">CURRENT REPLAY</button>
+      <button data-t="0">NOW</button><button data-t="2">T+2</button>
+      <button data-t="6">T+6</button><button data-t="12">T+12</button>
+      <label>tick <input id="tick" type="range" min="0" max="12" value="0" style="width:200px"></label>
+      <button id="play">▶ replay</button>
+      <span id="tmnote" style="color:var(--mut);font-size:12px"></span>
+    </div>
+  </section>
+</div>
+<div id="palette" role="dialog" aria-label="command palette"><input id="palin" placeholder="type a command or object id…  (Esc closes)" aria-label="command input"><div class="rows" id="palrows"></div></div>
+<script src="./vendor/leaflet.js"></script>
+<script>
+"use strict";
+const QS=new URLSearchParams(location.search);
+const HERO=QS.get("demo")==="hero", DENSE=QS.get("demo")==="dense";
+const SCENE=QS.get("scene")||(DENSE?"dense":"");
+let ULTRA=null, TICK=0, TMODE="replay", MAP=null, LAYERGROUPS={}, ACTIVE={}, SELECTED=null, TIMER=null, OPACITY={weather:.55,satellite:.12};
+const COLORS={AIRCRAFT:"#5aa9ff",MARITIME:"#4fd1a5",SATELLITE:"#b48cff",WEATHER:"#ffc857",WILDFIRE:"#ff6b4a",SEISMIC:"#ff9f68",TRAFFIC:"#ffd166",ROAD:"#ffd166",PUBLIC_CAMERA:"#8fd0ff",PORT:"#7fe0d4",AIRPORT:"#a8c8ff",INFRASTRUCTURE:"#c9b8ff",ENERGY:"#ffe08a",GOVERNMENT:"#d7dce3",DISASTER:"#ff8fa3",EVENT:"#ffffff",ENTITY:"#cfe3ff",BLIND_SPOT:"#6b7280",OSINT:"#e0aaff",WXCELL:"#7fd4ff"};
+function esc(s){return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+async function jget(p){const r=await fetch(p);if(!r.ok)throw new Error(r.status);return r.json();}
+function chip(obs){const c={OBSERVED:"obs",INFERRED:"inf",CORROBORATED:"cor",UNKNOWN:"unk"}[obs]||"unk";return `<span class="chip ${c}">${esc(obs)}</span>`;}
+const ICONS={
+ plane:'<svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 0 L9 4 L14 6.5 L9 7 L8.6 11 L10 13.5 L8 13 L6 13.5 L7.4 11 L7 7 L2 6.5 L7 4 Z" fill="COLOR"/></svg>',
+ ship:'<svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 1 L11 11 L7 9 L3 11 Z" fill="COLOR"/></svg>',
+ dot:'<svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4" fill="COLOR"/></svg>',
+ cam:'<svg width="14" height="14" viewBox="0 0 14 14"><rect x="1" y="4" width="8" height="6" rx="1" fill="COLOR"/><path d="M9 6 L13 4 L13 10 L9 8 Z" fill="COLOR"/></svg>',
+ tower:'<svg width="14" height="14" viewBox="0 0 14 14"><path d="M6 1 h2 v3 l2 8 h-6 Z" fill="COLOR"/></svg>',
+ anchor:'<svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="3" r="2" fill="none" stroke="COLOR" stroke-width="1.5"/><path d="M7 5 v7 M3 8 c0 3 8 3 8 0 M3 8 l-1 2 M11 8 l1 2" stroke="COLOR" stroke-width="1.5" fill="none"/></svg>',
+ doc:'<svg width="14" height="14" viewBox="0 0 14 14"><rect x="3" y="1" width="8" height="12" rx="1" fill="none" stroke="COLOR" stroke-width="1.5"/><path d="M5 5 h4 M5 8 h4" stroke="COLOR" stroke-width="1.2"/></svg>',
+ flame:'<svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 0 C9 4 12 5 12 9 A5 5 0 0 1 2 9 C2 5 5 4 7 0 Z" fill="COLOR"/></svg>',
+ blind:'<svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5" fill="none" stroke="COLOR" stroke-width="1.5" stroke-dasharray="2 2"/><path d="M2 2 L12 12" stroke="COLOR" stroke-width="1.5"/></svg>',
+ sat:'<svg width="14" height="14" viewBox="0 0 14 14"><rect x="2" y="2" width="10" height="7" rx="1" fill="none" stroke="COLOR" stroke-width="1.5"/><path d="M5 9 L3 13 M9 9 L11 13 M1 5 h12" stroke="COLOR" stroke-width="1.2"/></svg>',
+ cloud:'<svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 11 a3 3 0 0 1 0-6 a4 4 0 0 1 7.5-1.5 A2.8 2.8 0 0 1 11 11 Z" fill="COLOR"/></svg>',
+ pulse:'<svg width="14" height="14" viewBox="0 0 14 14"><path d="M1 7 h3 l2-4 l2 8 l2-4 h3" fill="none" stroke="COLOR" stroke-width="1.6"/></svg>',
+ cone:'<svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 1 L11 12 L3 12 Z" fill="COLOR"/><rect x="2" y="12" width="10" height="1.6" fill="COLOR"/></svg>',
+ bolt:'<svg width="14" height="14" viewBox="0 0 14 14"><path d="M8 0 L3 8 h3 L6 14 L11 6 H8 Z" fill="COLOR"/></svg>',
+ nodes:'<svg width="14" height="14" viewBox="0 0 14 14"><circle cx="3" cy="7" r="2" fill="COLOR"/><circle cx="11" cy="4" r="2" fill="COLOR"/><circle cx="11" cy="10" r="2" fill="COLOR"/><path d="M5 7 h3 M5 6 L9 4.5 M5 8 L9 9.5" stroke="COLOR" stroke-width="1.1"/></svg>',
+ file:'<svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 1 h5 l3 3 v9 h-8 Z" fill="none" stroke="COLOR" stroke-width="1.5"/><path d="M8 1 v3 h3" fill="none" stroke="COLOR" stroke-width="1.2"/></svg>'};
+function icon(name,color){return (ICONS[name]||ICONS.dot).replace(/COLOR/g,color);}
+function glyph(kind,o,color,sel){
+  const shape=kind==="ac"?"plane":(kind==="vs"?"ship":"dot");
+  const rot=(kind==="ac"?o.heading:(kind==="vs"?o.course:0))||0;
+  return L.divIcon({className:"glyph"+(sel?" sel":""),
+    html:`<div style="transform:rotate(${rot}deg)">${icon(shape,color)}</div>`,
+    iconSize:[14,14],iconAnchor:[7,7]});
+}
+function initMap(){
+  MAP=L.map("map",{zoomControl:true,attributionControl:false}).setView([51.45,-3.1],8);
+  const lines=[];
+  for(let la=49;la<=54;la+=0.5)lines.push([[la,-5.5],[la,-1]]);
+  for(let lo=-5.5;lo<=-1;lo+=0.5)lines.push([[49,lo],[54,lo]]);
+  L.polyline(lines,{color:"#141b2a",weight:1,interactive:false}).addTo(MAP);
+  // synthetic geography (procedural stand-in, NOT real coastline data):
+  // sea tint west of the estuary line + dashed coast + port ring.
+  const coast=[[49,-4.7],[50,-4.4],[50.7,-4.1],[51.2,-3.7],[51.42,-3.3],[51.7,-3.0],[52,-2.9],[53,-2.8],[54,-2.7]];
+  L.polygon([[49,-5.5],[49,-4.7],[50,-4.4],[50.7,-4.1],[51.2,-3.7],[51.42,-3.3],[51.7,-3.0],[52,-2.9],[53,-2.8],[54,-2.7],[54,-5.5]],
+    {color:"#1d3a52",weight:0,fillColor:"#0e2233",fillOpacity:.85,interactive:false}).addTo(MAP);
+  L.polyline(coast,{color:"#2e4a63",weight:1.5,dashArray:"2 3",interactive:true}).bindTooltip("synthetic coastline (procedural stand-in)").addTo(MAP);
+  L.circle([51.42,-3.18],{radius:9000,color:"#7fe0d4",weight:1,dashArray:"4 4",fill:false,interactive:false}).addTo(MAP);
+}
+function markersFor(items,color,kind){
+  const g=L.layerGroup(); if(!items||!items.length)return g;
+  const z=MAP.getZoom(), rich=(kind==="ac"||kind==="vs")&&items.length<=150;
+  if(items.length>120&&z<9){
+    const cells={};
+    for(const o of items){const k=Math.round(o.lat*4)+":"+Math.round(o.lon*4);(cells[k]=cells[k]||[]).push(o);}
+    for(const k in cells){const c=cells[k];const la=c.reduce((a,o)=>a+o.lat,0)/c.length,lo=c.reduce((a,o)=>a+o.lon,0)/c.length;
+      L.circleMarker([la,lo],{radius:6+Math.min(10,Math.sqrt(c.length)),color:color,weight:2,fillOpacity:.25})
+        .bindTooltip(`${c.length} ${kind}`).addTo(g);}
+    return g;
+  }
+  for(const o of items){
+    let m;
+    if(rich){m=L.marker([o.lat,o.lon],{icon:glyph(kind,o,color,SELECTED===o.id)});}
+    else{m=L.circleMarker([o.lat,o.lon],{radius:kind==="sat"||kind==="wx"?9:5,color:color,weight:2,fillOpacity:.5});}
+    m.on("click",()=>select(kind,o.id)); m.bindTooltip(`${o.id}`); m.addTo(g);
+  }
+  return g;
+}
+const BLIND_ZONES=[
+ {pts:[[50.5,-5.6],[50.5,-4.4],[51.2,-4.4],[51.2,-5.6]],label:"offshore fringe — sparse receivers"},
+ {pts:[[51.8,-2.4],[51.8,-1.6],[52.2,-1.6],[52.2,-2.4]],label:"rural fringe — sparse road sensors"}];
+function renderLayers(){
+  for(const k in LAYERGROUPS)MAP.removeLayer(LAYERGROUPS[k]);
+  LAYERGROUPS={}; const counts={};
+  const defs=[
+    ["aircraft",ULTRA.aircraft,"AIRCRAFT","ac"],["vessels",ULTRA.vessels,"MARITIME","vs"],
+    ["weather",ULTRA.weather.cells,"WXCELL","wx"],["wildfire",ULTRA.wildfire,"WILDFIRE","wf"],
+    ["seismic",ULTRA.seismic,"SEISMIC","eq"],["road",ULTRA.road,"TRAFFIC","rd"],
+    ["cameras",ULTRA.cameras,"PUBLIC_CAMERA","cam"]];
+  for(const [lid,items,cat,kind] of defs){
+    if(ACTIVE[lid]===false)continue;
+    const g=markersFor(items,COLORS[cat],kind); g.addTo(MAP); LAYERGROUPS[lid]=g; counts[lid]=items.length;
+  }
+  if(ACTIVE.satellite!==false){const g=L.layerGroup();
+    for(const s of ULTRA.satellite){L.polygon(s.footprint.map(p=>[p[0],p[1]]),{color:COLORS.SATELLITE,weight:1.5,fillOpacity:OPACITY.satellite,fillColor:COLORS.SATELLITE})
+      .on("click",()=>select("sat",s.id)).bindTooltip(s.scene_id).addTo(g);}
+    g.addTo(MAP);LAYERGROUPS.satellite=g;counts.satellite=ULTRA.satellite.length;}
+  if(ACTIVE.weather!==false&&LAYERGROUPS.weather){ // alert polygons under markers
+    for(const a of ULTRA.weather.alerts){L.polygon(a.polygon.map(p=>[p[0],p[1]]),{color:COLORS.WEATHER,weight:1.5,dashArray:"6 4",fillOpacity:.08+OPACITY.weather*.15,fillColor:COLORS.WEATHER})
+      .bindTooltip(a.title).addTo(LAYERGROUPS.weather);}}
+  const infra=L.layerGroup();
+  for(const p of ULTRA.ports)L.circleMarker([p.lat,p.lon],{radius:7,color:COLORS.PORT,weight:2,fillOpacity:.6})
+    .on("click",()=>select("port",p.id)).bindTooltip(p.name).addTo(infra);
+  for(const a of ULTRA.airports)L.circleMarker([a.lat,a.lon],{radius:7,color:COLORS.AIRPORT,weight:2,fillOpacity:.6})
+    .on("click",()=>select("apt",a.id)).bindTooltip(a.name).addTo(infra);
+  infra.addTo(MAP);LAYERGROUPS.infra=infra;counts.infra=ULTRA.ports.length+ULTRA.airports.length;
+  if(ACTIVE.osint!==false){const g=L.layerGroup();
+    for(const o of ULTRA.osint){
+      if(o.polygon){L.polygon(o.polygon.map(p=>[p[0],p[1]]),{color:COLORS.OSINT,weight:1.5,dashArray:"3 3",fillOpacity:.07})
+        .on("click",()=>select("osint",o.id)).bindTooltip(o.title).addTo(g);}
+      else{L.circleMarker([o.lat,o.lon],{radius:6,color:COLORS.OSINT,weight:2,fillOpacity:.5})
+        .on("click",()=>select("osint",o.id)).bindTooltip(o.title).addTo(g);}}
+    g.addTo(MAP);LAYERGROUPS.osint=g;counts.osint=ULTRA.osint.length;}
+  if(ACTIVE.blind!==false){const g=L.layerGroup();
+    for(const z of BLIND_ZONES){L.polygon(z.pts,{color:COLORS.BLIND_SPOT,weight:1.2,dashArray:"5 4",fillOpacity:.05})
+      .bindTooltip(z.label).addTo(g);}
+    g.addTo(MAP);LAYERGROUPS.blind=g;counts.blind=BLIND_ZONES.length;}
+  if(ACTIVE.trails!==false&&!DENSE&&ULTRA.aircraft.length<=150){const g=L.layerGroup();
+    for(const o of ULTRA.aircraft){if(o.trail)L.polyline(o.trail,{color:COLORS.AIRCRAFT,weight:1,opacity:.4,interactive:false}).addTo(g);}
+    for(const o of ULTRA.vessels.slice(0,18)){/* vessels hold position in replay */}
+    g.addTo(MAP);LAYERGROUPS.trails=g;}
+  const tot=ULTRA.aircraft.length+ULTRA.vessels.length+ULTRA.weather.cells.length+ULTRA.road.length+ULTRA.satellite.length+ULTRA.seismic.length+ULTRA.wildfire.length+ULTRA.cameras.length;
+  for(const lid in counts){const el=document.getElementById("ct-"+lid);if(el)el.textContent=counts[lid];}
+  document.getElementById("sys").textContent=`dataset ${ULTRA.dataset_id} · ${ULTRA.license} · tick ${ULTRA.tick} · live disabled`;
+  document.getElementById("srchealth").textContent="2 qualified · 1 best-effort · rest user-key/gated";
+  document.getElementById("healthmini").textContent="synthetic-replay OK · USGS/EONET not polled in demo · keys never bundled";
+}
+const LAYERSPEC=[
+ ["MOVEMENT",[["aircraft","Aircraft","plane","AIRCRAFT"],["vessels","Vessels","ship","MARITIME"],["trails","Trails","dot","AIRCRAFT"],["road","Road","cone","TRAFFIC"]]],
+ ["EARTH",[["satellite","Satellite","sat","SATELLITE"],["seismic","Seismic","pulse","SEISMIC"],["wildfire","Wildfire","flame","WILDFIRE"]]],
+ ["WEATHER",[["weather","Weather + alerts","cloud","WXCELL"]]],
+ ["INFRASTRUCTURE",[["infra","Ports + airports","anchor","PORT"]]],
+ ["SOURCES",[["cameras","Public cameras","cam","PUBLIC_CAMERA"]]],
+ ["INTELLIGENCE",[["osint","Public OSINT","doc","GOVERNMENT"],["blind","Blind spots","blind","BLIND_SPOT"]]]];
+const RIGHTS_TIP={aircraft:"CC0 synthetic replay",vessels:"CC0 synthetic replay",trails:"derived from replay",satellite:"CC0 synthetic (STAC vocabulary)",seismic:"CC0 fixture · USGS leg user opt-in",wildfire:"CC0 synthetic · FIRMS leg user-key",weather:"CC0 synthetic",road:"CC0 synthetic",infra:"synthetic reference points",cameras:"CC0 synthetic snapshots",osint:"synthetic public-shape notices",blind:"coverage metadata, not absence"};
+function renderLayerList(){
+  document.getElementById("layers").innerHTML=LAYERSPEC.map(([grp,rows])=>
+    `<div class="grp">${esc(grp)}</div>`+rows.map(([lid,title,ic,cat])=>
+      `<label class="layrow" title="rights: ${esc(RIGHTS_TIP[lid]||"synthetic")} · health: OK · ${lid==="trails"?"derived":"replay"}">
+       <input type="checkbox" data-l="${lid}" ${lid==="blind"?"":"checked"}>
+       <span style="width:14px;height:14px;flex:none">${icon(ic,COLORS[cat]||"#999")}</span>
+       ${esc(title)}<span class="ct" id="ct-${lid}"></span></label>`).join("")
+    +((grp==="WEATHER"||grp==="EARTH")?`<div class="oprow">opacity <input type="range" min="5" max="90" value="${grp==="WEATHER"?55:12}" data-op="${grp==="WEATHER"?"weather":"satellite"}" aria-label="overlay opacity"></div>`:"")).join("");
+  if(ACTIVE.blind===undefined)ACTIVE.blind=false;
+  document.querySelectorAll("#layers input[type=checkbox]").forEach(cb=>{
+    if(cb.dataset.l==="blind")cb.checked=ACTIVE.blind===true;
+    cb.onchange=()=>{ACTIVE[cb.dataset.l]=cb.checked;renderLayers();};});
+  document.querySelectorAll("#layers input[data-op]").forEach(r=>r.oninput=()=>{OPACITY[r.dataset.op]=Number(r.value)/100;renderLayers();});
+}
+function stepTime(at){const m=/T\+(\d+)/.exec(at||"");return m?Number(m[1]):0;}
+function allSteps(){return ULTRA.heroes.flatMap((h,hi)=>h.steps.map(s=>({...s,hero:hi,htitle:h.title})));}
+function renderFeed(){
+  let steps=allSteps();
+  if(TMODE==="belief")steps=steps.filter(s=>stepTime(s.t)<=TICK);
+  const heroBox=HERO?`<div class="hero"><b>HERO</b> — ${esc(ULTRA.heroes[0].title)}<br><span style="color:var(--mut)">deterministic multi-sensor story, synthetic</span></div>`:"";
+  const sev=s=>s.layer==="WEATHER"||s.layer==="DISASTER"||s.layer==="SEISMIC"?'<span class="sev crit">ALERT</span>':(s.layer==="TRAFFIC"?'<span class="sev watch">WATCH</span>':'<span class="sev info">INFO</span>');
+  document.getElementById("feed").innerHTML=heroBox+(steps.length?steps.map((s,i)=>
+    `<button class="ev" role="option" aria-selected="${i===0}" data-ref="${esc(s.ref)}" onclick="selectStep('${esc(s.ref)}')">
+      <b>${esc(s.title)}</b>${sev(s)}<br><small>${esc(s.t)} · ${esc(s.layer)} · ${esc(s.ref)}</small></button>`).join("")
+    :`<i style="color:var(--mut)">no steps visible at tick ${TICK} in HISTORICAL BELIEF — advance time</i>`);
+  const first=document.querySelector("#feed .ev");
+  if(first)selectStep(first.dataset.ref);
+}
+function entityFor(kind,id){
+  const table={"SYN-AC001":["ENT-AC001"],"SYN-VS002":["ENT-VS002"],"SYN-PORT-01":["ENT-PORT"],"SYN-APT-01":["ENT-APT"],"SYN-SAT00":["ENT-SAT00"],"SYN-ALERT-01":["ENT-STORM"],"SYN-EQ00":["ENT-STORM"]};
+  return table[id]||[];
+}
+function relationsHtml(kind,id){
+  const ents=entityFor(kind,id);
+  if(!ents.length)return `<p style="color:var(--mut);font-size:12.5px">no charted relations for this object (bounded graph — absence is stated, not hidden)</p>`;
+  const rels=ULTRA.relations.filter(r=>ents.includes(r.src)||ents.includes(r.dst));
+  const names={};for(const e of ULTRA.entities)names[e.id]=e.label;
+  return rels.map(r=>`<div class="rel"><b>${esc(names[r.src]||r.src)}</b> —[${esc(r.type)}]→ <b>${esc(names[r.dst]||r.dst)}</b><br>
+    <small style="color:var(--mut)">effective ${esc(r.effective)} · evidence ${esc(r.evidence)} · method ${esc(r.method)} · confidence ${esc(r.confidence)}</small></div>`).join("");
+}
+function objectCard(kind,id,ev){
+  if(kind==="cam"||id.startsWith("SYN-CAM")){
+    return `<svg class="snap" viewBox="0 0 300 150" role="img" aria-label="synthetic camera snapshot"><defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c2f4a"/><stop offset=".6" stop-color="#0e1626"/><stop offset=".6" stop-color="#232c3d"/><stop offset="1" stop-color="#11161f"/></linearGradient></defs>
+     <rect width="300" height="150" fill="url(#sk)"/>${[0,1,2,3,4,5,6,7,8,9].map(i=>`<line x1="${i*30}" y1="0" x2="${i*30}" y2="150" stroke="#26303f"/>`).join("")}
+     <rect x="40" y="95" width="60" height="18" fill="#2c3a52"/><rect x="180" y="88" width="80" height="25" fill="#2c3a52"/>
+     <circle cx="230" cy="40" r="10" fill="#3a4a66"/><text x="10" y="20" fill="#9aa4b2" font-size="11" font-family="monospace">${esc(id)} · ${esc(ev.when??"")}</text>
+     <text x="10" y="140" fill="#ffc857" font-size="11">SYNTHETIC SNAPSHOT — no persons, no live feed</text></svg>`;
+  }
+  if(kind==="sat"){
+    const s=(ULTRA.satellite||[]).find(x=>x.id===id);
+    if(s)return `<svg class="snap" viewBox="0 0 300 150" role="img" aria-label="scene footprint preview"><rect width="300" height="150" fill="#0e1626"/>
+     ${[0,1,2,3].map(i=>`<line x1="0" y1="${i*40}" x2="300" y2="${i*40}" stroke="#1c2f4a"/>`).join("")}
+     <rect x="70" y="25" width="160" height="100" fill="none" stroke="#b48cff" stroke-width="2" stroke-dasharray="5 3"/>
+     <text x="10" y="20" fill="#9aa4b2" font-size="11" font-family="monospace">${esc(s.scene_id)} · ${esc(s.sensor)} · ${s.resolution_m}m · clouds ${s.cloud_cover_pct}%</text>
+     <text x="10" y="140" fill="#9aa4b2" font-size="11">acquired ${esc(s.acquired)} · preview: footprint only (no pixels claimed)</text></svg>`;
+  }
+  if(kind==="ac"||kind==="vs"){
+    const o=(kind==="ac"?ULTRA.aircraft:ULTRA.vessels).find(x=>x.id===id);
+    if(o&&kind==="ac")return `<dl class="kv"><dt>callsign</dt><dd class="mono">${esc(o.callsign)}</dd><dt>altitude</dt><dd class="mono">${o.alt_ft} ft</dd>
+     <dt>speed</dt><dd class="mono">${o.speed_kt} kt</dd><dt>heading</dt><dd class="mono">${o.heading}°</dd><dt>trail</dt><dd class="mono">${o.trail.length} pts</dd></dl>`;
+    if(o)return `<dl class="kv"><dt>vessel</dt><dd>${esc(o.name)}</dd><dt>speed</dt><dd class="mono">${o.speed_kt} kt</dd>
+     <dt>course</dt><dd class="mono">${o.course}°</dd><dt>state</dt><dd>${esc(o.nav_state)}</dd></dl>`;
+  }
+  return "";
+}
+async function select(kind,id,title){
+  SELECTED=id;
+  try{const ev=await jget(`/api/ultra/evidence?id=${encodeURIComponent(id)}&kind=${encodeURIComponent(kind)}`);
+    const ctx=await jget(`/api/ultra/context?lat=${ev.where.lat??51.42}&lon=${ev.where.lon??-3.18}`);
+    const headline=title||ev.what;
+    const status=ev.observation==="OBSERVED"?"tracked in replay":(ev.observation==="CORROBORATED"?"multi-source story":(ev.observation==="INFERRED"?"modeled view":"unstated"));
+    document.getElementById("drawer").innerHTML=
+     `<h3 style="margin-top:0">${esc(headline)} ${chip(ev.observation)}<br>
+      <small class="mono" style="color:var(--mut)">${esc(ev.what)}</small></h3>
+      ${objectCard(kind,id,ev)}
+      <dl class="kv"><dt>where</dt><dd class="mono">${ev.where.lat??"—"}, ${ev.where.lon??"—"}</dd>
+      <dt>when</dt><dd>${esc(ev.when??"—")}</dd><dt>first seen</dt><dd>${esc(ev.first_seen)}</dd>
+      <dt>status</dt><dd>${esc(status)}</dd><dt>confidence</dt><dd>${esc(ev.confidence)}</dd>
+      <dt>precision</dt><dd>${esc(ev.precision)}</dd></dl>
+      <h3 style="font-size:12px;color:var(--mut)">SOURCE TRAIL — every claim has a trail</h3>
+      <div class="mono" style="font-size:11.5px">${esc(ev.source)} · fetched demo-t0 (replay) · ${esc(ev.observation)} · rights: ${esc(ev.rights)}</div>
+      <h3 style="font-size:12px;color:var(--mut)">EVIDENCE</h3>
+      <dl class="kv"><dt>raw</dt><dd>fixture record ${esc(id)}</dd><dt>normalized</dt><dd>typed layer object (this card)</dd>
+      <dt>corroborates</dt><dd>single synthetic source; heroes show multi-source chains</dd>
+      <dt>contradicts</dt><dd>none in demo</dd><dt>unknown</dt><dd>live state unobserved (replay only)</dd></dl>
+      <h3 style="font-size:12px;color:var(--mut)">ENTITY RELATIONS (bounded)</h3>
+      ${relationsHtml(kind,id)}
+      <h3 style="font-size:12px;color:var(--mut)">CROSS-SENSOR CONTEXT (proximity only)</h3>
+      <div class="mono" style="font-size:11.5px">aircraft ${ctx.nearby_aircraft.length} · vessels ${ctx.nearby_vessels.length} · weather ${ctx.nearby_weather.length} · road ${ctx.nearby_road.length}<br>${esc(ctx.note)}</div>
+      <h3 style="font-size:12px;color:var(--mut)">BLIND SPOTS</h3>
+      ${ev.blind_spots.map(b=>`<div class="blind">${esc(b)} — not absence, just uncovered</div>`).join("")}`;
+    renderLayers();
+  }catch(e){document.getElementById("drawer").textContent="evidence unavailable ("+e.message+")";}
+}
+async function selectStep(ref){const s=allSteps().find(x=>x.ref===ref);await select("step",ref,s?s.text:"");}
+function tickClock(){const d=new Date();document.getElementById("clock").textContent=d.toISOString().slice(11,19)+"Z";}
+let _frames=0,_t0=performance.now();
+function fpsLoop(){_frames++;const n=performance.now();
+  if(n-_t0>=2000){const fps=Math.round(_frames*1000/(n-_t0));_frames=0;_t0=n;
+    const c=document.getElementById("counts");if(c&&ULTRA)c.textContent=`${ULTRA.aircraft.length+ULTRA.vessels.length+ULTRA.weather.cells.length+ULTRA.road.length+ULTRA.satellite.length} objects · ${fps} fps`;}
+  requestAnimationFrame(fpsLoop);}
+function setTMode(m){TMODE=m;document.getElementById("tmode").textContent={world:"CURRENT WORLD",belief:"HISTORICAL BELIEF",replay:"CURRENT REPLAY"}[m];
+  document.querySelectorAll(".tmmode").forEach(b=>b.classList.toggle("on",b.dataset.m===m));
+  document.getElementById("tmnote").textContent={world:"World as currently replayed: full synthetic record visible; history never rewritten.",
+    belief:`Belief at tick ${TICK}: only steps at or before T+${TICK} are shown; later outcomes hidden by construction.`,
+    replay:`tick ${TICK}: positions replay at tick ${TICK}; evidence/relations effective now; history never rewritten.`}[m];
+  renderFeed();}
+async function loadUltra(){
+  const url="/api/ultra?tick="+TICK+(SCENE?"&scene="+encodeURIComponent(SCENE):"");
+  const alt="http://127.0.0.1:8765/api/ultra?tick="+TICK+(SCENE?"&scene="+encodeURIComponent(SCENE):"");
+  try{ULTRA=await jget(url);}
+  catch(e){try{ULTRA=await jget(alt);}
+    catch(e2){document.getElementById("sys").textContent="ultra API unavailable (serve via godseye demo)";return;}}
+  document.getElementById("modepill").textContent=DENSE?"DENSITY":"REPLAY";
+  document.getElementById("maptitle").textContent=DENSE?"Density scene · 1k objects (synthetic)":"World surface · synthetic replay (approximate)";
+  document.getElementById("healthdot").style.color="var(--ok)";
+  renderLayers();renderFeed();setTMode(TMODE);
+}
+const COMMANDS=[
+ ["toggle-aircraft","Toggle aircraft layer",()=>flip("aircraft")],
+ ["toggle-vessels","Toggle vessel layer",()=>flip("vessels")],
+ ["toggle-satellite","Toggle satellite layer",()=>flip("satellite")],
+ ["show-blind-spots","Show blind-spot layer",()=>{ACTIVE.blind=true;syncBlind();renderLayers();}],
+ ["hide-blind-spots","Hide blind-spot layer",()=>{ACTIVE.blind=false;syncBlind();renderLayers();}],
+ ["go-to-port","Go to Port Meridian",()=>{MAP.setView([51.42,-3.18],11);select("port","SYN-PORT-01");}],
+ ["go-to-airport","Go to Meridian Field",()=>{MAP.setView([51.55,-3.02],11);select("apt","SYN-APT-01");}],
+ ["replay-hour","Replay ticks 0→12",()=>{document.getElementById("play").click();}],
+ ["belief-now","Time mode: historical belief",()=>setTMode("belief")],
+ ["replay-mode","Time mode: current replay",()=>setTMode("replay")]];
+function flip(lid){ACTIVE[lid]===false?ACTIVE[lid]=true:ACTIVE[lid]=false;
+  document.querySelectorAll(`#layers input[data-l="${lid}"]`).forEach(cb=>cb.checked=ACTIVE[lid]!==false);renderLayers();}
+function syncBlind(){document.querySelectorAll('#layers input[data-l="blind"]').forEach(cb=>cb.checked=ACTIVE.blind===true);}
+function openPal(){document.getElementById("palette").style.display="block";const i=document.getElementById("palin");i.value="";palFilter("");i.focus();}
+function closePal(){document.getElementById("palette").style.display="none";document.getElementById("search").focus();}
+function palItems(q){
+  q=(q||"").toLowerCase();
+  const cmds=COMMANDS.filter(c=>(c[0]+c[1]).toLowerCase().includes(q)).map(c=>({t:"cmd",label:c[1],run:c[2]}));
+  const objs=[];
+  if(ULTRA&&q){const pool=[...ULTRA.aircraft.map(o=>["ac",o.id]),...ULTRA.vessels.map(o=>["vs",o.id]),
+    ...ULTRA.satellite.map(o=>["sat",o.id]),...ULTRA.cameras.map(o=>["cam",o.id]),
+    ...ULTRA.entities.map(e=>["entity",e.id])];
+    for(const [k,id] of pool){if(id.toLowerCase().includes(q)){objs.push({t:"obj",label:id+"  ·  "+k,run:()=>{closePal();select(k,id);}});if(objs.length>=8)break;}}}
+  return [...cmds,...objs].slice(0,12);
+}
+function palFilter(q){const items=palItems(q);
+  document.getElementById("palrows").innerHTML=items.length?items.map((it,i)=>
+    `<div class="prow${i===0?" hot":""}" data-i="${i}"><small>${esc(it.t)}</small> ${esc(it.label)}</div>`).join("")
+    :`<div class="prow"><small>no match</small></div>`;
+  document.querySelectorAll("#palrows .prow[data-i]").forEach(el=>el.onclick=()=>items[Number(el.dataset.i)].run());
+  document.getElementById("palrows")._items=items;}
+document.getElementById("palin").oninput=e=>palFilter(e.target.value);
+document.getElementById("palin").onkeydown=e=>{if(e.key==="Enter"){const it=document.getElementById("palrows")._items;if(it&&it[0])it[0].run();}};
+document.querySelectorAll("#time [data-t]").forEach(b=>b.onclick=()=>{TICK=Number(b.dataset.t);document.getElementById("tick").value=TICK;loadUltra();});
+document.querySelectorAll(".tmmode").forEach(b=>b.onclick=()=>setTMode(b.dataset.m));
+document.getElementById("tick").oninput=e=>{TICK=Number(e.target.value);loadUltra();};
+document.getElementById("play").onclick=()=>{if(TIMER){clearInterval(TIMER);TIMER=null;return;}
+  TIMER=setInterval(()=>{TICK=(TICK+1)%13;document.getElementById("tick").value=TICK;loadUltra();if(TICK===12){clearInterval(TIMER);TIMER=null;}},900);};
+document.getElementById("search").onkeydown=e=>{if(e.key==="/"){e.preventDefault();e.target.focus();}};
+document.getElementById("search").oninput=e=>{const q=e.target.value.toLowerCase();
+  document.querySelectorAll("#feed .ev").forEach(b=>b.style.display=b.textContent.toLowerCase().includes(q)?"":"none");};
+document.addEventListener("keydown",e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();openPal();return;}
+  if(e.key==="Escape"&&document.getElementById("palette").style.display==="block"){closePal();return;}
+  if(e.key==="/"&&document.activeElement.id!=="search"&&document.activeElement.id!=="palin"){e.preventDefault();document.getElementById("search").focus();}
+  if(e.key==="Escape"&&document.activeElement.id==="search"){document.getElementById("search").value="";document.getElementById("search").dispatchEvent(new Event("input"));}});
+initMap(); renderLayerList(); loadUltra(); tickClock(); setInterval(tickClock,1000); requestAnimationFrame(fpsLoop);
+if(MAP)MAP.on("zoomend",renderLayers);
+</script>
+</body>
+</html>

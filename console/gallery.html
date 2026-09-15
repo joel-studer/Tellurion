@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GOD'S EYE — plugin gallery</title>
+<style>
+:root{--bg:#0b0e14;--panel:#11161f;--line:#26303f;--txt:#e8edf5;--mut:#9aa4b2;
+--acc:#5aa9ff;--ok:#4fd1a5;--warn:#ffc857;--font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.55 var(--font)}
+:focus-visible{outline:2px solid var(--acc)}
+header{padding:14px 22px;background:#070a10;border-bottom:1px solid var(--line)}
+main{max-width:1100px;margin:0 auto;padding:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+.card h3{margin:0 0 4px;font-size:14px}
+.tag{font-size:11px;padding:1px 8px;border-radius:10px;border:1px solid var(--line);color:var(--mut)}
+.tag.q{border-color:var(--ok);color:var(--ok)}.tag.k{border-color:var(--warn);color:var(--warn)}
+.mut{color:var(--mut);font-size:12.5px}
+</style>
+</head>
+<body>
+<header><b>GOD'S EYE</b> <span class="mut">plugin gallery — "I can add one of these."</span>
+<span class="mut" style="float:right"><a href="/ultra">ultra</a> · <a href="/">classic</a></span></header>
+<main>
+<h1 style="font-size:20px">Sensor plugins</h1>
+<p class="mut">First-party fixture adapters (offline) + qualified source registry.
+No one-click remote execution: every source shows rights, network, and install state.</p>
+<h2 style="font-size:14px">Bundled plugins</h2>
+<div style="margin-bottom:10px" id="filters" role="group" aria-label="category filter"></div>
+<div class="grid" id="pack"></div>
+<h2 style="font-size:14px;margin-top:18px">Source registry (discovery only)</h2>
+<div class="grid" id="reg"></div>
+</main>
+<script>
+"use strict";
+const PACK=[
+ ["aviation-synth","AIRCRAFT · Sensor","CC0 synthetic","none","fixture replay, 24 aircraft + trails"],
+ ["maritime-synth","MARITIME · Sensor","CC0 synthetic","none","fixture replay, 18 vessels + nav states"],
+ ["satellite-synth","SATELLITE · Sensor","CC0 synthetic (STAC vocabulary)","none","6 scenes: footprint/acquisition/cloud-cover"],
+ ["weather-synth","WEATHER · Sensor","CC0 synthetic","none","8 cells + 1 alert polygon"],
+ ["seismic-usgs","SEISMIC · Sensor","CC0 fixture + USGS public-domain leg","optional","fixture 2 events; live leg user opt-in"],
+ ["wildfire-synth","WILDFIRE · Sensor","CC0 fixture · FIRMS leg user-key","none","4 hotspots + confidence"],
+ ["traffic-synth","TRAFFIC · Sensor","CC0 synthetic","none","12 incidents: closures/congestion/works"],
+ ["camera-synth","CAMERAS · Sensor","CC0 synthetic snapshots","none","6 cameras, snapshots only, no persons"],
+ ["infra-context","INFRASTRUCTURE · Sensor","CC0 synthetic reference points","none","port + airport + grid watch zone"]];
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");}
+let FILTER="all";
+function catOf(p){return p[1].split(" ")[0];}
+function renderPack(){
+  const cats=["all",...new Set(PACK.map(catOf))];
+  document.getElementById("filters").innerHTML=cats.map(c=>
+    `<button class="tag" data-c="${esc(c)}" aria-pressed="${c===FILTER}" style="cursor:pointer;background:${c===FILTER?"#1b2230":"transparent"}">${esc(c)}</button>`).join(" ");
+  document.querySelectorAll("#filters .tag").forEach(b=>b.onclick=()=>{FILTER=b.dataset.c;renderPack();});
+  const rows=PACK.filter(p=>FILTER==="all"||catOf(p)===FILTER);
+  document.getElementById("pack").innerHTML=`<p class="mut" style="grid-column:1/-1">${rows.length} of ${PACK.length} shown · rights + network + health on every card</p>`+rows.map(p=>
+ `<div class="card"><h3>${esc(p[0])}</h3><span class="tag">${esc(p[1])}</span>
+  <span class="tag q">production-qualified</span> <span class="tag">v1.0.0</span>
+  <p class="mut">rights: ${esc(p[2])}<br>network: ${esc(p[3])} · health: ok · installed: bundled<br>${esc(p[4])}<br><br>
+  <i>Next: copy this card's shape — manifest + fixture + poll() + test — and open a PR.</i></p></div>`).join("");
+}
+renderPack();
+async function load(){try{const r=await fetch("/api/plugins");const j=await r.json();
+ document.getElementById("reg").innerHTML=j.sources.map(s=>
+  `<div class="card"><h3>${esc(s.source_id)}</h3>
+   <span class="tag">${esc(s.category)}</span>
+   <span class="tag ${s.status==="QUALIFIED"?"q":"k"}">${esc(s.status)}</span>
+   <p class="mut">auth: ${esc(s.auth)} · ${esc(s.realtime)}<br>rights: ${esc(s.data_rights)}<br>${esc(s.plugin_potential)}</p></div>`).join("");
+ }catch(e){document.getElementById("reg").innerHTML="<p class='mut'>registry unavailable offline (serve via godseye demo)</p>";}}
+load();
+</script>
+</body>
+</html>
