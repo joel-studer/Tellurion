@@ -1,0 +1,138 @@
+{
+ "spdxVersion": "SPDX-2.3",
+ "dataLicense": "CC0-1.0",
+ "SPDXID": "SPDXRef-DOCUMENT",
+ "name": "gods-eye",
+ "documentNamespace": "urn:gods-eye:sbom:0.1.0-proposed",
+ "creationInfo": {
+  "created": "2026-09-15T21:10:58+00:00",
+  "creators": [
+   "Tool: gods-eye repository split (manual inventory)"
+  ]
+ },
+ "published": false,
+ "signOff": "NOT_OBTAINED (maintainer sign-off pending; see legal/LICENSE_SIGNOFF.md)",
+ "runtimeDependencies": [],
+ "packages": [
+  {
+   "SPDXID": "SPDXRef-gods-eye",
+   "name": "gods-eye",
+   "version": "0.1.0",
+   "versionInfo": "0.1.0",
+   "license": "Apache-2.0 (PROPOSED, sign-off NOT_OBTAINED)",
+   "licenseDeclared": "Apache-2.0 (PROPOSED, sign-off NOT_OBTAINED)",
+   "licenseConcluded": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "source": "this repository",
+   "relationship": "DESCRIBES"
+  },
+  {
+   "SPDXID": "SPDXRef-leaflet",
+   "name": "leaflet",
+   "version": "1.9.4",
+   "versionInfo": "1.9.4",
+   "license": "BSD-2-Clause",
+   "licenseDeclared": "BSD-2-Clause",
+   "licenseConcluded": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "source": "vendored: console/vendor/leaflet.js",
+   "relationship": "CONTAINS"
+  },
+  {
+   "SPDXID": "SPDXRef-duckdb",
+   "name": "duckdb",
+   "version": "1.5.1",
+   "versionInfo": "1.5.1",
+   "license": "MIT",
+   "licenseDeclared": "MIT",
+   "licenseConcluded": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "source": "optional extra: market",
+   "relationship": "OPTIONAL_DEPENDENCY_OF"
+  },
+  {
+   "SPDXID": "SPDXRef-ccxt",
+   "name": "ccxt",
+   "version": "4.5.46",
+   "versionInfo": "4.5.46",
+   "license": "MIT",
+   "licenseDeclared": "MIT",
+   "licenseConcluded": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "source": "optional extra: market",
+   "relationship": "OPTIONAL_DEPENDENCY_OF"
+  },
+  {
+   "SPDXID": "SPDXRef-exchange-calendars",
+   "name": "exchange-calendars",
+   "version": "4.13.2",
+   "versionInfo": "4.13.2",
+   "license": "Apache-2.0",
+   "licenseDeclared": "Apache-2.0",
+   "licenseConcluded": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "source": "optional extra: market",
+   "relationship": "OPTIONAL_DEPENDENCY_OF"
+  },
+  {
+   "SPDXID": "SPDXRef-pandas",
+   "name": "pandas",
+   "version": "3.0.1",
+   "versionInfo": "3.0.1",
+   "license": "BSD-3-Clause",
+   "licenseDeclared": "BSD-3-Clause",
+   "licenseConcluded": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "source": "optional extra: market",
+   "relationship": "OPTIONAL_DEPENDENCY_OF"
+  },
+  {
+   "SPDXID": "SPDXRef-pandas-market-calendars",
+   "name": "pandas-market-calendars",
+   "version": "5.4.0",
+   "versionInfo": "5.4.0",
+   "license": "MIT",
+   "licenseDeclared": "MIT",
+   "licenseConcluded": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "source": "optional extra: market",
+   "relationship": "OPTIONAL_DEPENDENCY_OF"
+  },
+  {
+   "SPDXID": "SPDXRef-playwright",
+   "name": "playwright",
+   "version": "1.58.0",
+   "versionInfo": "1.58.0",
+   "license": "Apache-2.0",
+   "licenseDeclared": "Apache-2.0",
+   "licenseConcluded": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "source": "optional extra: capture",
+   "relationship": "OPTIONAL_DEPENDENCY_OF"
+  },
+  {
+   "SPDXID": "SPDXRef-pytest",
+   "name": "pytest",
+   "version": "9.0.2",
+   "versionInfo": "9.0.2",
+   "license": "MIT",
+   "licenseDeclared": "MIT",
+   "licenseConcluded": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "source": "optional extra: dev",
+   "relationship": "DEV_DEPENDENCY_OF"
+  },
+  {
+   "SPDXID": "SPDXRef-setuptools",
+   "name": "setuptools",
+   "version": "82.0.0",
+   "versionInfo": "82.0.0",
+   "license": "MIT",
+   "licenseDeclared": "MIT",
+   "licenseConcluded": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "source": "build backend",
+   "relationship": "BUILD_DEPENDENCY_OF"
+  }
+ ]
+}

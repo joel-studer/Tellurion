@@ -1,0 +1,170 @@
+{
+ "schema": "asset-rights-v1",
+ "policy": "UNKNOWN rights cannot ship; any content change requires a new rights review (sha256).",
+ "allowed_licenses": [
+  "CC0-1.0",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "MIT",
+  "Apache-2.0",
+  "PROJECT-OWNED"
+ ],
+ "assets": [
+  {
+   "path": "console/vendor/LEAFLET_LICENSE.txt",
+   "license": "BSD-2-Clause",
+   "basis": "Leaflet 1.9.4 upstream release; licence text shipped as console/vendor/LEAFLET_LICENSE.txt.",
+   "sha256": "71b200e7eb10f0ce5a99e30cf1bf7b1dcc9837734b49714aca2f8a459ec3c2f2"
+  },
+  {
+   "path": "console/vendor/leaflet.css",
+   "license": "BSD-2-Clause",
+   "basis": "Leaflet 1.9.4 upstream release; licence text shipped as console/vendor/LEAFLET_LICENSE.txt.",
+   "sha256": "337bfca5cabd03b39815b2700febe2b3b7edf55921c59cd49f88ecb328212303"
+  },
+  {
+   "path": "console/vendor/leaflet.js",
+   "license": "BSD-2-Clause",
+   "basis": "Leaflet 1.9.4 upstream release; licence text shipped as console/vendor/LEAFLET_LICENSE.txt.",
+   "sha256": "db49d009c841f5ca34a888c96511ae936fd9f5533e90d8b2c4d57596f4e5641a"
+  },
+  {
+   "path": "docs/media/social-preview-1200x630.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "563a252d81deddf2602b809e309b4167ff0389d3346e4e82758a7d77ea55e3dc"
+  },
+  {
+   "path": "docs/media/ultra-hero.mp4",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "d7904b6cadec17f55c2aac1a7c6dddd57f3eccb5b254451e07d3182ada92c7be"
+  },
+  {
+   "path": "docs/screenshots/entity-graph.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "10ae82ea7274e76172d0a6faf9f004368938dbc5617d28cf4285b331336e1e63"
+  },
+  {
+   "path": "docs/screenshots/event-evidence.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "76901a0b734c9e3807b9b65e9f75b3bb5d7e6a74abad9903023dd3e231394be1"
+  },
+  {
+   "path": "docs/screenshots/gods-eye-ultra-hero.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "94bc8223fa694f67560b2a89ae5987a3ad7f0d2928fedd0e0d274e72fb270459"
+  },
+  {
+   "path": "docs/screenshots/hero-world.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "76901a0b734c9e3807b9b65e9f75b3bb5d7e6a74abad9903023dd3e231394be1"
+  },
+  {
+   "path": "docs/screenshots/plugin-system.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "1673213d6bba4ba7b72354684bada1ea7ed2ea70f368e63af28930e3817cf1d0"
+  },
+  {
+   "path": "docs/screenshots/source-health.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "f3fddf385d636ff9d0557bf7fbb5a957850ab7d3ef7fe824fc49aa897f21d2c0"
+  },
+  {
+   "path": "docs/screenshots/time-machine.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "536804c713f7107de0e87e1c5bba3fb14a28bdc307aee5b1bb05691b41aa0337"
+  },
+  {
+   "path": "docs/screenshots/ultra-evidence.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "83316fa7ec6e449f34cf81b14c4c5d71cb143076d150e625f9438aa47ab730e4"
+  },
+  {
+   "path": "docs/screenshots/ultra-gallery.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "45d7a6139d8ef6fb8bfdd5667f361c043ff50093554f34078ce630c510dfc7bc"
+  },
+  {
+   "path": "docs/screenshots/ultra-hero.gif",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "e0f9d8cfd54f01c872a6a99d196623333e560ff73fe65a4cad0bf244503805a1"
+  },
+  {
+   "path": "docs/screenshots/ultra-world.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "766328781d635874330aedbdfa647f997141d32a2274db6110d6dbc78167bf8d"
+  },
+  {
+   "path": "examples/plugins/example_sensor/fixture.json",
+   "license": "CC0-1.0",
+   "basis": "Plugin fixture (example-sensor): public-domain (synthetic CC0 fixture; no real persons)",
+   "sha256": "1312e407e312467e1254764efa6b5a6b673131cabba6185035120536cb63b7dc"
+  },
+  {
+   "path": "plugins/aviation_synth/fixture.json",
+   "license": "CC0-1.0",
+   "basis": "Plugin fixture (aviation-synth): CC0 synthetic (generated in-repo)",
+   "sha256": "3e47f5faf56d2b02cbef1d440650a8b64acde0096f91368c08311571341d6744"
+  },
+  {
+   "path": "plugins/camera_synth/fixture.json",
+   "license": "CC0-1.0",
+   "basis": "Plugin fixture (camera-synth): CC0 synthetic snapshots (generated in-repo); real feeds need per-operator terms",
+   "sha256": "9e9e5f6f1c7e0f0e5301181f7a29030346e67dd4ea29cfc54e2b77e3bc63fbef"
+  },
+  {
+   "path": "plugins/infra_context/fixture.json",
+   "license": "CC0-1.0",
+   "basis": "Plugin fixture (infra-context): CC0 synthetic reference points (generated in-repo)",
+   "sha256": "c32ef0327afdc2d070e0a3ca92f51ed758e2483a5b6f73dd206af4b1864e7bfb"
+  },
+  {
+   "path": "plugins/maritime_synth/fixture.json",
+   "license": "CC0-1.0",
+   "basis": "Plugin fixture (maritime-synth): CC0 synthetic (generated in-repo)",
+   "sha256": "d1e527fd8ac8c9ed979420b674d09b2ac47d2f2cc704140105b29f61a834b39b"
+  },
+  {
+   "path": "plugins/satellite_synth/fixture.json",
+   "license": "CC0-1.0",
+   "basis": "Plugin fixture (satellite-synth): CC0 synthetic (STAC vocabulary, generated in-repo)",
+   "sha256": "e7850ee062d174bc70ce3b09e6525a7908b2de356975c7032b7b7e7f4da1823e"
+  },
+  {
+   "path": "plugins/seismic_usgs/fixture.json",
+   "license": "CC0-1.0",
+   "basis": "Plugin fixture (seismic-usgs): CC0 synthetic fixture; live leg uses USGS public-domain feed (user opt-in)",
+   "sha256": "3fd6fdb6cf71f2c0f451c68460cafd0247535bd26f6862016cb43ac6a2500c59"
+  },
+  {
+   "path": "plugins/traffic_synth/fixture.json",
+   "license": "CC0-1.0",
+   "basis": "Plugin fixture (traffic-synth): CC0 synthetic (generated in-repo)",
+   "sha256": "005d9b708148a4c27769b66a8357dacdca387d7617603f389922536622e817e7"
+  },
+  {
+   "path": "plugins/weather_synth/fixture.json",
+   "license": "CC0-1.0",
+   "basis": "Plugin fixture (weather-synth): CC0 synthetic (generated in-repo)",
+   "sha256": "2d0332b26d28d27459e4289b9cc6e89e8b0fc73dbc6a482852fefc274abcc9fe"
+  },
+  {
+   "path": "plugins/wildfire_synth/fixture.json",
+   "license": "CC0-1.0",
+   "basis": "Plugin fixture (wildfire-synth): CC0 synthetic fixture; live leg uses per-user FIRMS key (user opt-in)",
+   "sha256": "411f3d9f5893457d2bf7a7e2d16c777eb5d56c6623e8ae2290128d677f97ab0c"
+  }
+ ]
+}
