@@ -75,7 +75,11 @@ def discover_entry_points() -> Dict[str, Any]:
 
 def discover_from_dirs(dirs: List[str | Path],
                        strict: bool = False) -> Dict[str, Any]:
-    """Scan caller-supplied directories for manifest.json files (non-recursive)."""
+    """Scan caller-supplied directories for plugins (non-recursive).
+
+    Each directory may be a plugin itself (``<dir>/manifest.json``) or a
+    folder of plugins (``<dir>/*/manifest.json``).
+    """
     from gods_eye.future import plugins as pl  # noqa: F401 (kind check below)
     found: List[Dict[str, Any]] = []
     errors: List[str] = []
@@ -86,7 +90,10 @@ def discover_from_dirs(dirs: List[str | Path],
         if not p.is_dir():
             errors.append(f"{p}: not a directory (skipped)")
             continue
-        for manifest in sorted(p.glob("*/manifest.json")):
+        manifests = sorted(p.glob("*/manifest.json"))
+        if (p / "manifest.json").is_file():
+            manifests.insert(0, p / "manifest.json")  # the dir is a plugin
+        for manifest in manifests:
             origin = f"dir:{manifest.parent.name}"
             try:
                 payload = json.loads(manifest.read_text(encoding="utf-8"))

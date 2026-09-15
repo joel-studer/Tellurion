@@ -253,3 +253,11 @@ def test_new_plugin_scaffold_runs_at_shallow_depth():
             + (proc.stdout or "")[-1500:] + (proc.stderr or "")[-1500:])
     finally:
         shutil.rmtree(dest, ignore_errors=True)
+
+
+def test_discovery_accepts_a_plugin_directory_itself():
+    """`godseye plugins --dir my_sensor` lists the plugin in that folder."""
+    from gods_eye.future import discovery as di
+    plugin_dir = ROOT / "examples" / "plugins" / "example_sensor"
+    rep = di.discover_from_dirs([plugin_dir])
+    assert len(rep["plugins"]) == 1 and rep["plugins"][0]["ok"] is True

@@ -30,11 +30,14 @@ Ship one working sensor plugin (`weather-sensor-demo`) using ONLY:
 ## Acceptance (machine-verifiable)
 
 ```bash
-godseye doctor | grep -q '"verdict": "PASS"'
+godseye doctor | grep -q '"failed": 0'   # WARN rows (e.g. a busy port) are fine
 python -m pytest weather_sensor_demo/test_example_sensor.py -q
 godseye plugins validate ./weather_sensor_demo | grep -q '"verdict": "PASS"'
 python scripts/check_ai_task.py ./weather_sensor_demo
 ```
+
+PowerShell: run each command and read the JSON (`failed: 0`, `verdict: PASS`),
+or pipe into `Select-String '"failed": 0'`.
 
 `scripts/check_ai_task.py` asserts: manifest schema `plugin-v1`,
 licence + non-UNKNOWN rights, `poll()` returns fixture items with
