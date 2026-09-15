@@ -25,7 +25,7 @@ dependencies = []
 [project.optional-dependencies]
 market = [
     "duckdb>=1.0.0",
-    "ccxt>=4.0.0",
+    "ccxt>=4.5.78",
     "exchange-calendars>=4.0.0",
     "pandas>=2.2",
     "pandas_market_calendars>=5.4.0",
