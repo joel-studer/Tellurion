@@ -27,7 +27,7 @@ market = [
     "duckdb>=1.0.0",
     "ccxt>=4.0.0",
     "exchange-calendars>=4.0.0",
-    "pandas>=2.2",
+    "pandas>=3.0.5",
     "pandas_market_calendars>=5.4.0",
 ]
 capture = ["playwright>=1.50"]
