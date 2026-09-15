@@ -1,0 +1,1 @@
+{"items": [{"acquired": "2026-09-10T10:00:00Z", "cloud_cover_pct": 12, "footprint": [[51.3, -3.3], [51.3, -3.1], [51.5, -3.1], [51.5, -3.3]], "id": "SYN-SAT00", "platform": "SYN-SAT-1", "resolution_m": 10, "scene_id": "SYN_SCENE_000", "sensor": "SYN-MSI"}], "note": "shape sample only; poll() generates the full replay set"}

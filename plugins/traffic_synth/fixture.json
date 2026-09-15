@@ -1,0 +1,1 @@
+{"items": [{"id": "SYN-RD00", "kind": "CLOSURE", "lat": 51.42, "lon": -3.18, "reported": "demo-T+0h", "severity": 3}], "note": "shape sample only; poll() generates the full replay set"}

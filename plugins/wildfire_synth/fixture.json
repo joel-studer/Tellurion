@@ -1,0 +1,1 @@
+{"items": [{"confidence": "HIGH", "id": "SYN-FIRE00", "lat": 51.9, "lon": -2.6, "observation": "OBSERVED", "observed": "demo-T+0h", "sensor": "SYN-VIIRS"}], "note": "shape sample only; poll() generates the full replay set"}

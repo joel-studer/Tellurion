@@ -1,0 +1,1 @@
+{"items": [{"id": "SYN-WX00", "lat": 51.42, "lon": -3.18, "observation": "INFERRED", "precip_mm_h": 12.5, "radius_km": 20, "wind_kt": 45}], "note": "shape sample only; poll() generates the full replay set"}
