@@ -257,7 +257,7 @@ class CorporateAction:
 class ResearchExperiment:
     """Declarative experiment definition (future-only)."""
     experiment_id: str
-    signal_family: str          # versioned id, e.g. "SEC_EVENT_DIRECTION@v1"
+    signal_id: str              # versioned id, e.g. "storm-landfall@v1"
     signal_version: str
     event_ids: tuple = ()
     evidence_cutoff: Optional[str] = None  # ISO date; None == UNKNOWN
@@ -277,7 +277,7 @@ class ResearchExperiment:
     def lineage_keys(self) -> dict:
         return {
             "experiment_id": self.experiment_id,
-            "signal_family": self.signal_family,
+            "signal_id": self.signal_id,
             "signal_version": self.signal_version,
             "event_ids": sorted(self.event_ids),
             "evidence_cutoff": self.evidence_cutoff,

@@ -13,8 +13,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
-# NOTE (V17): no module-scope import of gods_eye.version here — the public
-# preview ships registry.py standalone and the stamp was unused.
+# NOTE: registry.py is standalone; it stamps no package version.
 
 
 @dataclass(frozen=True)

@@ -173,7 +173,7 @@ def cmd_doctor() -> Dict[str, Any]:
                    "refusing to continue: ALLOW_LIVE must stay false")
     except Exception as e:
         _check(checks, "live execution disabled", FAIL,
-               f"{type(e).__name__}: {e}", "see docs/SECURITY_BOUNDARY.md")
+               f"{type(e).__name__}: {e}", "see docs/guides/security-defaults.md")
 
     # 11. Telemetry disabled (community paths make no outbound calls)
     try:
@@ -377,7 +377,7 @@ def main(argv: List[str] | None = None) -> int:
             print(f"error: {rep['error']}", file=sys.stderr)
             return 1
         print(f"scaffolded '{args.name}' in {rep['dir']} — "
-              f"see CONTRIBUTING_DRAFT.md for the 5-step flow.")
+              f"see CONTRIBUTING.md for the 5-step flow.")
         return 0
     if args.cmd == "scout":
         from gods_eye.future import sensor_sources as ss

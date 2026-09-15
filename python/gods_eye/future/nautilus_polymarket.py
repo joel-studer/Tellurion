@@ -30,7 +30,7 @@ NAUTILUS_SHAPE = {
     },
     "settlement_statuses": ["MATCHED", "MINED", "RETRYING", "CONFIRMED", "FAILED"],
     "fill_void": "OrderFillVoided on FAILED",
-    "collateral": "pUSD 0xC011a7E12a19f7B1f670d46F03B03f3342E82DFB (Polygon)",
+    "collateral": "pUSD (Polygon; token address intentionally not recorded)",
     "provenance": "docs/future/NAUTILUS_INTEGRATION_REVIEW.md",
 }
 
