@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gods-eye"
+version = "0.1.0"
+description = "Open-source, local-first world intelligence: sensor plugins, evidence, entity graph, time machine, and a multi-layer world view."
+readme = "README.md"
+requires-python = ">=3.13"
+# Licence: Apache-2.0 is PROPOSED; maintainer sign-off NOT_OBTAINED.
+# The license field is added only after sign-off (legal/LICENSE_SIGNOFF.md).
+keywords = ["osint", "geospatial", "intelligence", "leaflet", "satellite",
+            "aviation", "maritime", "weather", "plugins"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: GIS",
+]
+# The core runs on the Python standard library only.
+dependencies = []
+
+[project.optional-dependencies]
+market = [
+    "duckdb>=1.0.0",
+    "ccxt>=4.0.0",
+    "exchange-calendars>=4.0.0",
+    "pandas>=2.2",
+    "pandas_market_calendars>=5.4.0",
+]
+capture = ["playwright>=1.50"]
+dev = ["pytest>=8.3"]
+
+[project.scripts]
+godseye = "gods_eye.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "python"}
+
+[tool.setuptools.packages.find]
+where = ["python"]
+include = ["gods_eye*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["python"]
+testpaths = ["tests", "plugins", "examples"]

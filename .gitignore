@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+.pytest_cache/
+.venv/
+venv/
+
+# Local runtime state (never commit)
+state/
+state_future/
+.godseye/
+*.sqlite
+*.sqlite-*
+*.db
+*.duckdb
+*.log
+
+# Secrets (never commit)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Build and capture output
+dist/
+preview-assets/
+
+# OS
+.DS_Store
+Thumbs.db
