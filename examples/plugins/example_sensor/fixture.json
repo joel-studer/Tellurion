@@ -1,0 +1,8 @@
+{
+  "provenance": "synthetic CC0 fixture for examples/plugins/example_sensor",
+  "license": "CC0-1.0",
+  "items": [
+    {"id": "ex-001", "ts": "2026-09-01T09:00:00+00:00", "label": "Synthetic example observation 1"},
+    {"id": "ex-002", "ts": "2026-09-01T09:05:00+00:00", "label": "Synthetic example observation 2"}
+  ]
+}

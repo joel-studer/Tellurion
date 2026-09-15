@@ -1,0 +1,13 @@
+{
+  "name": "example-sensor",
+  "version": "0.1.0",
+  "kind": "Sensor",
+  "license": "MIT",
+  "data_rights": "public-domain (synthetic CC0 fixture; no real persons)",
+  "capabilities": ["poll"],
+  "network": "none",
+  "secrets": "none",
+  "provenance": "examples/plugins/example_sensor (synthetic CC0)",
+  "health": "ok",
+  "schema": "plugin-v1"
+}
