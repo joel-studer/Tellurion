@@ -1,4 +1,4 @@
-# GOD'S EYE
+# Tellurion
 
 **Open-source, local-first world intelligence.**
 
