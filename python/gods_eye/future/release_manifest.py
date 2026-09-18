@@ -46,6 +46,7 @@ PUBLIC_INCLUDE_FILES: Tuple[str, ...] = (
     "python/gods_eye/future/release_manifest.py",
     "python/gods_eye/future/validator.py",
     "python/gods_eye/future/release_check.py",
+    "python/gods_eye/future/extensions.py",
     "python/gods_eye/future/rights.py",
     "python/gods_eye/future/lineage.py",
     "python/gods_eye/future/isolation.py",

@@ -50,8 +50,7 @@ def _checks() -> list[tuple[str, bool, str]]:
     py = sys.executable
 
     p = _run([py, "-c", "import gods_eye, gods_eye.cli, gods_eye.demo, "
-              "gods_eye.plugins, gods_eye.market, gods_eye.execution, "
-              "gods_eye.portfolio, gods_eye.core; print(gods_eye.__file__)"])
+              "gods_eye.plugins, gods_eye.core; print(gods_eye.__file__)"])
     origin = (p.stdout or "").strip()
     inside = os.path.normcase(origin).startswith(os.path.normcase(str(PY)))
     rows.append(("imports from this checkout", p.returncode == 0 and inside,

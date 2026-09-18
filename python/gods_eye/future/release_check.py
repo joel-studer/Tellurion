@@ -54,6 +54,7 @@ REQUIRED_FILES: Sequence[Union[str, tuple]] = (
     "python/gods_eye/future/world_change.py",
     "python/gods_eye/future/world_imagery.py",
     "python/gods_eye/future/world_earth.py",
+    "python/gods_eye/future/extensions.py",
     "python/gods_eye/rights/registry.py",
     "python/gods_eye/future/boundary.py",
     "tests/test_boundary.py",

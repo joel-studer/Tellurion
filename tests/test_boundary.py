@@ -115,6 +115,17 @@ def test_no_trading_or_execution_surface_ships():
             importlib.import_module(f"gods_eye.future.{name}")
 
 
+def test_public_never_references_private_package():
+    """Dependency direction (hard rule): tellurion-private may import
+    Tellurion, but Tellurion must never reference tellurion-private.
+
+    Terms are assembled so this file itself never contains the literal
+    match (same precedent as _synthetic_samples above)."""
+    private = "gods_eye" + "_private"
+    hyphen = "gods-eye" + "-private"
+    assert boundary.denylist_hits(ROOT, [private, hyphen]) == []
+
+
 def test_trading_surface_check_detects_a_reintroduced_module(tmp_path):
     pkg = tmp_path / "python" / "gods_eye" / "future"
     pkg.mkdir(parents=True)
