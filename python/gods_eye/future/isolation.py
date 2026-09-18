@@ -1,7 +1,7 @@
 """Fail-closed path isolation guard (generic, profile-driven).
 
 The open-source core ships with NO hardcoded protected paths. A downstream
-project that keeps protected state next to a GOD'S EYE checkout registers
+project that keeps protected state next to a Tellurion checkout registers
 an isolation profile at startup:
 
     from gods_eye.future import isolation

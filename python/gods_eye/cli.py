@@ -1,17 +1,17 @@
-"""GOD'S EYE developer CLI (stdlib argparse only, V15/V16/V17/V18).
+"""Tellurion developer CLI (stdlib argparse only).
 
 Commands:
-  godseye doctor      — environment + boundary checks (PASS/WARN/FAIL)
-  godseye demo        — one-command localhost demo (no keys, no network)
-  godseye ultra       — Ultra world surface (strongest deterministic demo)
-  godseye serve       — serve console localhost-only
-  godseye plugins [list] [--dir D] — list SDK kinds + discovered plugins
-  godseye plugins validate PATH    — validate a plugin dir (actionable)
-  godseye plugins inspect PATH     — alias of validate (full report)
-  godseye sources     — source/rights summary (public-safe)
-  godseye new-plugin  — scaffold a plugin from the example template
-  godseye scout       — rank public sensor-source candidates (offline)
-  godseye release-check — launch-candidate readiness probe (read-only)
+  tellurion doctor      — environment + boundary checks (PASS/WARN/FAIL)
+  tellurion demo        — one-command localhost demo (no keys, no network)
+  tellurion ultra       — Ultra world surface (strongest deterministic demo)
+  tellurion serve       — serve console localhost-only
+  tellurion plugins [list] [--dir D] — list SDK kinds + discovered plugins
+  tellurion plugins validate PATH    — validate a plugin dir (actionable)
+  tellurion plugins inspect PATH     — alias of validate (full report)
+  tellurion sources     — source/rights summary (public-safe)
+  tellurion new-plugin  — scaffold a plugin from the example template
+  tellurion scout       — rank public sensor-source candidates (offline)
+  tellurion release-check — launch-candidate readiness probe (read-only)
 
 No heavy CLI dependency. No live execution. No credentials.
 Errors are human-readable (no raw tracebacks for expected failures).
@@ -33,7 +33,7 @@ def _check(checks: List[Dict[str, Any]], name: str, status: str,
                    "fix": fix})
 
 
-def cmd_doctor() -> Dict[str, Any]:
+def cmd_doctor(port: int | None = None) -> Dict[str, Any]:
     """Doctor V2: PASS/WARN/FAIL per check with actionable messages."""
     import sys as _sys
     checks: List[Dict[str, Any]] = []
@@ -44,7 +44,7 @@ def cmd_doctor() -> Dict[str, Any]:
     else:
         _check(checks, "python>=3.13", FAIL, _sys.version.split()[0],
                "install Python 3.13+ from https://www.python.org/downloads/ "
-               "then re-run: godseye doctor")
+               "then re-run: tellurion doctor")
 
     # 2. Package import
     try:
@@ -105,15 +105,16 @@ def cmd_doctor() -> Dict[str, Any]:
     try:
         from gods_eye.demo import (DEFAULT_PORT, HOST, port_available,
                                    select_port)
-        if port_available(DEFAULT_PORT, HOST):
+        probe_port = DEFAULT_PORT if port is None else int(port)
+        if port_available(probe_port, HOST):
             _check(checks, "localhost bind", PASS,
-                   f"{HOST}:{DEFAULT_PORT} free")
+                   f"{HOST}:{probe_port} free")
         else:
-            alt, _ = select_port(DEFAULT_PORT, HOST)
+            alt, _ = select_port(probe_port, HOST)
             _check(checks, "localhost bind", WARN,
-                   f"{HOST}:{DEFAULT_PORT} occupied; auto-fallback to {alt}",
-                   f"stop the program on {DEFAULT_PORT}, or run: "
-                   f"godseye demo --port {alt}")
+                   f"{HOST}:{probe_port} occupied; auto-fallback to {alt}",
+                   f"stop the program on {probe_port}, or run: "
+                   f"tellurion demo --port {alt}")
     except Exception as e:
         _check(checks, "localhost bind", FAIL, f"{type(e).__name__}: {e}",
                "check loopback interface / local firewall rules")
@@ -145,7 +146,7 @@ def cmd_doctor() -> Dict[str, Any]:
         else:
             _check(checks, "plugin discovery", WARN, f"errors={errs}",
                    "entry-point metadata unreadable; dir-based discovery "
-                   "still works: see godseye new-plugin")
+                   "still works: see tellurion new-plugin")
     except Exception as e:
         _check(checks, "plugin discovery", FAIL, f"{type(e).__name__}: {e}",
                "reinstall the package: pip install -e .")
@@ -161,18 +162,18 @@ def cmd_doctor() -> Dict[str, Any]:
         _check(checks, "rights metadata", FAIL, f"{type(e).__name__}: {e}",
                "reinstall the package: pip install -e .")
 
-    # 10. Live execution disabled
+    # 10. No trading or execution surface (V1 is world intelligence only)
     try:
-        from gods_eye.future import exec_safety as es
-        g = es.LiveExecutionGuard().describe()
-        if g["ALLOW_LIVE"] is False and g["ALLOW_PAPER_SANDBOX"] is False:
-            _check(checks, "live execution disabled", PASS,
-                   f"allowed: {g['allowed_today']}")
-        else:
-            _check(checks, "live execution disabled", FAIL, str(g),
-                   "refusing to continue: ALLOW_LIVE must stay false")
+        from pathlib import Path as _Path
+        from gods_eye.future import boundary as _b
+        hits = _b.trading_surface_hits(_Path(__file__).resolve().parents[2])
+        _check(checks, "no execution surface", PASS if not hits else FAIL,
+               "no order, venue, portfolio or backtest modules"
+               if not hits else f"{len(hits)} present: {hits[:3]}",
+               "" if not hits else
+               "remove them: this build must not be able to trade")
     except Exception as e:
-        _check(checks, "live execution disabled", FAIL,
+        _check(checks, "no execution surface", FAIL,
                f"{type(e).__name__}: {e}", "see docs/guides/security-defaults.md")
 
     # 11. Telemetry disabled (community paths make no outbound calls)
@@ -255,9 +256,9 @@ def cmd_new_plugin(kind: str, name: str, out_dir: str) -> Dict[str, Any]:
         manifest_path = dest / "manifest.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         manifest["name"] = name
-        kind_map = {"sensor": "Sensor", "venue": "Venue",
-                    "prediction-market": "PredictionMarket",
-                    "market-data": "MarketData"}
+        kind_map = {"sensor": "Sensor",
+                    "entity-resolver": "EntityResolver",
+                    "visualization": "Visualization"}
         manifest["kind"] = kind_map.get(kind, "Sensor")
         manifest["provenance"] = f"scaffolded from example_sensor as {name}"
         manifest_path.write_text(json.dumps(manifest, indent=2),
@@ -275,10 +276,14 @@ def cmd_new_plugin(kind: str, name: str, out_dir: str) -> Dict[str, Any]:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="godseye",
-                                description="GOD'S EYE developer CLI (no keys, no live)")
+    p = argparse.ArgumentParser(prog="tellurion",
+                                description="Tellurion developer CLI (no keys, no live)")
     sub = p.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("doctor", help="environment + boundary checks (PASS/WARN/FAIL)")
+    doc = sub.add_parser("doctor",
+                         help="environment + boundary checks (PASS/WARN/FAIL)")
+    doc.add_argument("--port", type=int, default=None,
+                     help="probe this localhost port instead of the default "
+                     "(verification harnesses pass an ephemeral port)")
     d = sub.add_parser("demo", help="one-command localhost demo")
     d.add_argument("--port", type=int, default=8765)
     d.add_argument("--no-browser", action="store_true")
@@ -312,8 +317,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("sources", help="source/rights summary")
     np = sub.add_parser("new-plugin", help="scaffold a plugin from the template")
     np.add_argument("--kind", default="sensor",
-                    choices=["sensor", "market-data", "venue",
-                             "prediction-market"])
+                    choices=["sensor", "entity-resolver", "visualization"])
     np.add_argument("--name", required=True, help="plugin name for the manifest")
     np.add_argument("--dir", default="my_sensor_plugin",
                     help="destination directory (created if needed)")
@@ -327,6 +331,8 @@ def build_parser() -> argparse.ArgumentParser:
                         "(read-only, never publishes)")
     rc.add_argument("--root", default=None,
                     help="candidate root (default: auto-detect)")
+    rc.add_argument("--port", type=int, default=None,
+                    help="doctor bind-probe port (default: 8765)")
     return p
 
 
@@ -337,7 +343,7 @@ def main(argv: List[str] | None = None) -> int:
     except SystemExit as e:
         return int(e.code or 0)
     if args.cmd == "doctor":
-        rep = cmd_doctor()
+        rep = cmd_doctor(port=args.port)
         print(json.dumps(rep, indent=1))
         if rep["verdict"] == FAIL:
             print("doctor: FAIL — follow each check's `fix` hint, then re-run.",
@@ -352,8 +358,8 @@ def main(argv: List[str] | None = None) -> int:
         if args.action in ("validate", "inspect"):
             from gods_eye.future import validator as vd
             if not args.path:
-                print(f"error: godseye plugins {args.action} needs a PATH "
-                      f"(e.g. godseye plugins {args.action} ./my_sensor)",
+                print(f"error: tellurion plugins {args.action} needs a PATH "
+                      f"(e.g. tellurion plugins {args.action} ./my_sensor)",
                       file=sys.stderr)
                 return 2
             rep = vd.validate_plugin_dir(args.path)
@@ -423,7 +429,7 @@ def main(argv: List[str] | None = None) -> int:
     if args.cmd == "release-check":
         from gods_eye.future import release_check as rc
         try:
-            rep = rc.release_check(args.root)
+            rep = rc.release_check(args.root, port=args.port)
         except Exception as e:
             print(f"error: release check failed: {type(e).__name__}: {e}",
                   file=sys.stderr)

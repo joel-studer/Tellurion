@@ -3,52 +3,127 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GOD'S EYE — open-source world-intelligence platform</title>
+<title>Tellurion · open-source, local-first world intelligence</title>
+<meta name="description" content="Tellurion turns lawful public signals into an evidence-first, time-aware view of the world. Local-first, synthetic demo, no keys.">
+<link rel="icon" href="/console/brand/favicon.svg" type="image/svg+xml">
 <style>
-:root{--bg:#0d1117;--panel:#161b22;--line:#2a3342;--txt:#e6edf3;--mut:#8b949e;--acc:#58a6ff;--ok:#3fb950}
-body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
-.wrap{max-width:880px;margin:0 auto;padding:40px 20px}
-.hero{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:28px}
-.hero h1{margin:0 0 8px;font-size:30px}
-.hero p{color:var(--mut);margin:6px 0}
-.cta{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
-.cta a{background:#1f6feb;color:#fff;text-decoration:none;padding:8px 16px;border-radius:8px;font-weight:600}
-.cta a.ghost{background:transparent;border:1px solid var(--line);color:var(--txt)}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
-.card{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:14px}
-.card b{display:block;margin-bottom:4px}
-.card span{color:var(--mut);font-size:13px}
-pre{background:#010409;border:1px solid var(--line);border-radius:8px;padding:12px;overflow:auto;font-size:13px}
-footer{color:var(--mut);font-size:12px;margin-top:20px}
-@media(max-width:700px){.grid{grid-template-columns:1fr}}
+@font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:swap;
+src:url("/vendor/fonts/inter-latin-wght-normal.woff2") format("woff2")}
+:root{--bg:#060b13;--s1:#0d1521;--s2:#101925;--s3:#16212f;--line:rgba(128,150,178,.16);
+--line-2:rgba(128,150,178,.3);--text:#e8eef6;--text-2:#b2bfce;--text-3:#8290a3;--sun:#ffb547;
+--sun-soft:rgba(255,181,71,.13);--radius:14px;
+--font:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 var(--font);-webkit-font-smoothing:antialiased}
+a{color:var(--sun)}
+:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
+.mono{font-family:var(--mono)}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:650;padding:3px 10px;border-radius:999px;
+border:1px solid var(--line-2);color:var(--text-2)}
+.chip.syn{border-color:rgba(255,181,71,.42);color:var(--sun);background:var(--sun-soft)}
+.btn{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 18px;border-radius:10px;border:1px solid var(--line-2);
+background:var(--s3);color:var(--text);text-decoration:none;font-size:14px;font-weight:600}
+.btn.primary{background:var(--sun);color:#1b1305;border-color:var(--sun)}
+header.top{display:flex;align-items:center;gap:12px;padding:16px 28px;border-bottom:1px solid var(--line)}
+header.top .brand{display:flex;align-items:center;gap:11px;font-size:18px;font-weight:650;text-decoration:none;color:var(--text)}
+header.top nav{margin-left:auto;display:flex;gap:18px;font-size:14px;flex-wrap:wrap}
+header.top nav a{color:var(--text-2);text-decoration:none}
+header.top nav a:hover{color:var(--sun)}
+.wrap{max-width:1060px;margin:0 auto;padding:0 24px 64px}
+.hero{padding:60px 0 38px;text-align:center}
+.hero h1{margin:18px 0 12px;font-size:46px;line-height:1.1;letter-spacing:-.02em}
+.hero p.lead{margin:0 auto;max-width:640px;font-size:18px;color:var(--text-2)}
+.cta{display:flex;gap:12px;justify-content:center;margin:26px 0 16px;flex-wrap:wrap}
+.heroshot{display:block;margin:28px auto 4px;max-width:1000px;border:1px solid var(--line-2);border-radius:14px;
+overflow:hidden;box-shadow:0 20px 56px rgba(0,0,0,.6)}
+.heroshot img{display:block;width:100%;height:auto}
+.shotnote{margin:8px 0 0;font-size:12px;color:var(--text-3)}
+pre{background:#020509;border:1px solid var(--line);border-radius:12px;padding:16px 18px;overflow:auto;
+font:13.5px/1.75 var(--mono);color:var(--text-2);text-align:left;max-width:560px;margin:0 auto}
+pre b{color:var(--text);font-weight:600}
+.rail{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+section.block{padding:34px 0;border-top:1px solid var(--line)}
+section.block h2{margin:0 0 6px;font-size:12.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--sun)}
+section.block h3{margin:0 0 12px;font-size:26px;letter-spacing:-.01em}
+section.block p{margin:0 0 14px;color:var(--text-2);max-width:760px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:18px}
+.card{background:var(--s1);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.card b{display:block;margin-bottom:6px;font-size:14.5px}
+.card span{color:var(--text-3);font-size:13.5px}
+footer{border-top:1px solid var(--line);padding:22px 0;color:var(--text-3);font-size:13px}
+@media(max-width:700px){.hero h1{font-size:34px}header.top{padding:14px 18px}}
 </style>
 </head>
 <body>
+<header class="top">
+  <a class="brand" href="/landing"><img src="/console/brand/tellurion-mark.svg" alt="" width="30" height="30">Tellurion</a>
+  <nav>
+    <a href="/ultra?demo=hero">World surface</a><a href="/gallery">Plugins</a>
+    <a href="/api/world">API</a><a href="/ultra/classic">Classic view</a>
+  </nav>
+</header>
 <div class="wrap">
   <div class="hero">
-    <h1>GOD'S EYE</h1>
-    <p><b style="color:var(--txt)">Open-source, local-first world intelligence.</b></p>
-    <p>Aircraft · Ships · Satellites · Weather · Earth events · Infrastructure · Evidence · Time machine · Plugins — on one localhost world surface, from lawful public sources, with provenance on everything.</p>
+    <span class="chip syn">SYNTHETIC DEMO · no keys · no telemetry · live execution disabled</span>
+    <h1>The state of the world, with its evidence attached.</h1>
+    <p class="lead">Tellurion fuses lawful public signals into an evidence-first, time-aware operational view.
+      It runs on your machine, offline, on a synthetic replay.</p>
+    <a class="heroshot" href="/ultra?demo=hero" aria-label="Open the world surface">
+      <img src="/console/media/hero.png" width="1920" height="1080"
+           alt="The Tellurion world surface: a sunlit globe with synthetic aircraft, vessels, a storm system and a satellite swath, beside an evidence drawer">
+    </a>
+    <p class="shotnote">The world surface, captured from this demo. Synthetic replay, not live data.</p>
     <div class="cta">
-      <a href="/ultra?demo=hero">Open the Ultra demo</a>
-      <a class="ghost" href="/gallery">Plugin gallery</a>
-      <a class="ghost" href="/api/ultra">/api/ultra</a>
+      <a class="btn primary" href="/ultra?demo=hero">Run locally</a>
+      <a class="btn" href="/gallery">Build a plugin</a>
     </div>
-    <pre>pip install -e .
-godseye doctor   # PASS, no keys
-godseye ultra --hero   # localhost-only world surface</pre>
+    <pre><b>pip install -e .</b>
+<b>tellurion doctor</b>       # environment and boundary checks
+<b>tellurion ultra --hero</b> # the globe, on 127.0.0.1 only</pre>
+    <div class="rail">
+      <span class="chip">Aircraft</span><span class="chip">Vessels</span><span class="chip">Satellites</span>
+      <span class="chip">Weather</span><span class="chip">Earthquakes</span><span class="chip">Wildfire</span>
+      <span class="chip">Roads</span><span class="chip">Cameras</span><span class="chip">Evidence</span>
+      <span class="chip">Time machine</span><span class="chip">Plugins</span>
+    </div>
   </div>
-  <div class="grid">
-    <div class="card"><b>World context</b><span>Every event lands on the map with nearby vessels, weather, cameras, roads, and satellite footprints attached.</span></div>
-    <div class="card"><b>Evidence</b><span>What / where / when / who reported / raw vs normalized / corroboration / contradictions — on every object.</span></div>
-    <div class="card"><b>Time</b><span>Current world, historical belief, current replay: see what the system knew <i>then</i>.</span></div>
-    <div class="card"><b>Provenance</b><span>Source, rights, fetch time, observation state. UNKNOWN stays UNKNOWN. Blind spots are drawn, not hidden.</span></div>
-    <div class="card"><b>Extensibility</b><span>Rights-first plugin SDK: scaffold a sensor in a minute, qualify it, list it in the gallery.</span></div>
-    <div class="card"><b>Replay / demo</b><span>Synthetic CC0 dataset runs fully offline. No credentials, no telemetry, no live execution.</span></div>
-  </div>
+
+  <section class="block">
+    <h2>World</h2><h3>A globe you can interrogate</h3>
+    <p>Spin the Earth, fly into a region, and watch aggregated counts resolve into individual aircraft, vessels,
+      satellite passes, and weather. Day and night are modeled from the world clock. Geography is Natural Earth,
+      public domain: no tiles are fetched and no terrain is invented.</p>
+  </section>
+
+  <section class="block">
+    <h2>Evidence</h2><h3>Every object can be questioned</h3>
+    <p>Select anything and the drawer answers the same questions in the same order: what happened, which sources
+      said so and when, what corroborates it, which entities are related, where coverage is thin, and what the
+      rights are. Reported, modeled and corroborated are labelled, never blurred.</p>
+    <div class="grid">
+      <div class="card"><b>Sources, not vibes</b><span>Each report carries its layer, its time, and its observation state.</span></div>
+      <div class="card"><b>Blind spots</b><span>Thin coverage is drawn on the map. Missing data is never shown as calm.</span></div>
+      <div class="card"><b>Rights first</b><span>Licence and data rights travel with every record and every plugin.</span></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Time</h2><h3>What did we know, and when?</h3>
+    <p>The Time Machine scrubs the replay minute by minute in three modes: the current world, the historical belief
+      at a chosen moment, and the current replay. In belief mode later reports stay hidden until the clock reaches
+      them, so hindsight cannot leak into the picture.</p>
+  </section>
+
+  <section class="block">
+    <h2>Plugins</h2><h3>Add a sensor in an afternoon</h3>
+    <p>A sensor plugin is a manifest, a fixture, a <span class="mono">poll()</span>, and a test. The validator refuses
+      network calls, credential tokens, and imports from outside the core, so a plugin can be reviewed by reading it.</p>
+    <div class="cta" style="justify-content:flex-start"><a class="btn" href="/gallery">See the gallery</a></div>
+  </section>
+
   <footer>
-    Community edition: localhost only · no live execution · no telemetry · public/licensed/owned/authorized sources only.<br>
-    No market-beating claims; infrastructure only. Open-source core: map, evidence, time machine, plugin SDK.
+    Local-first: the demo binds to 127.0.0.1 and makes no outbound calls. Live execution is disabled in code.
+    Everything shown is synthetic and labelled. No market claims.
   </footer>
 </div>
 </body>

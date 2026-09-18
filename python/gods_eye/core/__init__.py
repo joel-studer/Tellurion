@@ -1,3 +1,5 @@
-"""Candidate alias package (V17, re-exports only)."""
+"""Candidate alias package (re-exports only)."""
 
-from gods_eye.future import venues  # noqa: F401
+from gods_eye.future import boundary  # noqa: F401
+from gods_eye.future import public_api  # noqa: F401
+from gods_eye.future import rights  # noqa: F401

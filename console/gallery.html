@@ -3,71 +3,140 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GOD'S EYE — plugin gallery</title>
+<title>Tellurion · plugin gallery</title>
+<link rel="icon" href="/console/brand/favicon.svg" type="image/svg+xml">
 <style>
-:root{--bg:#0b0e14;--panel:#11161f;--line:#26303f;--txt:#e8edf5;--mut:#9aa4b2;
---acc:#5aa9ff;--ok:#4fd1a5;--warn:#ffc857;--font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.55 var(--font)}
-:focus-visible{outline:2px solid var(--acc)}
-header{padding:14px 22px;background:#070a10;border-bottom:1px solid var(--line)}
-main{max-width:1100px;margin:0 auto;padding:18px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
-.card h3{margin:0 0 4px;font-size:14px}
-.tag{font-size:11px;padding:1px 8px;border-radius:10px;border:1px solid var(--line);color:var(--mut)}
-.tag.q{border-color:var(--ok);color:var(--ok)}.tag.k{border-color:var(--warn);color:var(--warn)}
-.mut{color:var(--mut);font-size:12.5px}
+@font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:swap;
+src:url("/vendor/fonts/inter-latin-wght-normal.woff2") format("woff2")}
+:root{--bg:#060b13;--s1:#0d1521;--s2:#101925;--line:rgba(128,150,178,.16);--line-2:rgba(128,150,178,.3);
+--text:#e8eef6;--text-2:#b2bfce;--text-3:#8290a3;--sun:#ffb547;--sun-soft:rgba(255,181,71,.13);
+--ok:#46d19a;--watch:#f5c451;--radius:14px;
+--font:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 var(--font);-webkit-font-smoothing:antialiased}
+a{color:var(--sun)}
+:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
+.mono{font-family:var(--mono)}
+.muted{color:var(--text-3)}
+header.top{display:flex;align-items:center;gap:12px;padding:16px 28px;border-bottom:1px solid var(--line)}
+header.top .brand{display:flex;align-items:center;gap:11px;font-size:18px;font-weight:650;text-decoration:none;color:var(--text)}
+header.top nav{margin-left:auto;display:flex;gap:18px;font-size:14px;flex-wrap:wrap}
+header.top nav a{color:var(--text-2);text-decoration:none}
+header.top nav a:hover{color:var(--sun)}
+main{max-width:1200px;margin:0 auto;padding:26px 24px 60px}
+h1{font-size:28px;margin:0 0 6px;letter-spacing:-.01em}
+.sub{color:var(--text-2);max-width:780px;margin:0 0 20px}
+h2{font-size:13px;letter-spacing:.09em;text-transform:uppercase;color:var(--text-3);margin:30px 0 12px}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.filters button{background:var(--s2);border:1px solid var(--line);color:var(--text-2);border-radius:999px;
+padding:6px 13px;font:600 12.5px var(--font);cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--sun-soft);border-color:rgba(255,181,71,.45);color:var(--sun)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.card{background:var(--s1);border:1px solid var(--line);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:11px}
+.card header{display:flex;align-items:center;gap:11px}
+.card .ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 16%,transparent)}
+.card h3{margin:0;font-size:15px}
+.card .cat{font-size:12px;color:var(--text-3)}
+.card p{margin:0;color:var(--text-2);font-size:13.5px}
+.meta{display:grid;grid-template-columns:108px 1fr;gap:5px 10px;font-size:12.5px;margin:0}
+.meta dt{color:var(--text-3)}
+.meta dd{margin:0;color:var(--text-2)}
+.state{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:11.5px}
+.state::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.state.ok{color:var(--ok)}
+.state.key{color:var(--watch)}
+.state.key::before{border-radius:2px}
+.state.unknown{color:var(--text-3)}
+.state.unknown::before{background:transparent;border:2px solid currentColor}
 </style>
 </head>
 <body>
-<header><b>GOD'S EYE</b> <span class="mut">plugin gallery — "I can add one of these."</span>
-<span class="mut" style="float:right"><a href="/ultra">ultra</a> · <a href="/">classic</a></span></header>
+<header class="top">
+  <a class="brand" href="/landing"><img src="/console/brand/tellurion-mark.svg" alt="" width="30" height="30">Tellurion</a>
+  <nav><a href="/ultra?demo=hero">World surface</a><a href="/landing">About</a><a href="/api/plugins">/api/plugins</a></nav>
+</header>
 <main>
-<h1 style="font-size:20px">Sensor plugins</h1>
-<p class="mut">First-party fixture adapters (offline) + qualified source registry.
-No one-click remote execution: every source shows rights, network, and install state.</p>
-<h2 style="font-size:14px">Bundled plugins</h2>
-<div style="margin-bottom:10px" id="filters" role="group" aria-label="category filter"></div>
-<div class="grid" id="pack"></div>
-<h2 style="font-size:14px;margin-top:18px">Source registry (discovery only)</h2>
-<div class="grid" id="reg"></div>
+  <h1>Plugin gallery</h1>
+  <p class="sub">Nine first-party sensor plugins ship with the demo, all on synthetic CC0 fixtures. Every card shows what the
+    plugin covers, what it needs, and what you may do with its data. Discovery is explicit: nothing is downloaded or run for you.</p>
+  <div class="filters" id="filters" role="group" aria-label="Filter by category"></div>
+  <div class="grid" id="pack"></div>
+  <h2>Source registry (discovery only, not polled in this demo)</h2>
+  <div class="grid" id="registry"></div>
 </main>
 <script>
 "use strict";
-const PACK=[
- ["aviation-synth","AIRCRAFT · Sensor","CC0 synthetic","none","fixture replay, 24 aircraft + trails"],
- ["maritime-synth","MARITIME · Sensor","CC0 synthetic","none","fixture replay, 18 vessels + nav states"],
- ["satellite-synth","SATELLITE · Sensor","CC0 synthetic (STAC vocabulary)","none","6 scenes: footprint/acquisition/cloud-cover"],
- ["weather-synth","WEATHER · Sensor","CC0 synthetic","none","8 cells + 1 alert polygon"],
- ["seismic-usgs","SEISMIC · Sensor","CC0 fixture + USGS public-domain leg","optional","fixture 2 events; live leg user opt-in"],
- ["wildfire-synth","WILDFIRE · Sensor","CC0 fixture · FIRMS leg user-key","none","4 hotspots + confidence"],
- ["traffic-synth","TRAFFIC · Sensor","CC0 synthetic","none","12 incidents: closures/congestion/works"],
- ["camera-synth","CAMERAS · Sensor","CC0 synthetic snapshots","none","6 cameras, snapshots only, no persons"],
- ["infra-context","INFRASTRUCTURE · Sensor","CC0 synthetic reference points","none","port + airport + grid watch zone"]];
-function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");}
-let FILTER="all";
-function catOf(p){return p[1].split(" ")[0];}
-function renderPack(){
-  const cats=["all",...new Set(PACK.map(catOf))];
-  document.getElementById("filters").innerHTML=cats.map(c=>
-    `<button class="tag" data-c="${esc(c)}" aria-pressed="${c===FILTER}" style="cursor:pointer;background:${c===FILTER?"#1b2230":"transparent"}">${esc(c)}</button>`).join(" ");
-  document.querySelectorAll("#filters .tag").forEach(b=>b.onclick=()=>{FILTER=b.dataset.c;renderPack();});
-  const rows=PACK.filter(p=>FILTER==="all"||catOf(p)===FILTER);
-  document.getElementById("pack").innerHTML=`<p class="mut" style="grid-column:1/-1">${rows.length} of ${PACK.length} shown · rights + network + health on every card</p>`+rows.map(p=>
- `<div class="card"><h3>${esc(p[0])}</h3><span class="tag">${esc(p[1])}</span>
-  <span class="tag q">production-qualified</span> <span class="tag">v1.0.0</span>
-  <p class="mut">rights: ${esc(p[2])}<br>network: ${esc(p[3])} · health: ok · installed: bundled<br>${esc(p[4])}<br><br>
-  <i>Next: copy this card's shape — manifest + fixture + poll() + test — and open a PR.</i></p></div>`).join("");
+const ICON = {
+  plane: "M12 2.2c.9 0 1.4 1 1.4 2v5.3l7.4 4.4v2.2l-7.4-2.3v4.5l2.3 1.8v1.7L12 21l-3.7.8v-1.7l2.3-1.8v-4.5l-7.4 2.3v-2.2l7.4-4.4V4.2c0-1 .5-2 1.4-2z",
+  ship: "M12 2.5 17.5 20 12 16.6 6.5 20z",
+  sat: "M8.5 8.5l7 7M3.5 6l2.5-2.5 4 4L7.5 10zM14 16.5l2.5-2.5 4 4-2.5 2.5z",
+  cloud: "M7 18.5a4.2 4.2 0 0 1-.7-8.3 6.2 6.2 0 0 1 11.8 1.7 3.4 3.4 0 0 1-.4 6.6z",
+  quake: "M2 12h4l2.2-6.5 3.3 13 3.1-9.5 1.9 3H22",
+  fire: "M12 2.5c1.8 3.4 6 5.8 6 11a6 6 0 0 1-12 0c0-2.8 1.6-4.6 2.7-6.3.6 1.9 1.6 3 2.8 3-.8-2.8-.4-5.2.5-7.7z",
+  cone: "M10 3h4l4.5 15h-13zM4 18.5h16V21H4z",
+  camera: "M3.5 7h12v10h-12zM15.5 10.5l5-3v9l-5-3z",
+  anchor: "M12 7.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM12 7.5V21M5 13a7 7 0 0 0 14 0M8.5 11h7"
+};
+const FILL = new Set(["plane", "ship", "cloud", "fire", "cone", "camera"]);
+const PACK = [
+  ["aviation-synth", "Aircraft", "plane", "#6aa8ff", "24 aircraft with headings and trails, replayed from a seeded fixture.", "regional replay", "CC0 synthetic", "none", "none", "1.0.0"],
+  ["maritime-synth", "Maritime", "ship", "#37d2b0", "18 vessels with course, speed, and navigation state.", "regional replay", "CC0 synthetic", "none", "none", "1.0.0"],
+  ["satellite-synth", "Satellite", "sat", "#b79cff", "6 scenes with footprint, acquisition time, and cloud cover.", "regional replay", "CC0 synthetic (STAC vocabulary)", "none", "none", "1.0.0"],
+  ["weather-synth", "Weather", "cloud", "#9ec7e8", "8 cells and one alert polygon over the scenario area.", "regional replay", "CC0 synthetic", "none", "none", "1.0.0"],
+  ["seismic-usgs", "Earth", "quake", "#ff8a5b", "Fixture events; the live leg mirrors the USGS GeoJSON feed if you opt in.", "fixture, optional live", "CC0 fixture; USGS public domain", "optional (USGS)", "none", "1.0.0"],
+  ["wildfire-synth", "Earth", "fire", "#ff6f4a", "4 hotspots with confidence bands.", "regional replay", "CC0 fixture; FIRMS needs your key", "none", "user key for live", "1.0.0"],
+  ["traffic-synth", "Roads", "cone", "#e2c26f", "12 incidents: closures, congestion, works, delays.", "regional replay", "CC0 synthetic", "none", "none", "1.0.0"],
+  ["camera-synth", "Cameras", "camera", "#e48fd0", "6 cameras with snapshot cards. Places only, never people.", "regional replay", "CC0 synthetic", "none", "none", "1.0.0"],
+  ["infra-context", "Infrastructure", "anchor", "#c9b38a", "Port, airport, and grid reference points for context.", "regional replay", "CC0 synthetic", "none", "none", "1.0.0"]
+];
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const icon = (name, color) => `<svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true"><path d="${ICON[name]}" ${FILL.has(name) ? `fill="${color}"` : `fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"`}/></svg>`;
+let filter = "All";
+function renderPack() {
+  const cats = ["All", ...new Set(PACK.map((p) => p[1]))];
+  document.getElementById("filters").innerHTML = cats.map((c) =>
+    `<button type="button" data-c="${esc(c)}" aria-pressed="${c === filter}">${esc(c)}</button>`).join("");
+  document.querySelectorAll("#filters button").forEach((b) => { b.onclick = () => { filter = b.dataset.c; renderPack(); }; });
+  const rows = PACK.filter((p) => filter === "All" || p[1] === filter);
+  document.getElementById("pack").innerHTML = rows.map((p) => `
+    <article class="card" style="--c:${p[3]}">
+      <header><span class="ic">${icon(p[2], p[3])}</span>
+        <div><h3>${esc(p[0])}</h3><div class="cat">${esc(p[1])} · Sensor · v${esc(p[9])}</div></div></header>
+      <p>${esc(p[4])}</p>
+      <dl class="meta">
+        <dt>Coverage</dt><dd>${esc(p[5])}</dd>
+        <dt>Status</dt><dd><span class="state ok">BUNDLED</span> ships in this repo, offline fixture</dd>
+        <dt>Rights</dt><dd>${esc(p[6])}</dd>
+        <dt>Network</dt><dd>${esc(p[7])}</dd>
+        <dt>Secrets</dt><dd>${esc(p[8])}</dd>
+        <dt>Maintainer</dt><dd>Tellurion core</dd>
+      </dl>
+    </article>`).join("");
 }
 renderPack();
-async function load(){try{const r=await fetch("/api/plugins");const j=await r.json();
- document.getElementById("reg").innerHTML=j.sources.map(s=>
-  `<div class="card"><h3>${esc(s.source_id)}</h3>
-   <span class="tag">${esc(s.category)}</span>
-   <span class="tag ${s.status==="QUALIFIED"?"q":"k"}">${esc(s.status)}</span>
-   <p class="mut">auth: ${esc(s.auth)} · ${esc(s.realtime)}<br>rights: ${esc(s.data_rights)}<br>${esc(s.plugin_potential)}</p></div>`).join("");
- }catch(e){document.getElementById("reg").innerHTML="<p class='mut'>registry unavailable offline (serve via godseye demo)</p>";}}
-load();
+async function registry() {
+  const el = document.getElementById("registry");
+  try {
+    const data = await (await fetch("/api/plugins")).json();
+    el.innerHTML = data.sources.map((s) => {
+      const needsKey = String(s.auth || "").toLowerCase().includes("key");
+      const state = needsKey ? ["key", "NEEDS YOUR KEY"] : ["unknown", "NOT POLLED HERE"];
+      return `<article class="card" style="--c:#8290a3">
+        <header><div><h3>${esc(s.source_id)}</h3>
+          <div class="cat">${esc(s.category)} · ${esc(s.realtime || "cadence unstated")}</div></div></header>
+        <p>${esc(s.plugin_potential || "")}</p>
+        <dl class="meta">
+          <dt>State</dt><dd><span class="state ${state[0]}">${state[1]}</span></dd>
+          <dt>Auth</dt><dd>${esc(s.auth)}</dd>
+          <dt>Rights</dt><dd>${esc(s.data_rights)}</dd>
+          <dt>Coverage</dt><dd>${esc(s.coverage || "unstated")}</dd>
+        </dl></article>`;
+    }).join("");
+  } catch (error) {
+    el.innerHTML = `<p class="muted">Source registry unavailable offline. Start the demo with <span class="mono">tellurion ultra</span>.</p>`;
+  }
+}
+registry();
 </script>
 </body>
 </html>

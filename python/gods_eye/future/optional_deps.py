@@ -20,33 +20,11 @@ STATUSES = ("AVAILABLE", "NOT_INSTALLED", "BLOCKED", "UNKNOWN")
 
 # name -> (import_names, policy, relevance)
 _CATALOG: Dict[str, Dict[str, Any]] = {
-    "lean": {"imports": ("lean",), "policy": "optional boundary",
-             "relevance": "backtest engine boundary (job contract only)"},
-    "nautilus_trader": {"imports": ("nautilus_trader",), "policy": "BLOCKED in-process (LGPL: separate process only)",
-                        "relevance": "execution sim boundary"},
-    "hftbacktest": {"imports": ("hftbacktest",), "policy": "optional boundary",
-                    "relevance": "microstructure validator boundary"},
-    "skfolio": {"imports": ("skfolio",), "policy": "optional boundary",
-                "relevance": "portfolio optimizer boundary"},
-    "pypfopt": {"imports": ("pypfopt",), "policy": "optional boundary",
-                "relevance": "secondary weight validator boundary"},
-    "torch": {"imports": ("torch",), "policy": "optional (challenger pool only)",
-              "relevance": "ML challengers (not required)"},
-    "kronos": {"imports": ("kronos",), "policy": "optional (challenger candidate)",
-               "relevance": "forecast challenger (not installed until samples exist)"},
-    "duckdb": {"imports": ("duckdb",), "policy": "optional market extra",
-               "relevance": "catalog index (graceful in-memory fallback)"},
-    "ccxt": {"imports": ("ccxt",), "policy": "optional market extra",
-             "relevance": "venue metadata layer (offline describe)"},
-    "exchange_calendars": {"imports": ("exchange_calendars",),
-                           "policy": "optional market extra",
-                           "relevance": "multi-venue session breadth"},
-    "sktime": {"imports": ("sktime",), "policy": "optional ml extra",
-               "relevance": "challenger pool"},
-    "darts": {"imports": ("darts",), "policy": "optional ml extra",
-              "relevance": "challenger pool"},
-    "statsforecast": {"imports": ("statsforecast",), "policy": "optional ml extra",
-                      "relevance": "challenger (model-specific)"},
+    "playwright": {"imports": ("playwright",),
+                   "policy": "optional capture extra",
+                   "relevance": "screenshot and browser-QA scripts only"},
+    "pytest": {"imports": ("pytest",), "policy": "optional dev extra",
+               "relevance": "test suite"},
 }
 
 
@@ -55,19 +33,6 @@ def probe(name: str) -> Dict[str, Any]:
     if spec is None:
         return {"name": name, "status": "UNKNOWN",
                 "detail": "not in optional-dep catalog"}
-    if name == "nautilus_trader":
-        # Policy: never import in-process even if installed (LGPL boundary).
-        try:
-            import importlib.util
-            found = importlib.util.find_spec("nautilus_trader") is not None
-        except Exception:
-            return {"name": name, "status": "UNKNOWN",
-                    "detail": "probe failed", "policy": spec["policy"]}
-        return {"name": name,
-                "status": "BLOCKED" if found else "NOT_INSTALLED",
-                "detail": ("installed but in-process use refused (separate "
-                           "process only)" if found else "absent (normal)"),
-                "policy": spec["policy"], "relevance": spec["relevance"]}
     try:
         import importlib.util
         found = any(importlib.util.find_spec(mod) is not None

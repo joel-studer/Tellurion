@@ -2,7 +2,7 @@
 
 Measures the community edition only (no private pipeline, no state DBs):
   - interpreter + gods_eye import time (cold subprocess)
-  - godseye doctor wall time
+  - tellurion doctor wall time
   - /api/health + /api/demo latency (in-process localhost server)
   - synthetic payload scale: demo-shaped evidence rows at
     100 / 1,000 / 5,000 rows through payload-build + JSON encode

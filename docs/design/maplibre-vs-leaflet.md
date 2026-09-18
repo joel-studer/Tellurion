@@ -1,5 +1,12 @@
 # MAPLIBRE VS LEAFLET (V18.5 — measured 2026-09-15, decision: KEEP_LEAFLET)
 
+> **SUPERSEDED (2026-09-16).** This page compares a MapLibre 4.7.1 prototype
+> that had no globe, no selection, and no evidence drawer, so its
+> `KEEP_LEAFLET` verdict no longer describes the product. The current measured
+> decision — MapLibre GL JS 6.10.0 globe as primary, Leaflet classic as
+> fallback — is in [`world-renderer-decision.md`](world-renderer-decision.md).
+> Kept for history.
+
 > Non-destructive prototype: `console/ultra-gl.html` (same
 > deterministic `/api/ultra` dataset, offline style, no tiles) vs the
 > Leaflet Ultra. Same box, same headless Chromium 1600×900,

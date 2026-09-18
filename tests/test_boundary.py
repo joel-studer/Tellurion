@@ -13,11 +13,11 @@
 
 from __future__ import annotations
 
+import importlib
 import json
 import subprocess
 import sys
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 
@@ -28,8 +28,8 @@ from gods_eye.future import boundary  # noqa: E402
 
 CORE_ENTRYPOINTS = (
     "gods_eye.cli", "gods_eye.demo", "gods_eye.core", "gods_eye.plugins",
-    "gods_eye.market", "gods_eye.execution", "gods_eye.portfolio",
     "gods_eye.future.ultra_demo", "gods_eye.future.release_check",
+    "gods_eye.future.world_now", "gods_eye.future.world_change",
 )
 
 _STDLIB_ONLY_PROBE = """
@@ -106,26 +106,22 @@ def test_scanners_detect_synthetic_material(tmp_path):
     assert {kind for _, kind in _synthetic_samples()} <= kinds
 
 
-def test_extension_slots_fail_clearly_then_accept_a_provider():
-    from gods_eye.future import extensions as ext
-    from gods_eye.future.portfolio import PortfolioConstraintSet
-    from gods_eye.future.portfolio_optimizer import FixturePortfolioOptimizer
-    ext.unregister()
-    optimizer = FixturePortfolioOptimizer("equal_weight")
-    inputs = [SimpleNamespace(strategy_id="fixture-a"),
-              SimpleNamespace(strategy_id="fixture-b")]
-    with pytest.raises(ext.ExtensionUnavailable, match="portfolio.eligibility"):
-        optimizer.optimize(inputs, PortfolioConstraintSet())
-    ext.register("portfolio.eligibility",
-                 SimpleNamespace(assert_eligible=lambda item: item))
-    try:
-        candidate = optimizer.optimize(inputs, PortfolioConstraintSet())
-        assert {sid for sid, _ in candidate.weights} == {"fixture-a",
-                                                         "fixture-b"}
-    finally:
-        ext.unregister()
-    with pytest.raises(KeyError):
-        ext.get("no.such.slot")
+def test_no_trading_or_execution_surface_ships():
+    """V1 is world intelligence only: the trading modules must not exist."""
+    assert boundary.trading_surface_hits(ROOT) == []
+    for name in ("venues", "market", "exec_engine", "portfolio_optimizer",
+                 "nautilus_polymarket", "prediction_markets"):
+        with pytest.raises(ModuleNotFoundError):
+            importlib.import_module(f"gods_eye.future.{name}")
+
+
+def test_trading_surface_check_detects_a_reintroduced_module(tmp_path):
+    pkg = tmp_path / "python" / "gods_eye" / "future"
+    pkg.mkdir(parents=True)
+    (pkg / "venues.py").write_text("VENUE = 1", encoding="utf-8")
+    (pkg / "world_now.py").write_text("NOW = 1", encoding="utf-8")
+    assert boundary.trading_surface_hits(tmp_path) == [
+        "python/gods_eye/future/venues.py"]
 
 
 def test_isolation_ships_no_hardcoded_profile(tmp_path):

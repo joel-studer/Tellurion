@@ -1,6 +1,6 @@
 """Release readiness checker (read-only, never publishes).
 
-``godseye release-check`` (or ``python -m gods_eye.future.release_check``)
+``tellurion release-check`` (or ``python -m gods_eye.future.release_check``)
 verifies this source tree and returns PASS / WARN / FAIL with one
 actionable row per check. It never modifies, uploads, or publishes.
 
@@ -29,8 +29,8 @@ REQUIRED_FILES: Sequence[Union[str, tuple]] = (
     "pyproject.toml",
     ".gitignore",
     ".gitattributes",
-    ("LICENSE", "legal/LICENSE.proposed"),
-    ("NOTICE", "legal/NOTICE.proposed"),
+    "LICENSE",
+    "NOTICE",
     "legal/THIRD_PARTY_NOTICES.md",
     "legal/SBOM.spdx.json",
     "legal/ASSET_RIGHTS.json",
@@ -41,13 +41,34 @@ REQUIRED_FILES: Sequence[Union[str, tuple]] = (
     "console/landing.html",
     "console/ultra.html",
     "console/gallery.html",
+    "console/world.html",
+    "console/world/app.js",
+    "console/world/styles.css",
     "python/gods_eye/future/ultra_demo.py",
     "python/gods_eye/future/layers.py",
     "python/gods_eye/future/sensor_sources.py",
+    "python/gods_eye/future/world_demo.py",
+    "python/gods_eye/future/world_live.py",
+    "python/gods_eye/future/world_now.py",
+    "python/gods_eye/future/world_air.py",
+    "python/gods_eye/future/world_change.py",
+    "python/gods_eye/rights/registry.py",
     "python/gods_eye/future/boundary.py",
-    "python/gods_eye/future/extensions.py",
+    "tests/test_boundary.py",
+    "tests/test_preview_surface.py",
+    "tests/test_ultra.py",
+    "tests/test_world.py",
+    "tests/test_aviation_v21.py",
+    "tests/test_world_now_v20.py",
+    "tests/test_world_coverage_v19.py",
+    "tests/test_future_preview_v16.py",
+    "tests/test_future_ultra_v18.py",
     "plugins/aviation_synth/manifest.json",
     "plugins/camera_synth/manifest.json",
+    "plugins/weather_nws/manifest.json",
+    "plugins/disaster_eonet/manifest.json",
+    "plugins/space_swpc/manifest.json",
+    "plugins/austria_pack/manifest.json",
     "docs/OPEN_CORE_BOUNDARY.md",
     "docs/guides/demo-performance.md",
     "examples/plugins/example_sensor/manifest.json",
@@ -62,7 +83,11 @@ REQUIRED_FILES: Sequence[Union[str, tuple]] = (
 ENVIRONMENT_ONLY_CHECKS = ("localhost bind",)
 SBOM_FILE = "legal/SBOM.spdx.json"
 GATES_FILE = ".github/RELEASE_GATES.json"
-CLOSED_GATE_VALUES = ("PASS", "OBTAINED")
+# A gate is closed when it passed, was obtained, or the owner
+# explicitly waived it for this release. A waiver is recorded as a
+# waiver: it never becomes a PASS.
+CLOSED_GATE_VALUES = ("PASS", "OBTAINED",
+                      "WAIVED_BY_OWNER_FOR_V1_PUBLIC_BETA")
 
 Rows = List[Dict[str, Any]]
 
@@ -89,12 +114,14 @@ def read_gates(root: Path) -> Dict[str, Any]:
         data = json.loads((Path(root) / GATES_FILE).read_text(encoding="utf-8"))
         gates = {str(k): str(v.get("status", "UNKNOWN"))
                  for k, v in data["gates"].items()}
+        published = bool(data.get("published", False))
     except (OSError, ValueError, KeyError, AttributeError, TypeError) as e:
         return {"ok": False, "gates": {}, "publishable": False,
-                "error": f"{type(e).__name__}: {e}"}
+                "published": False, "error": f"{type(e).__name__}: {e}"}
     publishable = bool(gates) and all(v in CLOSED_GATE_VALUES
                                       for v in gates.values())
-    return {"ok": True, "gates": gates, "publishable": publishable}
+    return {"ok": True, "gates": gates, "publishable": publishable,
+            "published": published}
 
 
 def _check_files(rows: Rows, root: Path) -> None:
@@ -113,15 +140,15 @@ def _check_imports(rows: Rows, root: Path) -> None:
     _row(rows, "import boundary", PASS if not problems else FAIL,
          f"{len(problems)} gods_eye imports outside the shipped package",
          "" if not problems else
-         "ship the module or call it through gods_eye.future.extensions: "
+         "ship the module, or drop the import: "
          + "; ".join(f"{p['file']}:{p['line']} {p['module']}"
                      for p in problems[:3]))
 
 
-def _check_doctor(rows: Rows) -> None:
+def _check_doctor(rows: Rows, port: int | None = None) -> None:
     try:
         from gods_eye.cli import cmd_doctor
-        rep = cmd_doctor()
+        rep = cmd_doctor(port=port)
     except Exception as e:
         _row(rows, "doctor", FAIL, f"{type(e).__name__}: {e}",
              "run: pip install -e .")
@@ -138,20 +165,15 @@ def _check_doctor(rows: Rows) -> None:
          f"warned={rep['warned']}"
          + (f" (environment only: {'; '.join(env_notes)})" if env_notes else ""),
          "" if status == PASS
-         else "run godseye doctor and follow each fix hint")
+         else "run tellurion doctor and follow each fix hint")
 
 
-def _check_live(rows: Rows) -> None:
-    try:
-        from gods_eye.future import exec_safety as es
-    except Exception as e:
-        _row(rows, "live disabled", FAIL, f"{type(e).__name__}: {e}")
-        return
-    off = es.ALLOW_LIVE is False and es.ALLOW_PAPER_SANDBOX is False
-    _row(rows, "live disabled", PASS if off else FAIL,
-         f"ALLOW_LIVE={es.ALLOW_LIVE} "
-         f"ALLOW_PAPER_SANDBOX={es.ALLOW_PAPER_SANDBOX}",
-         "" if off else "both gates must stay false in code")
+def _check_live(rows: Rows, root: Path) -> None:
+    hits = boundary.trading_surface_hits(root)
+    _row(rows, "no execution surface", PASS if not hits else FAIL,
+         "no order, venue, portfolio or backtest modules ship"
+         if not hits else f"{len(hits)} trading modules present",
+         "" if not hits else f"remove: {hits[:3]}")
 
 
 def _check_dataset(rows: Rows) -> None:
@@ -254,7 +276,8 @@ def _check_docs(rows: Rows, root: Path) -> None:
     readme = root / "README.md"
     text = (readme.read_text(encoding="utf-8", errors="ignore").lower()
             if readme.is_file() else "")
-    ok = "godseye ultra" in text or "godseye demo" in text
+    ok = ("tellurion ultra" in text or "tellurion demo" in text
+          or "tellurion ultra" in text or "tellurion doctor" in text)
     _row(rows, "readme", PASS if ok else WARN,
          "quickstart present" if ok else "README missing quickstart",
          "" if ok else "add the three-command quickstart to README.md")
@@ -264,14 +287,19 @@ def _check_docs(rows: Rows, root: Path) -> None:
          "" if ci.is_file() else "add .github/workflows/ci.yml")
 
 
-def release_check(root: str | None = None) -> Dict[str, Any]:
-    """Run all release checks. Read-only. Never publishes."""
+def release_check(root: str | None = None,
+                  port: int | None = None) -> Dict[str, Any]:
+    """Run all release checks. Read-only. Never publishes.
+
+    `port` overrides the doctor's localhost-bind probe target so
+    verification can use an ephemeral port (default: 8765 behavior,
+    where an occupied port is reported as environment-only)."""
     root_p = _candidate_root(root)
     rows: Rows = []
     _check_files(rows, root_p)
     _check_imports(rows, root_p)
-    _check_doctor(rows)
-    _check_live(rows)
+    _check_doctor(rows, port=port)
+    _check_live(rows, root_p)
     _check_dataset(rows)
     _check_plugin(rows, root_p)
     gates = _check_legal(rows, root_p)
@@ -282,13 +310,14 @@ def release_check(root: str | None = None) -> Dict[str, Any]:
     verdict = FAIL if failed else (WARN if warned else PASS)
     return {"ok": verdict == PASS, "verdict": verdict, "failed": failed,
             "warned": warned, "checks": rows, "gates": gates["gates"],
-            "publishable": gates["publishable"], "published": False,
+            "publishable": gates["publishable"],
+            "published": gates.get("published", False),
             "note": "read-only readiness probe; never publishes"}
 
 
 def main() -> int:
     import argparse
-    p = argparse.ArgumentParser(prog="godseye release-check")
+    p = argparse.ArgumentParser(prog="tellurion release-check")
     p.add_argument("--root", default=None,
                    help="repository root (default: auto-detect)")
     args, _unknown = p.parse_known_args()

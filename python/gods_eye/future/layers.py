@@ -17,9 +17,11 @@ from typing import Any, Dict, List
 OBSERVATION_STATES = ("OBSERVED", "INFERRED", "CORROBORATED", "UNKNOWN")
 
 LAYER_CATEGORIES = ("AIRCRAFT", "MARITIME", "SATELLITE", "WEATHER",
-                    "RADAR", "WILDFIRE", "SEISMIC", "TRAFFIC", "ROAD",
-                    "PUBLIC_CAMERA", "PORT", "AIRPORT", "INFRASTRUCTURE",
-                    "ENERGY", "GOVERNMENT", "DISASTER",
+                    "RADAR", "WILDFIRE", "SEISMIC", "VOLCANO", "TRAFFIC", "ROAD",
+                    "TRANSIT", "PUBLIC_CAMERA", "PORT", "AIRPORT",
+                    "INFRASTRUCTURE", "ENERGY", "AIR_QUALITY",
+                    "SPACE_WEATHER", "SPACE", "GOVERNMENT", "DISASTER",
+                    "FLOOD", "TSUNAMI", "STORM", "HUMANITARIAN", "NEWS",
                     "MILITARY_PUBLIC_OSINT", "EVENT", "ENTITY",
                     "BLIND_SPOT", "UNKNOWN")
 
@@ -28,9 +30,12 @@ LAYER_GROUPS = ("MOVEMENT", "EARTH", "INFRASTRUCTURE", "EVENTS",
 
 CATEGORY_GROUP = {
     "AIRCRAFT": "MOVEMENT", "MARITIME": "MOVEMENT", "TRAFFIC": "MOVEMENT",
-    "ROAD": "MOVEMENT", "SATELLITE": "EARTH", "WEATHER": "EARTH",
-    "RADAR": "EARTH", "WILDFIRE": "EARTH", "SEISMIC": "EARTH",
-    "DISASTER": "EARTH", "PORT": "INFRASTRUCTURE",
+    "ROAD": "MOVEMENT", "TRANSIT": "MOVEMENT", "SATELLITE": "EARTH",
+    "SPACE": "EARTH", "SPACE_WEATHER": "EARTH", "WEATHER": "EARTH",
+    "STORM": "EARTH", "RADAR": "EARTH", "WILDFIRE": "EARTH",
+    "SEISMIC": "EARTH", "VOLCANO": "EARTH", "FLOOD": "EARTH",
+    "TSUNAMI": "EARTH", "DISASTER": "EARTH", "AIR_QUALITY": "EARTH",
+    "PORT": "INFRASTRUCTURE", "HUMANITARIAN": "EVENTS", "NEWS": "EVENTS",
     "AIRPORT": "INFRASTRUCTURE", "INFRASTRUCTURE": "INFRASTRUCTURE",
     "ENERGY": "INFRASTRUCTURE", "PUBLIC_CAMERA": "SOURCES",
     "GOVERNMENT": "SOURCES", "EVENT": "EVENTS", "ENTITY": "EVENTS",
@@ -38,7 +43,26 @@ CATEGORY_GROUP = {
     "UNKNOWN": "EVENTS",
 }
 
-TIME_MODES = ("LIVE", "REPLAY", "STATIC")
+# Data-source truth model: every source declares one of these.
+# LIVE = real-time qualified feed; DELAYED = qualified feed with lag;
+# STATIC = timetable/geography snapshot; REPLAY = deterministic fixture
+# playback; SYNTHETIC = generated demo world (never presented as live).
+TRUTH_MODES = ("LIVE", "DELAYED", "STATIC", "REPLAY", "SYNTHETIC")
+
+# Observation vocabulary for world objects (binding on new world paths;
+# legacy OBSERVED/INFERRED/CORROBORATED/UNKNOWN mapping is preserved):
+# OBSERVED = sensor saw it; PUBLIC_REPORT = press/community report;
+# GOVERNMENT_NOTICE = official notice; NEWS_REPORT = news metadata
+# (e.g. GDELT); INFERRED = modeled/derived; CORROBORATED = multi-source;
+# UNKNOWN = unstated.
+OBSERVATION_TYPES = ("OBSERVED", "PUBLIC_REPORT", "GOVERNMENT_NOTICE",
+                     "NEWS_REPORT", "INFERRED", "CORROBORATED", "UNKNOWN")
+
+# Corroboration wording (UI must use exactly these tokens).
+CORROBORATION_STATES = ("ONE SOURCE", "MULTIPLE SOURCES", "CORROBORATED",
+                        "CONFLICTING", "UNKNOWN")
+
+TIME_MODES = ("LIVE", "DELAYED", "STATIC", "REPLAY", "SYNTHETIC")
 
 HEALTH_STATES = ("OK", "DEGRADED", "STALE", "OFFLINE", "RIGHTS_BLOCKED",
                  "BLIND")
@@ -180,3 +204,52 @@ def stack_summary() -> Dict[str, Any]:
             "groups": sorted({ly.group for ly in stack}),
             "rule": "observation is always one of "
                     "OBSERVED/INFERRED/CORROBORATED/UNKNOWN"}
+
+
+def make_observation(source: str,
+                     source_event_time: str | None = None,
+                     published_time: str | None = None,
+                     first_seen: str | None = None,
+                     ingested_at: str | None = None,
+                     effective_time: str | None = None,
+                     precision: str = "UNKNOWN",
+                     rights: str = "UNKNOWN",
+                     provenance: str = "UNKNOWN",
+                     observation_type: str = "UNKNOWN") -> Dict[str, Any]:
+    """Truth-model observation envelope (never substitutes ingest for event).
+
+    Unknown timestamps stay the string "UNKNOWN" (never None-mapped to now).
+    """
+    def _t(v: str | None) -> str:
+        return v if v else "UNKNOWN"
+    if observation_type not in OBSERVATION_TYPES and observation_type not in \
+            OBSERVATION_STATES:
+        raise ValueError(f"unknown observation_type: {observation_type}")
+    if precision not in PRECISION:
+        raise ValueError(f"unknown precision: {precision}")
+    return {
+        "source": source,
+        "source_event_time": _t(source_event_time),
+        "published_time": _t(published_time),
+        "first_seen": _t(first_seen),
+        "ingested_at": _t(ingested_at),
+        "effective_time": _t(effective_time or source_event_time),
+        "precision": precision,
+        "rights": rights,
+        "provenance": provenance,
+        "observation_type": observation_type,
+    }
+
+
+def truth_label(truth_mode: str) -> str:
+    """Human label for a TRUTH_MODES value (fail-closed on unknown)."""
+    labels = {
+        "LIVE": "LIVE",
+        "DELAYED": "DELAYED",
+        "STATIC": "STATIC",
+        "REPLAY": "REPLAY",
+        "SYNTHETIC": "SYNTHETIC WORLD REPLAY",
+    }
+    if truth_mode not in TRUTH_MODES:
+        raise ValueError(f"unknown truth mode: {truth_mode}")
+    return labels[truth_mode]

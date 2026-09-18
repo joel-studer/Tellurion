@@ -1,6 +1,6 @@
-"""GOD'S EYE one-command community demo (V15/V16).
+"""Tellurion one-command community demo.
 
-`python -m gods_eye.demo` (or `godseye demo`):
+`python -m gods_eye.demo` (or `tellurion demo`):
   - starts localhost-only (127.0.0.1, no 0.0.0.0 — never LAN)
   - loads safe synthetic replay data (no keys, no private alpha, no creds)
   - serves the demo console + JSON API
@@ -41,14 +41,10 @@ class PortOccupied(Exception):
 
 def demo_payload() -> dict:
     from gods_eye.future import demo_dataset as dd
-    from gods_eye.future import venue_registry as vr
-    from gods_eye.future import exec_safety as es
     ds = dd.demo_dataset()
     return {
         "demo": ds,
         "timeline": dd.timeline(),
-        "venues": vr.summary(),
-        "safety": es.LiveExecutionGuard().describe(),
         "community_mode": True,
         "network": "localhost-only; no external fetch",
         "credentials": "none required; none accepted",
@@ -56,10 +52,9 @@ def demo_payload() -> dict:
 
 
 def health_payload() -> dict:
-    from gods_eye.future import exec_safety as es
     from gods_eye.future import demo_dataset as dd
     return {"ok": True, "community_mode": True,
-            "allow_live": es.ALLOW_LIVE,
+            "trading": "none: this build has no execution surface",
             "provenance": dd.PROVENANCE,
             "rights": dd.RIGHTS,
             "network": "localhost-only"}
@@ -97,6 +92,15 @@ def repo_root() -> Path:
     return Path.cwd()
 
 
+def _console_page(name: str, fallback: bytes) -> bytes:
+    """A console HTML page from the checkout, or ``fallback`` when absent."""
+    cand = repo_root() / "console" / name
+    try:
+        return cand.read_bytes() if cand.is_file() else fallback
+    except OSError:
+        return fallback
+
+
 def _demo_html() -> bytes:
     cand = repo_root() / "console" / "demo.html"
     try:
@@ -104,8 +108,8 @@ def _demo_html() -> bytes:
             return cand.read_bytes()
     except OSError:
         pass
-    return (b"<!doctype html><meta charset=utf-8><title>GOD'S EYE demo</title>"
-            b"<body><h1>GOD'S EYE community demo</h1>"
+    return (b"<!doctype html><meta charset=utf-8><title>Tellurion demo</title>"
+            b"<body><h1>Tellurion community demo</h1>"
             b"<p>demo.html not found; /api/demo serves the dataset.</p>")
 
 
@@ -116,7 +120,7 @@ def _landing_html() -> bytes:
             return cand.read_bytes()
     except OSError:
         pass
-    return b"<!doctype html><meta charset=utf-8><title>GOD'S EYE</title>"
+    return b"<!doctype html><meta charset=utf-8><title>Tellurion</title>"
 
 
 def _ultra_html() -> bytes:
@@ -126,7 +130,7 @@ def _ultra_html() -> bytes:
             return cand.read_bytes()
     except OSError:
         pass
-    return (b"<!doctype html><meta charset=utf-8><title>GOD'S EYE ultra</title>"
+    return (b"<!doctype html><meta charset=utf-8><title>Tellurion ultra</title>"
             b"<body><h1>Ultra view missing</h1>"
             b"<p>ultra.html not found; /api/ultra serves the dataset.</p>")
 
@@ -149,15 +153,30 @@ class _Handler(http.server.BaseHTTPRequestHandler):
         if path in ("/", "/demo"):
             self._send(_demo_html(), "text/html; charset=utf-8")
         elif path == "/ultra":
+            # Globe-first world surface; the page itself falls back to
+            # /ultra/classic when WebGL2 is unavailable.
+            self._send(_console_page("world.html", _ultra_html()),
+                       "text/html; charset=utf-8")
+        elif path == "/ultra/classic":
             self._send(_ultra_html(), "text/html; charset=utf-8")
+        elif path == "/api/world":
+            from gods_eye.future import world_scene as _ws
+            tick = (query.get("tick") or ["0"])[0]
+            self._send(json.dumps(_ws.scene(tick)).encode(), "application/json")
         elif path == "/ultra-gl":
+            # Historical local prototype; not shipped. Serve it only when a
+            # developer has the file, otherwise an honest 404 (never a 200
+            # placeholder that looks like a working page).
             cand = repo_root() / "console" / "ultra-gl.html"
             try:
-                body = (cand.read_bytes() if cand.is_file()
-                        else b"gl prototype missing")
+                body = cand.read_bytes() if cand.is_file() else None
             except OSError:
-                body = b"gl prototype missing"
-            self._send(body, "text/html; charset=utf-8")
+                body = None
+            if body is None:
+                self.send_response(404)
+                self.end_headers()
+            else:
+                self._send(body, "text/html; charset=utf-8")
         elif path == "/gallery":
             cand = repo_root() / "console" / "gallery.html"
             try:
@@ -213,6 +232,251 @@ class _Handler(http.server.BaseHTTPRequestHandler):
         elif path == "/api/health":
             self._send(json.dumps(health_payload(), indent=1).encode(),
                        "application/json")
+        elif path == "/api/world/now":
+            from gods_eye.future import world_now as _now
+            force = (query.get("refresh") or [""])[0] == "1"
+            serve_only = (query.get("norefresh") or [""])[0] == "1"
+            try:
+                payload = _now.get_now(refresh=not serve_only,
+                                       force=force)
+            except Exception as e:
+                payload = {"mode": "now", "error": f"{type(e).__name__}: "
+                                                  f"{str(e)[:200]}",
+                           "real_data": False, "live": False,
+                           "truth_label": "WORLD NOW (unavailable)",
+                           "objects": {}, "counts": {"total_real": 0},
+                           "links": [], "health": _now.source_health()}
+            self._send(json.dumps(payload, indent=1).encode(),
+                       "application/json")
+        elif path == "/api/world/now/evidence":
+            from gods_eye.future import world_now as _now
+            key = (query.get("key") or [""])[0][:200]
+            payload = _now.get_now(refresh=False)
+            found = None
+            for items in payload.get("objects", {}).values():
+                for it in items:
+                    if it.get("stable_key") == key or it.get("id") == key:
+                        found = it
+                        break
+                if found:
+                    break
+            related = [l for l in payload.get("links", [])
+                       if l.get("a") == (found or {}).get("stable_key")
+                       or l.get("b") == (found or {}).get("stable_key")]
+            self._send(json.dumps(
+                {"evidence": found, "related": related,
+                 "truth_label": "WORLD NOW (real public feeds)",
+                 "live": False}, indent=1).encode(), "application/json")
+        elif path == "/api/world/now/whatshere":
+            from gods_eye.future import world_now as _now
+            try:
+                lat = float((query.get("lat") or ["48.2"])[0])
+                lon = float((query.get("lon") or ["16.4"])[0])
+                radius = float((query.get("radius_km") or
+                                query.get("radius") or ["250"])[0])
+            except ValueError:
+                lat, lon, radius = 48.2, 16.4, 250.0
+            payload = _now.get_now(refresh=False)
+            here = _now.whats_here_now(lat, lon, radius,
+                                       payload.get("objects", {}))
+            # Movement V2: nearby live aircraft from the aviation
+            # snapshot (same process memory; absent when never polled).
+            try:
+                from gods_eye.future import world_air as _air
+                snap = _air.get_aviation(refresh=False)
+                near = [o["icao24"] for o in snap.get("states", [])
+                        if o.get("lat") is not None and _air._haversine_km(
+                            lat, lon, o["lat"], o["lon"]) <= radius]
+                here["movement"] = {
+                    "aircraft_nearby": len(near),
+                    "sample": near[:12],
+                    "vessels": "NO LIVE SOURCE (synthetic replay only)",
+                    "satellites": "NO LIVE SOURCE (synthetic replay only)",
+                    "trails": "recorded past positions (RECORDED truth); "
+                              "never a long-term archive"}
+            except Exception:
+                here["movement"] = {"aircraft_nearby": "UNKNOWN"}
+            self._send(json.dumps(here, indent=1).encode(),
+                       "application/json")
+        elif path == "/api/world/now/region":
+            from gods_eye.future import world_now as _now
+            region = (query.get("region") or ["Austria"])[0][:120]
+            payload = _now.get_now(refresh=False)
+            reg = _now.region_now(region, payload.get("objects", {}))
+            # Region intelligence: movement counts merged read-only.
+            try:
+                from gods_eye.future import world_air as _air
+                snap = _air.get_aviation(refresh=False)
+                c = snap.get("counts", {})
+                center = reg.get("center") or {}
+                radius = float(reg.get("radius_km") or 0.0)
+
+                def _inside(o: dict) -> bool:
+                    return (bool(center) and o.get("lat") is not None
+                            and o.get("lon") is not None
+                            and _air._haversine_km(center["lat"], center["lon"],
+                                                   o["lat"], o["lon"]) <= radius)
+                reg["movement"] = {
+                    # Aircraft inside THIS region's radius, never the
+                    # worldwide total presented as regional.
+                    "aircraft_tracked": sum(1 for s in snap.get("states", []) if _inside(s)),
+                    "radius_km": radius,
+                    "aircraft_all_tiles": c.get("total", 0),
+                    "important": sum(1 for f in snap.get("important", []) if _inside(f)),
+                    "vessels": "NO LIVE SOURCE",
+                    "satellites": "NO LIVE SOURCE",
+                    "generated_at": snap.get("generated_at", "UNKNOWN")}
+            except Exception:
+                reg["movement"] = {"aircraft_tracked": "UNKNOWN"}
+            try:
+                reg["blind_spots"] = _now.real_blind_spots()
+            except Exception:
+                reg["blind_spots"] = []
+            self._send(json.dumps(reg, indent=1).encode(),
+                       "application/json")
+        elif path == "/api/world/now/aviation":
+            from gods_eye.future import world_air as _air
+            include_mil = (query.get("mil") or [""])[0] == "1"
+            serve_only = (query.get("norefresh") or [""])[0] == "1"
+            viewport = None
+            try:
+                if "lat" in query and "lon" in query:
+                    viewport = {"lat": float(query["lat"][0]),
+                                "lon": float(query["lon"][0])}
+            except (ValueError, TypeError, IndexError):
+                viewport = None
+            try:
+                if serve_only:
+                    payload = _air.get_aviation(refresh=False)
+                else:
+                    _air.refresh_aviation(include_mil=include_mil,
+                                          viewport=viewport)
+                    payload = _air.get_aviation(refresh=False)
+                payload["source_rollup"] = _air.source_rollup()
+            except Exception as e:
+                payload = {"mode": "aviation", "error": f"{type(e).__name__}: "
+                           f"{str(e)[:200]}", "real_data": False,
+                           "live": False, "counts": {"total": 0},
+                           "states": [], "important": []}
+            if (query.get("light") or [""])[0] == "1":
+                slim = {k: payload.get(k) for k in (
+                    "mode", "dataset", "normalizer", "generated_at", "live",
+                    "real_data", "truth_label", "license_note",
+                    "attribution", "counts", "tracks_held", "capped",
+                    "health", "coverage", "errors", "source_rollup")
+                    if k in payload}
+                slim["important"] = payload.get("important", [])
+                slim["airport_events"] = payload.get("airport_events", [])
+                # Map positions only: exactly what the globe draws, nothing
+                # more (no registration, squawk or history). Keeps the light
+                # payload small while every counted aircraft stays visible.
+                fields = ("icao24", "lat", "lon", "track_deg", "callsign",
+                          "type", "baro_alt_ft", "gs_kt")
+                slim["positions"] = [
+                    {k: s.get(k) for k in fields}
+                    for s in payload.get("states", [])
+                    if s.get("lat") is not None and s.get("lon") is not None]
+                payload = slim
+            self._send(json.dumps(payload, indent=1).encode(),
+                       "application/json")
+        elif path == "/api/world/now/important":
+            from gods_eye.future import world_air as _air
+            payload = _air.get_aviation(refresh=False)
+            self._send(json.dumps(
+                {"important": payload.get("important", []),
+                 "airport_events": payload.get("airport_events", []),
+                 "counts": payload.get("counts", {}),
+                 "generated_at": payload.get("generated_at", "UNKNOWN"),
+                 "truth_label": "IMPORTANT NOW (transparent rules only)",
+                 "live": False}, indent=1).encode(), "application/json")
+        elif path == "/api/world/now/important-v2":
+            from gods_eye.future import world_air as _air
+            try:
+                payload = _air.important_v2()
+            except Exception as e:
+                payload = {"mode": "important-v2",
+                           "error": f"{type(e).__name__}: "
+                                    f"{str(e)[:200]}",
+                           "items": [], "n": 0, "live": False}
+            self._send(json.dumps(payload, indent=1).encode(),
+                       "application/json")
+        elif path == "/api/world/now/trail":
+            from gods_eye.future import world_air as _air
+            hx = (query.get("hex") or [""])[0][:6].lower()
+            snap = _air.get_aviation(refresh=False)
+            ac = next((o for o in snap.get("states", [])
+                       if o.get("icao24") == hx), None)
+            flagged = next((f for f in snap.get("flagged", [])
+                            if f.get("icao24") == hx), None)
+            self._send(json.dumps(
+                {"icao24": hx, "aircraft": ac, "flags": flagged,
+                 "trail": _air.get_trail(hx),
+                 "truth_label": "short rolling trail (memory only)",
+                 "live": False}, indent=1).encode(), "application/json")
+        elif path == "/api/world/changes":
+            from gods_eye.future import world_change as _chg
+            since = (query.get("since") or [""])[0][:64] or None
+            serve_only = (query.get("norefresh") or [""])[0] == "1"
+            try:
+                limit = max(1, min(500, int(
+                    (query.get("limit") or ["100"])[0])))
+            except ValueError:
+                limit = 100
+            try:
+                payload = _chg.get_changes(refresh=not serve_only,
+                                           since=since, limit=limit)
+            except Exception as e:
+                payload = {"mode": "changes",
+                           "error": f"{type(e).__name__}: "
+                                    f"{str(e)[:200]}",
+                           "real_data": False, "live": False,
+                           "truth_label": "WORLD CHANGE (unavailable)",
+                           "changes": [], "cursor": "", "counts": {},
+                           "sources": {}}
+            self._send(json.dumps(payload, indent=1).encode(),
+                       "application/json")
+        elif path == "/api/world/presets":
+            self._send(json.dumps(
+                {"presets": [
+                    {"id": "world-now", "label": "WORLD NOW",
+                     "view": "world", "density": "standard",
+                     "layers": ["aircraft", "vessels", "weather",
+                                "seismic", "disasters"]},
+                    {"id": "aviation", "label": "GLOBAL AVIATION",
+                     "view": "world", "density": "dense",
+                     "layers": ["aircraft", "airports"]},
+                    {"id": "aviation-live", "label": "GLOBAL AVIATION (LIVE)",
+                     "view": "world", "mode": "now", "sky": "aviation"},
+                    {"id": "important-now", "label": "IMPORTANT NOW",
+                     "view": "world", "mode": "now", "sky": "important"},
+                    {"id": "movement-live", "label": "LIVE MOVEMENT",
+                     "view": "world", "mode": "now", "sky": "movement"},
+                    {"id": "shipping", "label": "GLOBAL SHIPPING",
+                     "view": "world", "density": "dense",
+                     "layers": ["vessels", "ports"]},
+                    {"id": "earth", "label": "EARTH LIVE (replay)",
+                     "view": "world", "density": "standard",
+                     "layers": ["seismic", "wildfire", "volcanoes",
+                                "disasters"]},
+                    {"id": "severe", "label": "SEVERE WEATHER",
+                     "view": "world", "density": "standard",
+                     "layers": ["weather", "disasters"]},
+                    {"id": "disaster", "label": "DISASTER WATCH",
+                     "view": "world", "density": "standard",
+                     "layers": ["disasters", "seismic", "wildfire",
+                                "notices"]},
+                    {"id": "satellites", "label": "SATELLITES",
+                     "view": "world", "density": "standard",
+                     "layers": ["satellites"]},
+                    {"id": "austria", "label": "AUSTRIA",
+                     "view": "region", "region": "Austria"},
+                    {"id": "europe", "label": "EUROPE",
+                     "view": "region", "region": "Germany"},
+                    {"id": "atlantic", "label": "NORTH ATLANTIC",
+                     "view": "world", "density": "standard",
+                     "layers": ["vessels", "aircraft", "weather"]},
+                ], "truth_mode": "SYNTHETIC"}, indent=1).encode(),
+                "application/json")
         elif path.startswith("/vendor/") or path.startswith("/console/"):
             self._serve_static(path)
         else:
@@ -222,12 +486,16 @@ class _Handler(http.server.BaseHTTPRequestHandler):
     def _serve_static(self, path: str) -> None:
         """Serve vendored console assets (localhost only, traversal-safe).
 
-        Only .js/.css/.png under console/ (the vendored UI libs). No
+        Only static asset types under console/ (scripts, styles, images,
+        fonts, data). No
         dotfiles, no directory listing, no Range games.
         """
         from urllib.parse import unquote
-        ctype = (".js", "application/javascript"), (".css", "text/css"), (
-            ".png", "image/png")
+        ctype = ((".js", "application/javascript"),
+                 (".mjs", "application/javascript"), (".css", "text/css"),
+                 (".png", "image/png"), (".svg", "image/svg+xml"),
+                 (".json", "application/json"), (".woff2", "font/woff2"),
+                 (".txt", "text/plain"))
         name = unquote(path.split("?", 1)[0])
         if "/." in name.replace("\\", "/") or ".." in name:
             self.send_response(404)
@@ -251,8 +519,8 @@ class _Handler(http.server.BaseHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
             return
-        self._send(body, mime + ("; charset=utf-8" if suffix != ".png"
-                                 else ""))
+        binary = suffix in (".png", ".woff2")
+        self._send(body, mime + ("" if binary else "; charset=utf-8"))
 
 
 def port_available(port: int, host: str = HOST) -> bool:
@@ -285,7 +553,7 @@ def select_port(requested: int, host: str = HOST,
     if strict:
         raise PortOccupied(
             f"port {requested} on {host} is already in use. "
-            f"Stop the other program, or run: godseye demo --port "
+            f"Stop the other program, or run: tellurion demo --port "
             f"{requested + 1} (or omit --strict-port to auto-select).")
     probe = requested + 1
     while probe <= 65535 and not port_available(probe, host):
@@ -311,7 +579,7 @@ def run_demo(port: int = DEFAULT_PORT, open_browser: bool = False,
         suffix = "?demo=hero" if hero else ""
         url = f"http://{HOST}:{use_port}/ultra{suffix}"
         n_layers = len(_u.ultra_payload(tick=0))
-        print("GOD'S EYE ULTRA")
+        print("TELLURION ULTRA")
         print("Mode: LOCAL / REPLAY"
               f"{' / HERO (deterministic)' if hero else ''}")
         print("Live execution: DISABLED")
@@ -324,7 +592,7 @@ def run_demo(port: int = DEFAULT_PORT, open_browser: bool = False,
     else:
         suffix = "?demo=hero" if hero else ""
         url = f"http://{HOST}:{use_port}/{suffix}"
-        print("GOD'S EYE Community Demo")
+        print("Tellurion community demo")
         print(f"Status: LOCAL / REPLAY"
               f"{' / HERO (deterministic)' if hero else ''}")
         print("Live execution: DISABLED")

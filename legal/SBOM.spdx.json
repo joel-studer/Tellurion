@@ -2,27 +2,28 @@
  "spdxVersion": "SPDX-2.3",
  "dataLicense": "CC0-1.0",
  "SPDXID": "SPDXRef-DOCUMENT",
- "name": "gods-eye",
- "documentNamespace": "urn:gods-eye:sbom:0.1.0-proposed",
+ "name": "tellurion",
+ "documentNamespace": "urn:tellurion:sbom:1.0.0-beta.1",
  "creationInfo": {
-  "created": "2026-09-15T21:10:58+00:00",
+  "created": "2026-09-18T09:38:22+00:00",
   "creators": [
-   "Tool: gods-eye repository split (manual inventory)"
-  ]
+   "Tool: Tellurion final release pass (manual inventory, verified against the built candidate)"
+  ],
+  "comment": "Regenerated 2026-09-18 for the v1.0.0-beta.1 release candidate: every CONTAINS package matches the vendored files and legal/THIRD_PARTY_NOTICES.md; MapLibre GL JS confirmed at runtime via maplibregl.getVersion() = 6.10.0. Project licence is MIT, decided by the maintainer; no external counsel review was performed. The optional market extra and its packages were removed with the trading surface."
  },
  "published": false,
- "signOff": "NOT_OBTAINED (maintainer sign-off pending; see legal/LICENSE_SIGNOFF.md)",
+ "signOff": "OBTAINED (maintainer decision 2026-09-18; see legal/LICENSE_SIGNOFF.md)",
  "runtimeDependencies": [],
  "packages": [
   {
-   "SPDXID": "SPDXRef-gods-eye",
-   "name": "gods-eye",
-   "version": "0.1.0",
-   "versionInfo": "0.1.0",
-   "license": "Apache-2.0 (PROPOSED, sign-off NOT_OBTAINED)",
-   "licenseDeclared": "Apache-2.0 (PROPOSED, sign-off NOT_OBTAINED)",
-   "licenseConcluded": "NOASSERTION",
-   "downloadLocation": "NOASSERTION",
+   "SPDXID": "SPDXRef-tellurion",
+   "name": "tellurion",
+   "version": "1.0.0-beta.1",
+   "versionInfo": "1.0.0-beta.1",
+   "license": "MIT",
+   "licenseDeclared": "MIT",
+   "licenseConcluded": "MIT",
+   "downloadLocation": "https://github.com/joel-studer/Tellurion",
    "source": "this repository",
    "relationship": "DESCRIBES"
   },
@@ -39,64 +40,40 @@
    "relationship": "CONTAINS"
   },
   {
-   "SPDXID": "SPDXRef-duckdb",
-   "name": "duckdb",
-   "version": "1.5.1",
-   "versionInfo": "1.5.1",
-   "license": "MIT",
-   "licenseDeclared": "MIT",
-   "licenseConcluded": "NOASSERTION",
-   "downloadLocation": "NOASSERTION",
-   "source": "optional extra: market",
-   "relationship": "OPTIONAL_DEPENDENCY_OF"
-  },
-  {
-   "SPDXID": "SPDXRef-ccxt",
-   "name": "ccxt",
-   "version": "4.5.46",
-   "versionInfo": "4.5.46",
-   "license": "MIT",
-   "licenseDeclared": "MIT",
-   "licenseConcluded": "NOASSERTION",
-   "downloadLocation": "NOASSERTION",
-   "source": "optional extra: market",
-   "relationship": "OPTIONAL_DEPENDENCY_OF"
-  },
-  {
-   "SPDXID": "SPDXRef-exchange-calendars",
-   "name": "exchange-calendars",
-   "version": "4.13.2",
-   "versionInfo": "4.13.2",
-   "license": "Apache-2.0",
-   "licenseDeclared": "Apache-2.0",
-   "licenseConcluded": "NOASSERTION",
-   "downloadLocation": "NOASSERTION",
-   "source": "optional extra: market",
-   "relationship": "OPTIONAL_DEPENDENCY_OF"
-  },
-  {
-   "SPDXID": "SPDXRef-pandas",
-   "name": "pandas",
-   "version": "3.0.1",
-   "versionInfo": "3.0.1",
+   "SPDXID": "SPDXRef-maplibre-gl",
+   "name": "maplibre-gl",
+   "version": "6.10.0",
+   "versionInfo": "6.10.0",
    "license": "BSD-3-Clause",
    "licenseDeclared": "BSD-3-Clause",
    "licenseConcluded": "NOASSERTION",
    "downloadLocation": "NOASSERTION",
-   "source": "optional extra: market",
-   "relationship": "OPTIONAL_DEPENDENCY_OF"
+   "source": "vendored: console/vendor/maplibre/maplibre-gl.mjs",
+   "relationship": "CONTAINS"
   },
   {
-   "SPDXID": "SPDXRef-pandas-market-calendars",
-   "name": "pandas-market-calendars",
-   "version": "5.4.0",
-   "versionInfo": "5.4.0",
-   "license": "MIT",
-   "licenseDeclared": "MIT",
+   "SPDXID": "SPDXRef-inter",
+   "name": "inter",
+   "version": "5.3.0",
+   "versionInfo": "5.3.0 (Fontsource packaging of the Inter variable font)",
+   "license": "OFL-1.1",
+   "licenseDeclared": "OFL-1.1",
    "licenseConcluded": "NOASSERTION",
    "downloadLocation": "NOASSERTION",
-   "source": "optional extra: market",
-   "relationship": "OPTIONAL_DEPENDENCY_OF"
+   "source": "vendored: console/vendor/fonts/inter-latin-wght-normal.woff2",
+   "relationship": "CONTAINS"
+  },
+  {
+   "SPDXID": "SPDXRef-world-atlas",
+   "name": "world-atlas",
+   "version": "2.0.2",
+   "versionInfo": "2.0.2 (TopoJSON build of Natural Earth 1:50m; the data itself is public domain)",
+   "license": "ISC",
+   "licenseDeclared": "ISC",
+   "licenseConcluded": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "source": "vendored: console/data/land-50m.json, console/data/countries-50m.json",
+   "relationship": "CONTAINS"
   },
   {
    "SPDXID": "SPDXRef-playwright",

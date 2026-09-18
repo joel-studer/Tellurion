@@ -17,7 +17,7 @@ from typing import Any, Dict, List
 
 DATASET_ID = "ultra-demo-v1"
 LICENSE = "CC0-1.0 (synthetic)"
-PROVENANCE = "GOD'S EYE synthetic generator (seeded, deterministic)"
+PROVENANCE = "Tellurion synthetic generator (seeded, deterministic)"
 RIGHTS = "CC0: generated in-repo, no persons, no scraped rows"
 
 # Synthetic demo geography (fictional harbour city + airfield).
@@ -33,6 +33,26 @@ def _drift(rng: random.Random, lat: float, lon: float,
            scale: float = 0.05) -> tuple[float, float]:
     return (round(lat + rng.uniform(-scale, scale), 4),
             round(lon + rng.uniform(-scale, scale), 4))
+
+
+def _placed(rng: random.Random, lat: float, lon: float, scale: float,
+            on_land: bool, anchor: tuple[float, float]) -> tuple[float, float]:
+    """Drift around (lat, lon) until the point is on land or on water.
+
+    Uses the Natural Earth land mask when it ships with the checkout, so
+    synthetic vessels never sit on real land and roads never sit at sea.
+    Falls back to the unconstrained drift when the data file is absent.
+    """
+    from gods_eye.future import geo
+    mask = geo.land_mask()
+    point = _drift(rng, lat, lon, scale)
+    if mask is None:
+        return point
+    for _ in range(60):
+        if mask.is_land(*point) == on_land:
+            return point
+        point = _drift(rng, lat, lon, scale)
+    return anchor
 
 
 def aircraft(seed: int = 7, n: int = 24,
@@ -66,7 +86,8 @@ def vessels(seed: int = 11, n: int = 18,
     states = ["UNDERWAY", "ANCHORED", "MOORED"]
     out = []
     for i in range(n):
-        lat, lon = _drift(rng, HARBOR["lat"], HARBOR["lon"], 0.5)
+        lat, lon = _placed(rng, HARBOR["lat"], HARBOR["lon"], 0.5, False,
+                           (HARBOR["lat"], HARBOR["lon"]))
         out.append({
             "id": f"SYN-VS{i:03d}", "name": f"Meridian Trader {i}",
             "lat": lat, "lon": lon,
@@ -125,7 +146,7 @@ def wildfires(seed: int = 41, n: int = 4) -> List[Dict[str, Any]]:
     rng = _rng(seed)
     out = []
     for i in range(n):
-        lat, lon = _drift(rng, 51.9, -2.6, 0.4)
+        lat, lon = _placed(rng, 51.9, -2.6, 0.4, True, (51.9, -2.6))
         out.append({"id": f"SYN-FIRE{i:02d}", "lat": lat, "lon": lon,
                     "confidence": rng.choice(["LOW", "NOMINAL", "HIGH"]),
                     "observed": f"demo-T+{i}h", "sensor": "SYN-VIIRS",
@@ -155,7 +176,8 @@ def road_incidents(seed: int = 61, n: int = 12) -> List[Dict[str, Any]]:
     kinds = ["CLOSURE", "CONGESTION", "WORKS", "DELAY"]
     out = []
     for i in range(n):
-        lat, lon = _drift(rng, HARBOR["lat"], HARBOR["lon"], 0.35)
+        lat, lon = _placed(rng, HARBOR["lat"], HARBOR["lon"], 0.35, True,
+                           (AIRFIELD["lat"], AIRFIELD["lon"]))
         out.append({"id": f"SYN-RD{i:02d}", "kind": rng.choice(kinds),
                     "lat": lat, "lon": lon,
                     "severity": rng.randint(1, 5),
@@ -169,7 +191,8 @@ def cameras(seed: int = 71, n: int = 6) -> List[Dict[str, Any]]:
     rng = _rng(seed)
     out = []
     for i in range(n):
-        lat, lon = _drift(rng, HARBOR["lat"], HARBOR["lon"], 0.25)
+        lat, lon = _placed(rng, HARBOR["lat"], HARBOR["lon"], 0.25, True,
+                           (AIRFIELD["lat"], AIRFIELD["lon"]))
         out.append({"id": f"SYN-CAM{i:02d}", "lat": lat, "lon": lon,
                     "operator": "synthetic roads authority",
                     "feed": "snapshot", "last_update": f"demo-T+{i}m",

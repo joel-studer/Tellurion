@@ -9,6 +9,6 @@ about: Propose a new community plugin
 
 **Network needs + secrets (community plugins: none)**
 
-**Offline test (`godseye plugins validate ./dir` verdict)**
+**Offline test (`tellurion plugins validate ./dir` verdict)**
 
 **Screenshot (if UI surface)**

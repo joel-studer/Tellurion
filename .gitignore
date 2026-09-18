@@ -10,6 +10,7 @@ venv/
 # Local runtime state (never commit)
 state/
 state_future/
+raw_store/
 .godseye/
 *.sqlite
 *.sqlite-*
@@ -31,3 +32,6 @@ preview-assets/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local editor/agent config
+.claude/

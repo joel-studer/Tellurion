@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GOD'S EYE ULTRA — local world intelligence</title>
-<link rel="stylesheet" href="./vendor/leaflet.css">
+<title>Tellurion ULTRA · classic view</title>
+<link rel="stylesheet" href="/vendor/leaflet.css">
 <style>
 :root{
   --bg:#0b0e14; --panel:#11161f; --raised:#181e29; --line:#26303f;
@@ -84,7 +84,7 @@ input[type=range]{accent-color:var(--acc)}
 </head>
 <body>
 <header class="cmd">
-  <b>GOD'S EYE</b><span style="color:var(--mut);font-size:11px">ULTRA</span>
+  <b>Tellurion</b><span style="color:var(--mut);font-size:11px">ULTRA · classic view</span> <a href="/ultra" style="color:var(--acc);font-size:11px">open the globe</a>
   <span class="pill local">LOCAL</span><span class="pill demo" id="modepill">REPLAY</span>
   <span class="pill nolive">NO LIVE EXECUTION</span>
   <span id="counts" class="mono" style="color:var(--mut);font-size:11px"></span>
@@ -128,7 +128,7 @@ input[type=range]{accent-color:var(--acc)}
   </section>
 </div>
 <div id="palette" role="dialog" aria-label="command palette"><input id="palin" placeholder="type a command or object id…  (Esc closes)" aria-label="command input"><div class="rows" id="palrows"></div></div>
-<script src="./vendor/leaflet.js"></script>
+<script src="/vendor/leaflet.js"></script>
 <script>
 "use strict";
 const QS=new URLSearchParams(location.search);
@@ -366,7 +366,7 @@ async function loadUltra(){
   const alt="http://127.0.0.1:8765/api/ultra?tick="+TICK+(SCENE?"&scene="+encodeURIComponent(SCENE):"");
   try{ULTRA=await jget(url);}
   catch(e){try{ULTRA=await jget(alt);}
-    catch(e2){document.getElementById("sys").textContent="ultra API unavailable (serve via godseye demo)";return;}}
+    catch(e2){document.getElementById("sys").textContent="ultra API unavailable (serve via tellurion demo)";return;}}
   document.getElementById("modepill").textContent=DENSE?"DENSITY":"REPLAY";
   document.getElementById("maptitle").textContent=DENSE?"Density scene · 1k objects (synthetic)":"World surface · synthetic replay (approximate)";
   document.getElementById("healthdot").style.color="var(--ok)";

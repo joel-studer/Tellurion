@@ -1,10 +1,10 @@
 """Sensor scout for future developers (V18, discovery only, offline).
 
-`godseye scout` ranks the registry in `gods_eye.future.sensor_sources`
+`tellurion scout` ranks the registry in `gods_eye.future.sensor_sources`
 by relevance vs auth friction. It never connects anywhere.
 
 Usage:
-  godseye scout [--category AVIATION] [--status QUALIFIED]
+  tellurion scout [--category AVIATION] [--status QUALIFIED]
   python scripts/scout_sensors.py [--category AVIATION]
 """
 
@@ -20,7 +20,7 @@ sys.path.insert(0, str(ROOT / "python"))
 
 def main() -> int:
     import argparse
-    p = argparse.ArgumentParser(prog="godseye scout")
+    p = argparse.ArgumentParser(prog="tellurion scout")
     p.add_argument("--category", default=None)
     p.add_argument("--status", default=None)
     args = p.parse_args()

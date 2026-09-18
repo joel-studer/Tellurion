@@ -10,17 +10,13 @@ from __future__ import annotations
 from typing import Any, Dict, List
 
 _REGISTRY: Dict[str, List[Dict[str, Any]]] = {
-    "sensor": [], "market_data_provider": [], "entity_resolver": [],
-    "visualization": [], "model_challenger": [], "venue": [],
+    "sensor": [], "entity_resolver": [], "visualization": [],
 }
 
 _KIND_BY_FN = {
     "register_sensor": ("sensor", "Sensor"),
-    "register_market_data_provider": ("market_data_provider", "MarketData"),
     "register_entity_resolver": ("entity_resolver", "EntityResolver"),
     "register_visualization": ("visualization", "Visualization"),
-    "register_model_challenger": ("model_challenger", "ModelChallenger"),
-    "register_venue": ("venue", ("Venue", "PredictionMarket")),
 }
 
 
@@ -44,24 +40,12 @@ def register_sensor(declaration: Dict[str, Any]) -> Dict[str, Any]:
     return _register("register_sensor", declaration)
 
 
-def register_market_data_provider(declaration: Dict[str, Any]) -> Dict[str, Any]:
-    return _register("register_market_data_provider", declaration)
-
-
 def register_entity_resolver(declaration: Dict[str, Any]) -> Dict[str, Any]:
     return _register("register_entity_resolver", declaration)
 
 
 def register_visualization(declaration: Dict[str, Any]) -> Dict[str, Any]:
     return _register("register_visualization", declaration)
-
-
-def register_model_challenger(declaration: Dict[str, Any]) -> Dict[str, Any]:
-    return _register("register_model_challenger", declaration)
-
-
-def register_venue(declaration: Dict[str, Any]) -> Dict[str, Any]:
-    return _register("register_venue", declaration)
 
 
 def list_registered(slot: str = "UNKNOWN") -> Any:

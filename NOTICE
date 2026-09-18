@@ -1,0 +1,86 @@
+Tellurion
+Copyright (c) 2026 Joel Studer and the Tellurion contributors
+
+Tellurion is released under the MIT License; see LICENSE.
+
+This NOTICE is an attribution file. It is not an additional licence and it
+places no conditions on your use of Tellurion beyond the MIT terms. It exists
+because several third parties do require attribution, and because a world
+intelligence tool should say where its picture of the world comes from.
+
+================================================================================
+Third-party software shipped in this repository
+================================================================================
+
+- MapLibre GL JS 6.10.0 (BSD-3-Clause)
+  Copyright (c) 2023, MapLibre contributors
+  console/vendor/maplibre/ — licence text: MAPLIBRE_LICENSE.txt
+
+- Leaflet 1.9.4 (BSD-2-Clause)
+  Copyright (c) 2010-2023, Volodymyr Agafonkin
+  Copyright (c) 2010-2011, CloudMade
+  console/vendor/ — licence text: LEAFLET_LICENSE.txt
+
+- Inter 5.3.0, variable (SIL Open Font License 1.1)
+  Copyright 2016 The Inter Project Authors
+  console/vendor/fonts/ — licence text: INTER_OFL_LICENSE.txt
+
+No icon set is vendored: every icon in the console is inline SVG geometry
+drawn for this project. The Python core has no runtime dependencies.
+
+================================================================================
+Third-party data shipped in this repository
+================================================================================
+
+- world-atlas 2.0.2 TopoJSON (ISC)
+  Copyright 2013-2019 Michael Bostock
+  Derived from Natural Earth 1:50m, which is in the public domain.
+  console/data/ — licence text: WORLD_ATLAS_LICENSE.txt
+
+No map tiles, basemap imagery, or satellite imagery are bundled or fetched.
+The globe is drawn from the TopoJSON above.
+
+================================================================================
+Public data sources fetched at run time
+================================================================================
+
+WORLD NOW retrieves live public data from the sources below. Nothing is
+redistributed with this repository; each response is fetched by the person
+running the software, and the attribution required by each source is shown in
+the application beside the data it produced.
+
+- USGS Earthquake Hazards Program (courtesy of the U.S. Geological Survey)
+  US Government work, public domain.
+
+- NASA EONET
+  US Government work, public domain.
+
+- GDACS (UN OCHA / EC JRC)
+  Free reuse with attribution.
+
+- GDELT Project
+  Citation and a link to https://www.gdeltproject.org/ are mandatory.
+
+- NOAA Space Weather Prediction Center (SWPC)
+  US Government work, public domain.
+
+- National Weather Service (NWS)
+  US Government work, public domain.
+
+- adsb.lol contributors (ODbL 1.0)
+  Open Database License; attribution is required and share-alike applies to
+  derived databases. Aircraft positions are held in memory only.
+
+Sources that are not enabled by default — including those requiring a user's
+own key, and those whose terms have not been verified — are refused at run
+time and make no network request. Their state and the reason are visible in
+the application's coverage view.
+
+================================================================================
+Where the details live
+================================================================================
+
+Component inventory (SPDX 2.3)  legal/SBOM.spdx.json
+Optional dependency licences    legal/THIRD_PARTY_NOTICES.md
+Media, fixture and asset rights legal/ASSET_RIGHTS.json
+Per-source rights metadata      python/gods_eye/rights/registry.py

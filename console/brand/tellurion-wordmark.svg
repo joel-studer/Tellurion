@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="372" height="72" viewBox="0 0 372 72" role="img" aria-label="Tellurion">
+  <title>Tellurion</title>
+  <defs>
+    <linearGradient id="tellurion-wordmark-lit" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFD38A"/>
+      <stop offset="1" stop-color="#FFB547"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(4 4)">
+    <ellipse cx="32" cy="32" rx="29" ry="9" fill="none" stroke="#E8EEF6" stroke-opacity="0.35" stroke-width="2" transform="rotate(-23.4 32 32)"/>
+    <circle cx="32" cy="32" r="19" fill="#0B1522" stroke="#E8EEF6" stroke-width="3"/>
+    <path d="M32 13a19 19 0 0 1 0 38a9.5 19 0 0 0 0-38z" fill="url(#tellurion-wordmark-lit)"/>
+    <path d="M5.4 43.5a29 9 -23.4 0 0 53.2-23" fill="none" stroke="#E8EEF6" stroke-opacity="0.75" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="58.6" cy="20.5" r="3.8" fill="#FFB547" stroke="#060A11" stroke-width="1.5"/>
+  </g>
+  <text x="86" y="48" fill="#E8EEF6" font-family="Inter, 'Segoe UI', system-ui, -apple-system, sans-serif" font-size="38" font-weight="600" letter-spacing="0.4">Tellurion</text>
+</svg>

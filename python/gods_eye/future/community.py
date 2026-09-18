@@ -1,8 +1,8 @@
 """Community-mode boundary: the open-source core runs on its own.
 
 ``community_check()`` imports every community-safe module (UI, demo and
-replay, plugin discovery, world map, evidence, time machine, generic
-market/execution/portfolio contracts) and fails if those imports load a
+replay, plugin discovery, world map, evidence, change detection and
+time machine) and fails if those imports load a
 ``gods_eye`` module that does not ship inside this package. The check is
 structural (module file location), so it needs no list of downstream
 module names. Downstream CI may additionally set
@@ -18,26 +18,24 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 COMMUNITY_SAFE_MODULES = (
-    "gods_eye.future.venues",
-    "gods_eye.future.prediction_markets",
-    "gods_eye.future.venue_registry",
-    "gods_eye.future.ccxt_meta",
-    "gods_eye.future.crypto_data",
-    "gods_eye.future.nautilus_polymarket",
-    "gods_eye.future.nautilus_engine",
-    "gods_eye.future.market",
-    "gods_eye.future.execution",
-    "gods_eye.future.portfolio",
-    "gods_eye.future.providers",
+    "gods_eye.future.world_now",
+    "gods_eye.future.world_change",
+    "gods_eye.future.world_air",
+    "gods_eye.future.world_live",
+    "gods_eye.future.world_demo",
+    "gods_eye.future.world_scene",
+    "gods_eye.future.ultra_demo",
+    "gods_eye.future.layers",
+    "gods_eye.future.geo",
+    "gods_eye.future.sensor_sources",
+    "gods_eye.future.discovery",
     "gods_eye.future.plugins",
+    "gods_eye.future.validator",
     "gods_eye.future.public_api",
     "gods_eye.future.demo_dataset",
-    "gods_eye.future.session_calendar",
-    "gods_eye.future.market_catalog",
-    "gods_eye.future.venue_registry",
-    "gods_eye.future.oss",
-    "gods_eye.future.forecast",
-    "gods_eye.future.tca",
+    "gods_eye.future.rights",
+    "gods_eye.future.lineage",
+    "gods_eye.future.isolation",
 )
 
 PACKAGE_DIR = Path(__file__).resolve().parents[1]  # python/gods_eye

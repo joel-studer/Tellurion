@@ -15,8 +15,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any, Dict
 
-KINDS = ("Sensor", "MarketData", "EntityResolver", "Visualization",
-         "ModelChallenger", "Venue", "PredictionMarket")
+KINDS = ("Sensor", "EntityResolver", "Visualization")
 
 # Capabilities that prove a plugin smuggles private alpha/research hooks.
 FORBIDDEN_CAPABILITY_TOKENS = (
@@ -98,19 +97,11 @@ class SensorPlugin(ABC):
         raise NotImplementedError
 
 
-class MarketDataPlugin(ABC):
-    kind = "MarketData"
-
-    @abstractmethod
-    def fetch_bars(self, instrument: str, start: str, end: str) -> Any:
-        raise NotImplementedError
-
-
 class EntityResolverPlugin(ABC):
     kind = "EntityResolver"
 
     @abstractmethod
-    def resolve(self, venue: str, ticker: str, day: str) -> Any:
+    def resolve(self, name: str, kind: str, observed_at: str) -> Any:
         raise NotImplementedError
 
 
@@ -119,64 +110,4 @@ class VisualizationPlugin(ABC):
 
     @abstractmethod
     def render(self, payload: Dict[str, Any]) -> str:
-        raise NotImplementedError
-
-
-class ModelChallengerPlugin(ABC):
-    kind = "ModelChallenger"
-
-    @abstractmethod
-    def predict(self, frame: Any, horizon: int) -> Dict[str, Any]:
-        raise NotImplementedError
-
-
-class VenuePlugin(ABC):
-    """Generic venue adapter (market-data + execution capability surface).
-
-    Must NOT expose alpha signal APIs, private research hooks, or private
-    strategy ranking. Declares venue id, asset classes, capabilities,
-    required secrets, rights, rate limits, health, schema version, licence.
-    """
-
-    kind = "Venue"
-
-    @abstractmethod
-    def venue_id(self) -> str:
-        raise NotImplementedError
-
-    @abstractmethod
-    def describe(self) -> Dict[str, Any]:
-        """venue id, asset classes, market-data/execution capabilities,
-        required secrets, rights, rate limits, health, schema, licence."""
-        raise NotImplementedError
-
-    @abstractmethod
-    def fetch_bars(self, instrument: str, start: str, end: str) -> Any:
-        raise NotImplementedError
-
-
-class PredictionMarketPlugin(ABC):
-    """Generic prediction-market adapter (YES/NO + multi-outcome mechanics).
-
-    Mechanics only: market listing, outcome tokens, resolution-rule
-    references, probability prices. No resolution intelligence, no event
-    mapping, no timing/settlement edge.
-    """
-
-    kind = "PredictionMarket"
-
-    @abstractmethod
-    def venue_id(self) -> str:
-        raise NotImplementedError
-
-    @abstractmethod
-    def describe(self) -> Dict[str, Any]:
-        raise NotImplementedError
-
-    @abstractmethod
-    def list_markets(self, status: str = "OPEN") -> Any:
-        raise NotImplementedError
-
-    @abstractmethod
-    def fetch_probability(self, market_id: str, outcome: str) -> Any:
         raise NotImplementedError

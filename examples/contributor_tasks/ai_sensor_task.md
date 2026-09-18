@@ -11,11 +11,11 @@ Ship one working sensor plugin (`weather-sensor-demo`) using ONLY:
 - `README.md`, `CONTRIBUTING.md`
 - `docs/guides/plugin-trust-model.md`
 - `examples/plugins/example_sensor/` (manifest, plugin, fixture, test)
-- `godseye --help` / `godseye plugins validate --help` equivalents
+- `tellurion --help` / `tellurion plugins validate --help` equivalents
 
 ## Steps
 
-1. `godseye doctor` → PASS. 2. `godseye new-plugin --kind sensor
+1. `tellurion doctor` → PASS. 2. `tellurion new-plugin --kind sensor
    --name weather-sensor-demo --dir weather_sensor_demo`.
 3. Write `fixture.json`: 3+ synthetic weather observations (no real
    persons, no scraped rows).
@@ -24,15 +24,15 @@ Ship one working sensor plugin (`weather-sensor-demo`) using ONLY:
    NOTE: the scaffolded `test_poll_offline` asserts `len(items) == 2`
    (the template fixture size). With 3+ fixture items, update that
    assertion to `>= 3` (or your exact count) — the test is yours now.
-6. `godseye plugins validate ./weather_sensor_demo` → no FAIL rows.
-7. `godseye plugins --dir weather_sensor_demo` → listed, qualified.
+6. `tellurion plugins validate ./weather_sensor_demo` → no FAIL rows.
+7. `tellurion plugins --dir weather_sensor_demo` → listed, qualified.
 
 ## Acceptance (machine-verifiable)
 
 ```bash
-godseye doctor | grep -q '"failed": 0'   # WARN rows (e.g. a busy port) are fine
+tellurion doctor | grep -q '"failed": 0'   # WARN rows (e.g. a busy port) are fine
 python -m pytest weather_sensor_demo/test_example_sensor.py -q
-godseye plugins validate ./weather_sensor_demo | grep -q '"verdict": "PASS"'
+tellurion plugins validate ./weather_sensor_demo | grep -q '"verdict": "PASS"'
 python scripts/check_ai_task.py ./weather_sensor_demo
 ```
 

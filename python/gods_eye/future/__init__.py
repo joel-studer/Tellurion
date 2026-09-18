@@ -1,4 +1,4 @@
-"""GOD'S EYE extended namespace: SDK, demo, contracts, and safety gates.
+"""Tellurion extended namespace: SDK, demo, world state, and safety gates.
 
 Everything under ``gods_eye.future`` is part of the open-source core:
 

@@ -8,7 +8,7 @@
 | Probe | Value |
 |---|---|
 | `import gods_eye.demo` (cold interpreter) | 0.133 s |
-| `godseye doctor` (11 checks) | 0.568 s |
+| `tellurion doctor` (11 checks) | 0.568 s |
 | `GET /api/health` (285 B) | 0.044 s |
 | `GET /api/demo` (4,636 B) | 0.002 s |
 | Evidence payload build + JSON encode, 100 rows | 0.0001 s (~1.0M rows/s) |

@@ -1,18 +1,18 @@
 {
  "schema": "release-gates-v1",
- "note": "Human and legal gates. Only the maintainer changes a status. AI reviews are recorded separately and never close a human gate.",
+ "note": "Human and legal gates. Only the maintainer changes a status. AI reviews are recorded separately and never close a human gate. WAIVED_BY_OWNER_FOR_V1_PUBLIC_BETA is an explicit owner decision to release without that gate, not a pass.",
  "gates": {
   "EXTERNAL_PLUGIN_PILOT": {
-   "status": "NOT_RUN",
-   "evidence": null
+   "status": "WAIVED_BY_OWNER_FOR_V1_PUBLIC_BETA",
+   "evidence": "owner decision 2026-09-18; remains a post-release task"
   },
   "THIRD_EYE_HUMAN_REVIEW": {
-   "status": "NOT_RUN",
-   "evidence": null
+   "status": "WAIVED_BY_OWNER_FOR_V1_PUBLIC_BETA",
+   "evidence": "owner decision 2026-09-18; remains a post-release task"
   },
   "LICENSE_SIGNOFF": {
-   "status": "NOT_OBTAINED",
-   "evidence": "legal/LICENSE_SIGNOFF.md"
+   "status": "OBTAINED",
+   "evidence": "legal/LICENSE_SIGNOFF.md (maintainer decision 2026-09-18: MIT; no external counsel review)"
   }
  },
  "ai_reviews": {

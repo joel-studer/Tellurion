@@ -1,39 +1,34 @@
 # PUBLIC API STABILITY (V16 — preview classifications)
 
 > Minimized surface. Anything not listed here is INTERNAL and may change
-> without notice. Versioned: plugin schema, public API, demo dataset,
-> market contracts.
+> without notice. Versioned: plugin schema, public API, demo dataset.
 
 ## STABLE_PREVIEW (will not break without a major preview bump)
 
 - `gods_eye.future.public_api`: `register_sensor`,
-  `register_market_data_provider`, `register_entity_resolver`,
-  `register_visualization`, `register_model_challenger`, `register_venue`,
+  `register_entity_resolver`, `register_visualization`,
   `list_registered`, `api_surface` (schema `public-api-v1`).
 - `gods_eye.future.plugins`: `declare`, `production_qualified`,
   `qualify_or_refuse`, `rights_declared`, `KINDS`, `REQUIRED_KEYS`;
-  plugin base classes `SensorPlugin`, `MarketDataPlugin`,
-  `EntityResolverPlugin`, `VisualizationPlugin`, `ModelChallengerPlugin`,
-  `VenuePlugin`, `PredictionMarketPlugin` (schema `plugin-v1`).
+  plugin base classes `SensorPlugin`, `EntityResolverPlugin`,
+  `VisualizationPlugin` (schema `plugin-v1`).
 - `gods_eye.future.demo_dataset`: `demo_dataset`, `timeline`,
   `validate_no_holdout_refs`, `DATASET_ID` (`community-demo-v1`),
   CC0 provenance constants.
-- CLI: `godseye doctor|demo|serve|plugins|sources|new-plugin` flags as in
+- CLI: `tellurion doctor|demo|serve|plugins|sources|new-plugin` flags as in
   `--help` (JSON keys of `doctor` may gain new checks, never lose `verdict`,
   `ok`, `checks[].name/status/detail/fix`).
-- Demo HTTP: `/api/demo`, `/api/health` shapes (additive only).
+- HTTP: `/api/demo`, `/api/health`, `/api/world/now`,
+  `/api/world/changes` shapes (additive only).
 
 ## EXPERIMENTAL (may change; labelled in code/docs)
 
 - `gods_eye.future.discovery` (`explicit-dirs` + `entry-points` mechanisms,
   group `gods_eye.plugins`).
-- `gods_eye.future.venue_registry` row fields (additive), `ccxt_meta`
-  normalization output (additive), `nautilus_polymarket` shapes.
-- `gods_eye.future.venues` / `prediction_markets` dataclass fields
-  (additive; `UNKNOWN` defaults guaranteed).
+- `gods_eye.future.world_now` / `world_change` / `world_air` payload
+  fields (additive; `UNKNOWN` defaults guaranteed).
 - `gods_eye.future.optional_deps` catalog + statuses.
-- `gods_eye.future.extensions` slot names + contracts (additive);
-  `gods_eye.future.boundary` scan helpers; `gods_eye.future.isolation`
+- `gods_eye.future.boundary` scan helpers; `gods_eye.future.isolation`
   profile API (`configure`, `reset`).
 
 ## INTERNAL (no compatibility promise)

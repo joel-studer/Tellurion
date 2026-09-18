@@ -24,7 +24,7 @@ Plugins run with your user privileges. Install only plugins you trust:
 
 - explicit `pip install` or `--dir` only (discovery never downloads),
 - read `manifest.json` (licence, rights, network, secrets) before use,
-- `godseye plugins validate ./plugin_dir` must not report FAIL,
+- `tellurion plugins validate ./plugin_dir` must not report FAIL,
 - UNKNOWN data rights = never production-qualified.
 
 ## Data-rights responsibility
@@ -42,4 +42,4 @@ terms of service. Report rights violations as data-rights issues.
 ## Telemetry / network
 
 Community paths make no outbound network calls (localhost only).
-`godseye doctor` verifies this on every run.
+`tellurion doctor` verifies this on every run.

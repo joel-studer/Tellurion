@@ -156,7 +156,7 @@ def validate_plugin_dir(path: str | Path) -> Dict[str, Any]:
         report["errors"].append(f"not a directory: {d}")
         report["sections"]["schema"] = _section(
             False, "missing directory",
-            "run: godseye new-plugin --kind sensor --name NAME --dir DIR")
+            "run: tellurion new-plugin --kind sensor --name NAME --dir DIR")
         return report
     manifest_path = d / "manifest.json"
     if not manifest_path.is_file():

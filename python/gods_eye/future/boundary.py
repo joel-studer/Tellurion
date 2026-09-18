@@ -1,6 +1,6 @@
 """Open-core boundary scans (read-only, standard library only).
 
-Used by ``godseye release-check``, the test suite, and downstream CI.
+Used by ``tellurion release-check``, the test suite, and downstream CI.
 
 * :func:`unresolved_internal_imports` - every ``gods_eye`` import, at any
   scope, must resolve to a module (or a top-level name) shipped inside
@@ -249,6 +249,14 @@ PAYLOAD_SUFFIXES = (".sqlite", ".sqlite3", ".db", ".duckdb", ".sqlite-wal",
                     ".sqlite-shm", ".pem", ".key", ".p12", ".pfx",
                     ".keystore")
 PAYLOAD_TOP_DIRS = ("state", "raw_store")
+# Gitignored runtime-state dirs: their mere existence is normal product
+# behavior (cache/state created by running or testing the app) and they
+# never ship (manifest GENERATED/PUBLIC_EXCLUDE + .gitignore). The
+# top-dir rule therefore skips them; secret suffixes and .env files are
+# still caught everywhere, including inside these dirs.
+RUNTIME_STATE_DIRS = ("raw_store", "state", "state_future", "logs", "dist",
+                      "preview-assets", "__pycache__", ".pytest_cache",
+                      ".venv", "venv")
 
 
 def payload_hits(root: Path) -> List[str]:
@@ -259,10 +267,39 @@ def payload_hits(root: Path) -> List[str]:
         name = f.name.lower()
         is_env = name == ".env" or (name.startswith(".env.")
                                     and name != ".env.example")
+        top = rel.split("/", 1)[0]
         if (name.endswith(PAYLOAD_SUFFIXES) or is_env
-                or rel.split("/", 1)[0] in PAYLOAD_TOP_DIRS):
+                or (top in PAYLOAD_TOP_DIRS
+                    and top not in RUNTIME_STATE_DIRS)):
             out.append(rel)
     return out
+
+
+# -------------------------------------------------------- trading surface ---
+
+# V1 is world intelligence only. These module names carried the order,
+# venue, portfolio and backtest contracts that were removed before the
+# public release; the check replaces the old "live execution disabled"
+# flag, because a module that does not exist cannot be switched on.
+TRADING_MODULE_NAMES = frozenset({
+    "ccxt_meta", "crypto_data", "exec_engine", "exec_safety", "execution",
+    "forecast", "hft_validator", "lean_engine", "market", "market_catalog",
+    "nautilus_engine", "nautilus_polymarket", "portfolio",
+    "portfolio_optimizer", "prediction_markets", "pypfopt_validator",
+    "session_calendar", "skfolio_engine", "tca", "venue_registry", "venues",
+})
+
+
+def trading_surface_hits(root: Path) -> List[str]:
+    """Shipped modules that would reintroduce trading/execution logic."""
+    root = Path(root)
+    out: List[str] = []
+    for f in iter_files(root):
+        rel = _rel(root, f)
+        if (f.suffix == ".py" and rel.startswith("python/gods_eye/")
+                and f.stem in TRADING_MODULE_NAMES):
+            out.append(rel)
+    return sorted(out)
 
 
 # --------------------------------------------------------------- denylist ---
@@ -302,7 +339,7 @@ ASSET_SUFFIXES = frozenset({
     ".woff", ".woff2", ".ttf", ".otf", ".geojson", ".csv", ".parquet",
 })
 ALLOWED_ASSET_LICENSES = ("CC0-1.0", "BSD-2-Clause", "BSD-3-Clause", "MIT",
-                          "Apache-2.0", "PROJECT-OWNED")
+                          "Apache-2.0", "ISC", "OFL-1.1", "PROJECT-OWNED")
 _TEXT_ASSET_SUFFIXES = frozenset({".json", ".js", ".css", ".svg", ".geojson",
                                   ".csv", ".txt"})
 
@@ -312,7 +349,8 @@ def is_asset(rel: str) -> bool:
     suffix = Path(name).suffix.lower()
     return (suffix in ASSET_SUFFIXES
             or (name.startswith("fixture") and suffix == ".json")
-            or rel.startswith("console/vendor/"))
+            or rel.startswith(("console/vendor/", "console/data/",
+                               "console/brand/")))
 
 
 def asset_digest(path: Path) -> str:
@@ -324,8 +362,12 @@ def asset_digest(path: Path) -> str:
 
 def asset_files(root: Path) -> List[str]:
     root = Path(root)
+    # raw_store/ is gitignored runtime state (feed caches, baselines,
+    # thumbnail caches): ephemeral, content-addressed, never shipped.
+    # Rights entries are for shippable assets only.
     return [rel for rel in (_rel(root, f) for f in iter_files(root))
-            if is_asset(rel) and not rel.startswith("tests/")]
+            if is_asset(rel) and not rel.startswith("tests/")
+            and not rel.startswith("raw_store/")]
 
 
 def asset_rights(root: Path) -> Dict[str, Any]:

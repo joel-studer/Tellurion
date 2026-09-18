@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tellurion ULTRA · world surface</title>
+<meta name="description" content="Tellurion: open-source, local-first world intelligence. Synthetic replay, evidence-first, time-aware.">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/console/brand/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/vendor/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/vendor/maplibre/maplibre-gl.css">
+<link rel="stylesheet" href="/console/world/styles.css">
+<script>
+  // Renderer gate: the globe needs WebGL2. Without it, open the classic view.
+  (function () {
+    var query = new URLSearchParams(location.search);
+    var canvas = document.createElement("canvas");
+    var hasWebgl2 = !!(canvas.getContext && canvas.getContext("webgl2"));
+    if (!hasWebgl2 || query.get("renderer") === "classic") {
+      location.replace("/ultra/classic" + location.search);
+    }
+  })();
+</script>
+</head>
+<body class="booting" data-surface="ULTRA" data-worldmode="replay">
+<a class="skip" href="#eventList">Skip to events</a>
+<div id="map" role="application" aria-label="Interactive world globe. Use the command palette (Ctrl K) to jump to places."></div>
+<div id="vignette" aria-hidden="true"></div>
+<div id="awaken" aria-hidden="true"><img src="/console/brand/tellurion-wordmark.svg" alt="" width="372" height="72"></div>
+
+<header id="topbar" class="chrome">
+  <a class="brand" href="/landing" aria-label="Tellurion: about">
+    <img src="/console/brand/tellurion-mark.svg" alt="" width="30" height="30"><span>Tellurion</span>
+  </a>
+  <button id="cmd" class="command" type="button" aria-haspopup="dialog" aria-controls="palette">
+    <span class="cmd-icon" data-icon="search"></span>
+    <span class="cmd-text">Search places, objects, and commands</span>
+    <kbd>Ctrl</kbd><kbd>K</kbd>
+  </button>
+  <div class="status">
+    <div class="stat"><span class="label">World time</span><span id="worldTime" class="value mono">Loading</span></div>
+    <div class="stat"><span class="label">Mode</span><span class="value"><span class="badge replay" id="modeBadge">Replay · synthetic</span></span></div>
+    <button id="healthBtn" class="stat link" type="button"><span class="label">Sources</span><span class="value"><i class="dot ok"></i><span id="srcCount">Loading</span></span></button>
+    <div class="stat"><span class="label">Objects</span><span id="objCount" class="value mono">Loading</span></div>
+    <div class="stat"><span class="label">System</span><span class="value"><i class="dot ok"></i>Local · live off</span></div>
+  </div>
+</header>
+
+<nav id="rail" class="chrome panel" aria-label="World layers"><div id="layers"></div></nav>
+
+<aside id="side" class="chrome panel" aria-label="Events and evidence">
+  <section id="events">
+    <header class="panel-head"><h2>Events</h2><span id="evCount" class="muted"></span></header>
+    <div id="eventList" role="listbox" aria-label="Events, most severe first" tabindex="-1"></div>
+  </section>
+  <section id="drawer" hidden aria-labelledby="drawerTitle"></section>
+</aside>
+
+<div id="scenario" class="chrome" role="note">SYNTHETIC SCENARIO · replay data, not live</div>
+<div id="investigationBar" role="status">Investigation <button id="exitInvestigation" class="btn ghost" type="button">Exit</button></div>
+<div id="lod" class="chrome" aria-live="polite"></div>
+<div id="aggregates" class="chrome" aria-label="Global counts"></div>
+<div id="camera" class="chrome" role="toolbar" aria-label="Camera">
+  <button class="icon-btn" type="button" data-camera="world" title="Reset world (R)" aria-label="Reset world"></button>
+  <button class="icon-btn" type="button" data-camera="event" title="Fly to selected event" aria-label="Fly to selected event"></button>
+  <button class="icon-btn" type="button" data-camera="focus" title="Focus mode (F)" aria-label="Focus mode"></button>
+</div>
+<div id="attribution" class="chrome">Natural Earth (public domain) · MapLibre · synthetic replay, not live</div>
+
+<section id="timeline" class="chrome panel" aria-label="Time Machine">
+  <div class="tm-row">
+    <div class="tm-modes" role="radiogroup" aria-label="Time mode">
+      <button type="button" role="radio" data-mode="current" aria-checked="false">Current world</button>
+      <button type="button" role="radio" data-mode="belief" aria-checked="false">Historical belief</button>
+      <button type="button" role="radio" data-mode="replay" aria-checked="true">Current replay</button>
+    </div>
+    <button id="play" class="icon-btn" type="button" aria-label="Play replay"></button>
+    <div class="speed" role="group" aria-label="Playback speed">
+      <button type="button" data-speed="1" aria-pressed="true">1×</button>
+      <button type="button" data-speed="2" aria-pressed="false">2×</button>
+      <button type="button" data-speed="4" aria-pressed="false">4×</button>
+    </div>
+    <div id="tmTrack" class="track" role="slider" tabindex="0" aria-label="Replay time" aria-valuemin="0" aria-valuemax="12" aria-valuenow="0">
+      <div class="rail"></div><div id="tmFill" class="fill"></div><div id="tmMarkers"></div><div id="tmThumb" class="thumb"></div>
+      <div class="ticks" aria-hidden="true"><span>T0</span><span>T+3m</span><span>T+6m</span><span>T+9m</span><span>T+12m</span></div>
+    </div>
+    <div class="tm-time"><span id="tmClock" class="clock mono">T+00m</span><button id="now" class="btn ghost" type="button">Now</button></div>
+  </div>
+  <p id="tmNote" class="tm-note"></p>
+</section>
+
+<div id="focusCard" class="panel" aria-live="polite"></div>
+<div id="tooltip" role="tooltip" hidden></div>
+
+<div id="palette" class="dialog" role="dialog" aria-modal="true" aria-label="Command palette" hidden>
+  <div class="dialog-box">
+    <div class="palette-input"><span data-icon="search"></span>
+      <input id="paletteInput" type="text" autocomplete="off" spellcheck="false" placeholder="Go to a place, find an object, or run a command" aria-controls="paletteList" aria-autocomplete="list" role="combobox" aria-expanded="true">
+    </div>
+    <ul id="paletteList" role="listbox" aria-label="Results"></ul>
+    <footer><span><kbd>↑</kbd><kbd>↓</kbd> navigate</span><span><kbd>Enter</kbd> run</span><span><kbd>Esc</kbd> close</span></footer>
+  </div>
+</div>
+
+<div id="sources" class="dialog" role="dialog" aria-modal="true" aria-labelledby="sourcesTitle" hidden>
+  <div class="dialog-box wide">
+    <header class="panel-head"><h2 id="sourcesTitle">Source health</h2><span class="muted">What each source is doing right now</span>
+      <button class="icon-btn close" type="button" data-close="sources" aria-label="Close source health"></button></header>
+    <div id="sourcesBody" class="dialog-body"></div>
+  </div>
+</div>
+
+<div id="graphDialog" class="dialog" role="dialog" aria-modal="true" aria-labelledby="graphTitle" hidden>
+  <div class="dialog-box wide">
+    <header class="panel-head"><h2 id="graphTitle">Relations</h2><span class="muted">Bounded to direct relations</span>
+      <button class="icon-btn close" type="button" data-close="graphDialog" aria-label="Close relations"></button></header>
+    <div id="graphBody" class="dialog-body"></div>
+  </div>
+</div>
+
+<div id="fatal" class="dialog" role="alertdialog" aria-labelledby="fatalTitle" hidden>
+  <div class="dialog-box"><div class="dialog-body">
+    <h2 id="fatalTitle">The world surface could not start</h2>
+    <p id="fatalText" class="muted"></p>
+    <p><a class="btn" href="/ultra/classic">Open the classic view</a></p>
+  </div></div>
+</div>
+
+<div id="live" class="sr-only" aria-live="polite"></div>
+<noscript><p style="padding:24px">Tellurion needs JavaScript. The classic view at /ultra/classic also needs JavaScript.</p></noscript>
+<script type="module" src="/console/world/app.js"></script>
+</body>
+</html>

@@ -69,8 +69,8 @@ def test_optional_deps_core_requires_none():
     for row in rep["rows"]:
         assert row["status"] in od.STATUSES, row
     assert od.probe("no_such_dep")["status"] == "UNKNOWN"
-    # LGPL boundary: nautilus is never importable in-process
-    assert od.probe("nautilus_trader")["status"] in ("BLOCKED", "NOT_INSTALLED")
+    # the catalog itself must stay free of trading or ML engines
+    assert set(od.names()) == {"playwright", "pytest"}
 
 
 # --- discovery (explicit only) ----------------------------------------------
@@ -107,8 +107,8 @@ def test_cli_doctor_shape_and_live_disabled():
         assert c["status"] in ("PASS", "WARN", "FAIL")
     names = [c["name"] for c in rep["checks"]]
     assert "community-mode imports" in names
-    assert "live execution disabled" in names
-    live = next(c for c in rep["checks"] if c["name"] == "live execution disabled")
+    assert "no execution surface" in names
+    live = next(c for c in rep["checks"] if c["name"] == "no execution surface")
     assert live["status"] == "PASS"
 
 
@@ -138,7 +138,7 @@ def test_demo_localhost_only_and_port_policy():
     finally:
         s.close()
     # health payload never allows live
-    assert demo.health_payload()["allow_live"] is False
+    assert "allow_live" not in demo.health_payload()
 
 
 # --- public API stability surface -----------------------------------------------
@@ -146,17 +146,17 @@ def test_demo_localhost_only_and_port_policy():
 def test_public_api_stability_surface():
     from gods_eye.future import plugins as pl
     from gods_eye.future import public_api as api
-    for fn in ("register_sensor", "register_market_data_provider",
-               "register_entity_resolver", "register_visualization",
-               "register_model_challenger", "register_venue",
-               "list_registered", "api_surface"):
+    for fn in ("register_sensor", "register_entity_resolver",
+               "register_visualization", "list_registered", "api_surface"):
         assert callable(getattr(api, fn)), fn
+    for gone in ("register_market_data_provider", "register_venue",
+                 "register_model_challenger"):
+        assert not hasattr(api, gone), gone
     assert api.api_surface()["schema"] == "public-api-v1"
     for fn in ("declare", "production_qualified", "qualify_or_refuse",
                "rights_declared"):
         assert callable(getattr(pl, fn)), fn
-    assert "Sensor" in pl.KINDS and "Venue" in pl.KINDS
-    assert "PredictionMarket" in pl.KINDS
+    assert pl.KINDS == ("Sensor", "EntityResolver", "Visualization")
     # demo dataset frozen id + CC0 + no holdout refs
     from gods_eye.future import demo_dataset as dd
     assert dd.DATASET_ID == "community-demo-v1"
@@ -170,11 +170,13 @@ def test_community_mode_no_private_introduced():
     assert rep["failed"] == [] and rep["private_introduced"] == []
 
 
-def test_allow_live_false():
-    from gods_eye.future import exec_safety as es
-    assert es.ALLOW_LIVE is False
-    g = es.LiveExecutionGuard().describe()
-    assert g["ALLOW_LIVE"] is False and g["ALLOW_PAPER_SANDBOX"] is False
+def test_no_execution_surface():
+    from pathlib import Path
+    from gods_eye.future import boundary
+    from gods_eye import demo
+    assert boundary.trading_surface_hits(Path(__file__).resolve().parents[1]) == []
+    health = demo.health_payload()
+    assert "allow_live" not in health and "venues" not in demo.demo_payload()
 
 
 # --- repository .gitignore ---------------------------------------------------
@@ -207,8 +209,10 @@ def test_sbom_preview_shape():
     assert sbom_path.is_file()
     sbom = json.loads(sbom_path.read_text(encoding="utf-8"))
     assert sbom["spdxVersion"] == "SPDX-2.3"
-    assert sbom["signOff"].startswith("NOT_OBTAINED")
-    assert sbom["published"] is False
+    # sign-off is a maintainer decision; the file must state which one
+    assert sbom["signOff"].startswith(("NOT_OBTAINED", "OBTAINED"))
+    assert isinstance(sbom["published"], bool)
+    assert sbom["packages"][0]["license"] == "MIT"
     assert len(sbom["packages"]) >= 1
     for p in sbom["packages"]:
         assert {"name", "version", "license", "source"} <= set(p)
@@ -256,7 +260,7 @@ def test_new_plugin_scaffold_runs_at_shallow_depth():
 
 
 def test_discovery_accepts_a_plugin_directory_itself():
-    """`godseye plugins --dir my_sensor` lists the plugin in that folder."""
+    """`tellurion plugins --dir my_sensor` lists the plugin in that folder."""
     from gods_eye.future import discovery as di
     plugin_dir = ROOT / "examples" / "plugins" / "example_sensor"
     rep = di.discover_from_dirs([plugin_dir])

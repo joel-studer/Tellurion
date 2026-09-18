@@ -7,9 +7,59 @@
   "BSD-3-Clause",
   "MIT",
   "Apache-2.0",
+  "ISC",
+  "OFL-1.1",
   "PROJECT-OWNED"
  ],
  "assets": [
+  {
+   "path": "console/brand/favicon.svg",
+   "license": "PROJECT-OWNED",
+   "basis": "Tellurion identity assets drawn for this project (original SVG geometry).",
+   "sha256": "49e9881bf1037163abaf88d61dde79c3dc9ab8c44225444b49fea3b5ebc5a56f"
+  },
+  {
+   "path": "console/brand/tellurion-mark-light.svg",
+   "license": "PROJECT-OWNED",
+   "basis": "Tellurion identity assets drawn for this project (original SVG geometry).",
+   "sha256": "8ffae4e0b8d018ef6c182258025860ea1c3f602e4285db1778f5b6312586d2da"
+  },
+  {
+   "path": "console/brand/tellurion-mark.svg",
+   "license": "PROJECT-OWNED",
+   "basis": "Tellurion identity assets drawn for this project (original SVG geometry).",
+   "sha256": "6e042eb93e54434ee074bd76dff5421d39f77feb188af4105a767b8be91710c2"
+  },
+  {
+   "path": "console/brand/tellurion-wordmark.svg",
+   "license": "PROJECT-OWNED",
+   "basis": "Tellurion identity assets drawn for this project (original SVG geometry).",
+   "sha256": "63f41c4283945561b7b24d7999a269c4d3edad04e76f6b7c64c3287916bc708e"
+  },
+  {
+   "path": "console/data/WORLD_ATLAS_LICENSE.txt",
+   "license": "ISC",
+   "basis": "world-atlas 2.0.2 TopoJSON (ISC) derived from Natural Earth 1:50m (public domain); licence text console/data/WORLD_ATLAS_LICENSE.txt.",
+   "sha256": "8048290dfdb6e83fbed17e8985c8cfc4ce9da9b842642f3d3e497280790cfa31"
+  },
+  {
+   "path": "console/data/countries-50m.json",
+   "license": "ISC",
+   "basis": "world-atlas 2.0.2 TopoJSON (ISC) derived from Natural Earth 1:50m (public domain); licence text console/data/WORLD_ATLAS_LICENSE.txt.",
+   "sha256": "04342cdc1e3016bcd7db1630de95684d67b79fe3c8c460321e87aef469502394"
+  },
+  {
+   "path": "console/data/land-50m.json",
+   "license": "ISC",
+   "basis": "world-atlas 2.0.2 TopoJSON (ISC) derived from Natural Earth 1:50m (public domain); licence text console/data/WORLD_ATLAS_LICENSE.txt.",
+   "sha256": "619477ff690c086885e45cb91707d783805561bd75ae8e437b7d4694b0204e0f"
+  },
+  {
+   "path": "console/media/hero.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "c1de262656ee9a54798cc89160585e86919873fc9f111f23bb0e4e48acf2a0f9"
+  },
   {
    "path": "console/vendor/LEAFLET_LICENSE.txt",
    "license": "BSD-2-Clause",
@@ -29,88 +79,304 @@
    "sha256": "db49d009c841f5ca34a888c96511ae936fd9f5533e90d8b2c4d57596f4e5641a"
   },
   {
-   "path": "docs/media/social-preview-1200x630.png",
-   "license": "PROJECT-OWNED",
-   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
-   "sha256": "563a252d81deddf2602b809e309b4167ff0389d3346e4e82758a7d77ea55e3dc"
+   "path": "console/vendor/fonts/INTER_OFL_LICENSE.txt",
+   "license": "OFL-1.1",
+   "basis": "Inter 5.3.0 variable font (Fontsource packaging); SIL Open Font License 1.1 shipped as console/vendor/fonts/INTER_OFL_LICENSE.txt.",
+   "sha256": "3b0a5fca3d17942cde889069889dedbbbd075e9b599968c82a95f4d944e9b345"
   },
   {
-   "path": "docs/media/ultra-hero.mp4",
-   "license": "PROJECT-OWNED",
-   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
-   "sha256": "d7904b6cadec17f55c2aac1a7c6dddd57f3eccb5b254451e07d3182ada92c7be"
+   "path": "console/vendor/fonts/inter-latin-ext-wght-normal.woff2",
+   "license": "OFL-1.1",
+   "basis": "Inter 5.3.0 variable font (Fontsource packaging); SIL Open Font License 1.1 shipped as console/vendor/fonts/INTER_OFL_LICENSE.txt.",
+   "sha256": "34b9c504cab7a73e37b746343a449132e56cf7b5481af2cb81dc74dcff25c956"
   },
   {
-   "path": "docs/screenshots/entity-graph.png",
-   "license": "PROJECT-OWNED",
-   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
-   "sha256": "10ae82ea7274e76172d0a6faf9f004368938dbc5617d28cf4285b331336e1e63"
+   "path": "console/vendor/fonts/inter-latin-wght-normal.woff2",
+   "license": "OFL-1.1",
+   "basis": "Inter 5.3.0 variable font (Fontsource packaging); SIL Open Font License 1.1 shipped as console/vendor/fonts/INTER_OFL_LICENSE.txt.",
+   "sha256": "3100e775e8616cd2611beecfa23a4263d7037586789b43f035236a2e6fbd4c62"
   },
   {
-   "path": "docs/screenshots/event-evidence.png",
-   "license": "PROJECT-OWNED",
-   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
-   "sha256": "76901a0b734c9e3807b9b65e9f75b3bb5d7e6a74abad9903023dd3e231394be1"
+   "path": "console/vendor/maplibre/MAPLIBRE_LICENSE.txt",
+   "license": "BSD-3-Clause",
+   "basis": "MapLibre GL JS 6.10.0 upstream npm release; licence text shipped as console/vendor/maplibre/MAPLIBRE_LICENSE.txt.",
+   "sha256": "ee5fc05a0677eaf69601d2c7db0d9ecd6cc27c3abc1d0733bc9ed34707cf8ef2"
   },
   {
-   "path": "docs/screenshots/gods-eye-ultra-hero.png",
-   "license": "PROJECT-OWNED",
-   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
-   "sha256": "94bc8223fa694f67560b2a89ae5987a3ad7f0d2928fedd0e0d274e72fb270459"
+   "path": "console/vendor/maplibre/maplibre-gl-shared.mjs",
+   "license": "BSD-3-Clause",
+   "basis": "MapLibre GL JS 6.10.0 upstream npm release; licence text shipped as console/vendor/maplibre/MAPLIBRE_LICENSE.txt.",
+   "sha256": "0996a0ff2ecb2807afc3f053992539ff7fe45c1678a02304b2b33120136f81f3"
   },
   {
-   "path": "docs/screenshots/hero-world.png",
-   "license": "PROJECT-OWNED",
-   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
-   "sha256": "76901a0b734c9e3807b9b65e9f75b3bb5d7e6a74abad9903023dd3e231394be1"
+   "path": "console/vendor/maplibre/maplibre-gl-worker.mjs",
+   "license": "BSD-3-Clause",
+   "basis": "MapLibre GL JS 6.10.0 upstream npm release; licence text shipped as console/vendor/maplibre/MAPLIBRE_LICENSE.txt.",
+   "sha256": "7d5ebf88ec25a72cc48cc320d374f41d921e5105d2f1fc774d463a4b68164227"
   },
   {
-   "path": "docs/screenshots/plugin-system.png",
+   "path": "console/vendor/maplibre/maplibre-gl.css",
+   "license": "BSD-3-Clause",
+   "basis": "MapLibre GL JS 6.10.0 upstream npm release; licence text shipped as console/vendor/maplibre/MAPLIBRE_LICENSE.txt.",
+   "sha256": "8e2dbbab312dc57656fbb76e9fa5308c75c9d7c7ba5808a7d55bcdb64cc813fa"
+  },
+  {
+   "path": "console/vendor/maplibre/maplibre-gl.mjs",
+   "license": "BSD-3-Clause",
+   "basis": "MapLibre GL JS 6.10.0 upstream npm release; licence text shipped as console/vendor/maplibre/MAPLIBRE_LICENSE.txt.",
+   "sha256": "454e0bbb16c721cfbf952a92ff3e4362130346ed59a5bff56ae5d6fbebb651f7"
+  },
+  {
+   "path": "docs/brand/tellurion-mark-16.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Tellurion identity assets drawn for this project (original SVG geometry).",
+   "sha256": "538e84b2ed9ff83f8cace08dbabe0596ea78dc1ada2d3cc8953008648ac53898"
+  },
+  {
+   "path": "docs/brand/tellurion-mark-180.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Tellurion identity assets drawn for this project (original SVG geometry).",
+   "sha256": "1c506b82a5d2806169030c0289d22f66c042b3a9b91a406a60ae2f91fff6492c"
+  },
+  {
+   "path": "docs/brand/tellurion-mark-32.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Tellurion identity assets drawn for this project (original SVG geometry).",
+   "sha256": "ef162ad81af7eeaaf86277ccdc1f3a52bb44acd8566fb7a3c8b56c9b5d9a8626"
+  },
+  {
+   "path": "docs/brand/tellurion-mark-512.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Tellurion identity assets drawn for this project (original SVG geometry).",
+   "sha256": "4cfd930aed2db3db76ed6f089130f4f0332e05a1e990cc1dcb3cc24a06b63bc4"
+  },
+  {
+   "path": "docs/brand/tellurion-mark-64.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Tellurion identity assets drawn for this project (original SVG geometry).",
+   "sha256": "99f1b1b71a44c01101184f4f5dd23509d4c7906ffb62859853563bb724b35b27"
+  },
+  {
+   "path": "docs/brand/tellurion-social-1200x630.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Tellurion identity assets drawn for this project (original SVG geometry).",
+   "sha256": "014da2ef442538c241f43193362ca19004a315a795a9e2a4d37902165a65c10a"
+  },
+  {
+   "path": "docs/brand/tellurion-social-square-1080.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Tellurion identity assets drawn for this project (original SVG geometry).",
+   "sha256": "18f80175a390da54eaba8956b904660416eeda2bcc8ed8ee63f2f83dd58736fb"
+  },
+  {
+   "path": "docs/media/tellurion-hero.mp4",
    "license": "PROJECT-OWNED",
    "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
-   "sha256": "1673213d6bba4ba7b72354684bada1ea7ed2ea70f368e63af28930e3817cf1d0"
+   "sha256": "4c7a143766acf654cd69cd2261e60a6fa2b4ddb6f9d83e5fd4579b6dcf0af07d"
+  },
+  {
+   "path": "docs/screenshots/airport-story.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "ec77336a4261a7c57bb9302ad67a2e16f34097e052d727427727a5718f62ae7c"
+  },
+  {
+   "path": "docs/screenshots/change-before-after.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Local screen capture of the running open-source app rendering qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS metadata, GDELT with citation, adsb.lol ODbL); the capture composition is project-owned while underlying data stays under per-source rights with in-app attribution. No persons, no private data, no fake emergency.",
+   "sha256": "2381e44692ccbb9b4e71ce3e489ddfba82d0116fa905d4c873834c6d406d945b"
+  },
+  {
+   "path": "docs/screenshots/change-satellite-before-after.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Local screen capture of the running open-source app rendering qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS metadata, GDELT with citation, adsb.lol ODbL); the capture composition is project-owned while underlying data stays under per-source rights with in-app attribution. No persons, no private data, no fake emergency.",
+   "sha256": "f39b13dbfce0119767d00c1a025694108e8ec28d12be17671910fab8b14e816f"
+  },
+  {
+   "path": "docs/screenshots/change-satellite-cloud-limited.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Local screen capture of the running open-source app rendering qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS metadata, GDELT with citation, adsb.lol ODbL); the capture composition is project-owned while underlying data stays under per-source rights with in-app attribution. No persons, no private data, no fake emergency.",
+   "sha256": "41ea4c90561bf8dd14741c744e130517a9b3873e9c2139bd33535530e16b0924"
+  },
+  {
+   "path": "docs/screenshots/change-satellite-no-observation.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Local screen capture of the running open-source app rendering qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS metadata, GDELT with citation, adsb.lol ODbL); the capture composition is project-owned while underlying data stays under per-source rights with in-app attribution. No persons, no private data, no fake emergency.",
+   "sha256": "242379b8d3dfe31eb2b3992e40b7cebfd314b543aab86f9e35c99793d916910b"
+  },
+  {
+   "path": "docs/screenshots/command-palette.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "be1d84b84101767189a12404cf221f0308e6b84b302938412ed888ca641f875d"
+  },
+  {
+   "path": "docs/screenshots/earth-story.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "4dc35b30e2c2808e304b8230a4bf470eeeb81f48ef49d4365a8f74dc157003b2"
+  },
+  {
+   "path": "docs/screenshots/evidence-drawer.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "f2172f80d8133c0823627904cfa31158c39ac249b8b513d38700d6e61d442c4a"
+  },
+  {
+   "path": "docs/screenshots/focus-mode.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "90e0b941af9d264c1d9cb0c5a5961d59c475e2fd226a4e3d8942186f557025c0"
+  },
+  {
+   "path": "docs/screenshots/gallery.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "8270a0d036b760c066548286c8b48bec2b4d4f5095e35758a398f62a97d07aa4"
+  },
+  {
+   "path": "docs/screenshots/hero-world-now.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Local screen capture of the running open-source app rendering qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS metadata, GDELT with citation, adsb.lol ODbL); the capture composition is project-owned while underlying data stays under per-source rights with in-app attribution. No persons, no private data, no fake emergency.",
+   "sha256": "b139202adfece2df5ebc79a901cd07aa0fc0f1814b2f8c174bac84063af411f2"
+  },
+  {
+   "path": "docs/screenshots/investigation.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "368ecaeab7f053d4504e1b59a5cd27a1b37f45c4404478477d011e9f6339b549"
+  },
+  {
+   "path": "docs/screenshots/landing.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "2fbcd51e7207b8b628b3cbc836bc1c82fe95123b042957a1629c502c4bd5afb7"
+  },
+  {
+   "path": "docs/screenshots/relations.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "a36ee6a1c846c00e29aacb697d58b5a59c2d724ef545f7457c37f5bca1a84429"
+  },
+  {
+   "path": "docs/screenshots/replay-global.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "04d3c3dd36dbe8cc4da6dfe5b8e2ec57e3a2eca09258b9ca3d3323af8b3ffaec"
+  },
+  {
+   "path": "docs/screenshots/replay-no-live-change-leak.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Local screen capture of the running open-source app rendering qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS metadata, GDELT with citation, adsb.lol ODbL); the capture composition is project-owned while underlying data stays under per-source rights with in-app attribution. No persons, no private data, no fake emergency.",
+   "sha256": "553321a179a8078f07f7c9a0a15242011f9e96b3131ee3b4ead727413aa8c411"
   },
   {
    "path": "docs/screenshots/source-health.png",
    "license": "PROJECT-OWNED",
    "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
-   "sha256": "f3fddf385d636ff9d0557bf7fbb5a957850ab7d3ef7fe824fc49aa897f21d2c0"
+   "sha256": "7f2a9ed925d77be56757fa978f12a501abeba734fc7aec6c9064eae3488cef47"
+  },
+  {
+   "path": "docs/screenshots/tellurion-hero-2560.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "45185f45c9551da81189707f9836a7b65348ad19657b10edb3f06ed99600a783"
+  },
+  {
+   "path": "docs/screenshots/tellurion-hero.gif",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "606f0eb1d77c9a92654e7473a726204ba9a24dd46ab43f535052d6caa571654c"
+  },
+  {
+   "path": "docs/screenshots/tellurion-hero.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "c1de262656ee9a54798cc89160585e86919873fc9f111f23bb0e4e48acf2a0f9"
+  },
+  {
+   "path": "docs/screenshots/tellurion-laptop-1440.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "8922a89167a81e30e888c3ad00fb9015676b234adf0c31562c487991d48686f2"
   },
   {
    "path": "docs/screenshots/time-machine.png",
    "license": "PROJECT-OWNED",
    "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
-   "sha256": "536804c713f7107de0e87e1c5bba3fb14a28bdc307aee5b1bb05691b41aa0337"
+   "sha256": "9784f4f285514782ea692d81a86f2f16aa50e5d37e1a6152b424c13b401827f8"
   },
   {
-   "path": "docs/screenshots/ultra-evidence.png",
+   "path": "docs/screenshots/world-globe.png",
    "license": "PROJECT-OWNED",
    "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
-   "sha256": "83316fa7ec6e449f34cf81b14c4c5d71cb143076d150e625f9438aa47ab730e4"
+   "sha256": "9cb3359feb96d4e256cb7b4279093ba789dcbf50bd2145e5e4142e86bb31f3c1"
   },
   {
-   "path": "docs/screenshots/ultra-gallery.png",
+   "path": "docs/screenshots/world-now-aircraft.png",
    "license": "PROJECT-OWNED",
-   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
-   "sha256": "45d7a6139d8ef6fb8bfdd5667f361c043ff50093554f34078ce630c510dfc7bc"
+   "basis": "Local screen capture of the running open-source app rendering qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS metadata, GDELT with citation, adsb.lol ODbL); the capture composition is project-owned while underlying data stays under per-source rights with in-app attribution. No persons, no private data, no fake emergency.",
+   "sha256": "3d496f733a7495fa22b0c3e06618a1aa00dc7ce6880f55a45b3e48c44c51b178"
   },
   {
-   "path": "docs/screenshots/ultra-hero.gif",
+   "path": "docs/screenshots/world-now-change-drawer.png",
    "license": "PROJECT-OWNED",
-   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
-   "sha256": "e0f9d8cfd54f01c872a6a99d196623333e560ff73fe65a4cad0bf244503805a1"
+   "basis": "Local screen capture of the running open-source app rendering qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS metadata, GDELT with citation, adsb.lol ODbL); the capture composition is project-owned while underlying data stays under per-source rights with in-app attribution. No persons, no private data, no fake emergency.",
+   "sha256": "ebac4cfcd2fb5fe4541a0acb6e3459c1d8c5bf164bf752b82f6cd18ac1c51aee"
   },
   {
-   "path": "docs/screenshots/ultra-world.png",
+   "path": "docs/screenshots/world-now-change-global.png",
    "license": "PROJECT-OWNED",
-   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
-   "sha256": "766328781d635874330aedbdfa647f997141d32a2274db6110d6dbc78167bf8d"
+   "basis": "Local screen capture of the running open-source app rendering qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS metadata, GDELT with citation, adsb.lol ODbL); the capture composition is project-owned while underlying data stays under per-source rights with in-app attribution. No persons, no private data, no fake emergency.",
+   "sha256": "4daf55e21ec2be6d6b8c7d33bdd233e2bfddc848ea0655bd80a326ee4378475c"
+  },
+  {
+   "path": "docs/screenshots/world-now-coverage.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Local screen capture of the running open-source app rendering qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS metadata, GDELT with citation, adsb.lol ODbL); the capture composition is project-owned while underlying data stays under per-source rights with in-app attribution. No persons, no private data, no fake emergency.",
+   "sha256": "81f828b85d7c35ccbb7f338cef850d1e2f36ce78ebba63983bd3c48b069566a8"
+  },
+  {
+   "path": "docs/screenshots/world-now-event.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Local screen capture of the running open-source app rendering qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS metadata, GDELT with citation, adsb.lol ODbL); the capture composition is project-owned while underlying data stays under per-source rights with in-app attribution. No persons, no private data, no fake emergency.",
+   "sha256": "e68e5b582ff92c878fa265486bcfd7f085de5c640b3454067d289758d1ce8404"
+  },
+  {
+   "path": "docs/screenshots/world-now-global.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Local screen capture of the running open-source app rendering qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS metadata, GDELT with citation, adsb.lol ODbL); the capture composition is project-owned while underlying data stays under per-source rights with in-app attribution. No persons, no private data, no fake emergency.",
+   "sha256": "c8aab0eb94741832a8be835ff35e91e8b3ae841cc9529d80032ee02401d4e5a1"
+  },
+  {
+   "path": "docs/screenshots/world-now-important.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Local screen capture of the running open-source app rendering qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS metadata, GDELT with citation, adsb.lol ODbL); the capture composition is project-owned while underlying data stays under per-source rights with in-app attribution. No persons, no private data, no fake emergency.",
+   "sha256": "6f79bb25e69621d05a2d3390a6f3332c16519fc6caa13ff8b25fcef2115d8597"
+  },
+  {
+   "path": "docs/screenshots/world-now-region.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Local screen capture of the running open-source app rendering qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS metadata, GDELT with citation, adsb.lol ODbL); the capture composition is project-owned while underlying data stays under per-source rights with in-app attribution. No persons, no private data, no fake emergency.",
+   "sha256": "59de49efc5809a40bdaa42c9d19a132c9e25fefa05ebdebfb998a0efae460f96"
+  },
+  {
+   "path": "docs/screenshots/world-now-time-machine.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Local screen capture of the running open-source app rendering qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS metadata, GDELT with citation, adsb.lol ODbL); the capture composition is project-owned while underlying data stays under per-source rights with in-app attribution. No persons, no private data, no fake emergency.",
+   "sha256": "41988aa83c6aa230bc438010a35484cbb28c6f18e8866f32e1c6e5e986cf3c06"
   },
   {
    "path": "examples/plugins/example_sensor/fixture.json",
    "license": "CC0-1.0",
    "basis": "Plugin fixture (example-sensor): public-domain (synthetic CC0 fixture; no real persons)",
    "sha256": "1312e407e312467e1254764efa6b5a6b673131cabba6185035120536cb63b7dc"
+  },
+  {
+   "path": "plugins/austria_pack/fixture.json",
+   "license": "CC0-1.0",
+   "basis": "Plugin fixture (austria-pack): CC0 synthetic reference points; live legs per-agency open terms (GeoSphere Austria, data.gv.at CC-BY-4.0, OEBB GTFS, ASFINAG, EEA); verify each feed before use",
+   "sha256": "2fd344d6334049f58d240914db28ef133a60afb8422f45d4ddaaf0b8b82858d1"
   },
   {
    "path": "plugins/aviation_synth/fixture.json",
@@ -123,6 +389,12 @@
    "license": "CC0-1.0",
    "basis": "Plugin fixture (camera-synth): CC0 synthetic snapshots (generated in-repo); real feeds need per-operator terms",
    "sha256": "9e9e5f6f1c7e0f0e5301181f7a29030346e67dd4ea29cfc54e2b77e3bc63fbef"
+  },
+  {
+   "path": "plugins/disaster_eonet/fixture.json",
+   "license": "CC0-1.0",
+   "basis": "Plugin fixture (disaster-eonet): CC0 synthetic fixture; live leg uses NASA EONET open metadata (user opt-in)",
+   "sha256": "6420ca9b174a2720ced7ac7036dd42fb688de69e5d0c26f4523d39894b84e850"
   },
   {
    "path": "plugins/infra_context/fixture.json",
@@ -146,13 +418,25 @@
    "path": "plugins/seismic_usgs/fixture.json",
    "license": "CC0-1.0",
    "basis": "Plugin fixture (seismic-usgs): CC0 synthetic fixture; live leg uses USGS public-domain feed (user opt-in)",
-   "sha256": "3fd6fdb6cf71f2c0f451c68460cafd0247535bd26f6862016cb43ac6a2500c59"
+   "sha256": "50b926dfcca8714ad93ee594bbb588124e3edb20c871887af0d8a954af3b24e3"
+  },
+  {
+   "path": "plugins/space_swpc/fixture.json",
+   "license": "CC0-1.0",
+   "basis": "Plugin fixture (space-swpc): CC0 synthetic fixture; live leg uses NOAA SWPC public-domain products (user opt-in)",
+   "sha256": "0d51221e2b62a17b6acb5b348b0b90bafe3dd4548f0c3931aff192cd04c0f63f"
   },
   {
    "path": "plugins/traffic_synth/fixture.json",
    "license": "CC0-1.0",
    "basis": "Plugin fixture (traffic-synth): CC0 synthetic (generated in-repo)",
    "sha256": "005d9b708148a4c27769b66a8357dacdca387d7617603f389922536622e817e7"
+  },
+  {
+   "path": "plugins/weather_nws/fixture.json",
+   "license": "CC0-1.0",
+   "basis": "Plugin fixture (weather-nws): CC0 synthetic fixture; live leg uses NWS public-domain alerts (user opt-in, User-Agent required)",
+   "sha256": "58a1c4dce06950291b093b7674291dfeec37eaf25e6196deb1306a857d909fa0"
   },
   {
    "path": "plugins/weather_synth/fixture.json",

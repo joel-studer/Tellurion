@@ -15,7 +15,7 @@ the public API.
 ### 1. Check the environment (5 min)
 
 ```bash
-godseye doctor
+tellurion doctor
 ```
 
 Expect `verdict: PASS`. If a check reports WARN/FAIL, follow its `fix`
@@ -24,7 +24,7 @@ hint and re-run. Do not continue on FAIL.
 ### 2. Scaffold from the template (5 min)
 
 ```bash
-godseye new-plugin --kind sensor --name my-sensor --dir my_sensor
+tellurion new-plugin --kind sensor --name my-sensor --dir my_sensor
 ```
 
 This copies `manifest.json`, `plugin.py`, `fixture.json`, and the
@@ -46,7 +46,7 @@ Edit `my_sensor/manifest.json`:
 Validate any time with:
 
 ```bash
-godseye plugins validate ./my_sensor
+tellurion plugins validate ./my_sensor
 ```
 
 FAIL rows name the file, the rule, and the fix. The same check backs
@@ -76,7 +76,7 @@ print(api.list_registered())
 ```
 
 ```bash
-godseye plugins --dir my_sensor
+tellurion plugins --dir my_sensor
 ```
 
 Your sensor appears with its licence, rights, health, and the
@@ -93,9 +93,9 @@ non-UNKNOWN rights).
 
 ## Done when
 
-- [ ] `godseye doctor` PASS (paste the verdict).
+- [ ] `tellurion doctor` PASS (paste the verdict).
 - [ ] Offline test green (paste the pytest line).
-- [ ] `godseye plugins --dir my_sensor` lists your sensor as expected.
+- [ ] `tellurion plugins --dir my_sensor` lists your sensor as expected.
 - [ ] You can state the trust model in one paragraph (explicit install,
       explicit discovery, rights-first). See
       `docs/guides/plugin-trust-model.md`.

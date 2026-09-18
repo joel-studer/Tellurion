@@ -22,15 +22,15 @@ Plugin discovery surfaces, per plugin:
 - network needs
 - secrets needs
 - health
-- capabilities (market-data / execution / venue)
+- capabilities (sensor / entity-resolver / visualization)
 - schema version
 - production-qualified flag (GREEN only when licence + schema +
   non-UNKNOWN rights; otherwise YELLOW/UNKNOWN, never silent GREEN)
 
 ## Enforcement
 
-- `tests/test_venues.py` asserts: UNKNOWN-rights plugin is
-  discoverable but not qualified; alpha-capability plugin is refused;
-  missing-rights declaration raises.
+- `tests/test_ultra.py` and `tests/test_preview_surface.py` assert:
+  UNKNOWN-rights plugin is discoverable but not qualified;
+  alpha-capability plugin is refused; missing-rights declaration raises.
 - `console/demo.html` + future community UI show the qualified flag
   alongside health/capabilities (no silent promotion).

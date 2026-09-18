@@ -4,8 +4,8 @@ Hybrid by measurement, not by fashion.
 
 ## Python — integration / research / data / plugins
 
-All community contracts, the plugin SDK, discovery, demo server, venue
-and market abstractions, and the synthetic replay live here
+All world-state contracts, the plugin SDK, discovery, the demo and
+WORLD NOW servers, the change engine, and the synthetic replay live here
 (`python/gods_eye/`). Rationale: fastest review loop, largest geospatial
 and data ecosystem, zero build toolchain for contributors
 (`pip install -e .` is enough).
@@ -30,14 +30,10 @@ SVG world grid because it is offline-capable and reviewable.
 The core needs only the Python standard library. Everything else is an
 optional extra, imported lazily inside functions:
 
-- `market` extra: DuckDB (local catalog index), ccxt (offline venue
-  inventory; per-venue *data* rights stay UNKNOWN until licensed), pandas,
-  pandas_market_calendars and exchange_calendars (session legs).
-- `capture` extra: Playwright (screenshot and film capture scripts).
+- `capture` extra: Playwright (screenshot and QA capture scripts).
 - `dev` extra: pytest.
-- Vendored: Leaflet 1.9.4 (BSD-2-Clause) in `console/vendor/`.
+- Vendored: MapLibre GL JS 6.10.0 (BSD-3-Clause), Leaflet 1.9.4
+  (BSD-2-Clause), Inter 5.3.0 (OFL-1.1), world-atlas 2.0.2 (ISC).
 
-Copyleft engines (NautilusTrader, LGPL) stay behind process boundaries and
-are never linked in-process; GPL/AGPL code is never linked. Full list:
-`legal/THIRD_PARTY_NOTICES.md`; inventory: `legal/SBOM.spdx.json`
-(proposed, sign-off pending).
+GPL/AGPL code is never linked. Full list: `legal/THIRD_PARTY_NOTICES.md`;
+inventory: `legal/SBOM.spdx.json`.

@@ -1,4 +1,4 @@
-# OPEN-SOURCE LICENSE REVIEW (V15 — recommendation, no relicensing yet)
+# OPEN-SOURCE LICENSE REVIEW (recommendation; superseded by the owner's decision)
 
 > Descriptive comparison for the future public core. Not legal advice.
 > No files are relicensed by this document.
@@ -40,3 +40,15 @@ upstream allows) and LGPL adapters strictly behind process boundaries.
 - Qanat-GPL and any GPL/AGPL code are never linked (existing REJECT stands).
 - Final sign-off needs counsel + contributor-licence clarity before any
   publish step. SBOM + NOTICE files ship with the preview.
+
+## Decision (2026-09-18) — supersedes the recommendation above
+
+The maintainer chose **MIT**, not Apache-2.0. The review above is kept
+unedited so the trade-off stays visible: **MIT carries no express patent
+grant**, which was the single reason Apache-2.0 was recommended. Every
+other conclusion still holds, and the removal of all execution-adjacent
+code from V1 narrows the patent exposure the recommendation was written
+against.
+
+Recorded in `legal/LICENSE_SIGNOFF.md` (status OBTAINED, maintainer
+decision, no external counsel review).

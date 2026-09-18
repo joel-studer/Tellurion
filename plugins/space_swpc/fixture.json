@@ -1,0 +1,1 @@
+{"items": [{"id": "SWPC-SYN-01", "issued": "synthetic-t0", "kp_index": 4, "observation": "OBSERVED", "observation_type": "GOVERNMENT_NOTICE", "provenance": "Tellurion synthetic fixture", "rights": "CC0-1.0 (synthetic)", "storm_level": "G0", "summary": "Synthetic Kp 4 — unsettled", "truth_mode": "SYNTHETIC"}], "note": "CC0 fixture; live shape mirrors SWPC JSON products"}

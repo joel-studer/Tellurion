@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Tellurion">
+  <title>Tellurion (for light backgrounds)</title>
+  <ellipse cx="32" cy="32" rx="29" ry="9" fill="none" stroke="#0B1522" stroke-opacity="0.3" stroke-width="2" transform="rotate(-23.4 32 32)"/>
+  <circle cx="32" cy="32" r="19" fill="#0B1522" stroke="#0B1522" stroke-width="3"/>
+  <path d="M32 13a19 19 0 0 1 0 38a9.5 19 0 0 0 0-38z" fill="#F2A12E"/>
+  <path d="M5.4 43.5a29 9 -23.4 0 0 53.2-23" fill="none" stroke="#0B1522" stroke-opacity="0.8" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="58.6" cy="20.5" r="3.8" fill="#F2A12E" stroke="#FFFFFF" stroke-width="1.5"/>
+</svg>

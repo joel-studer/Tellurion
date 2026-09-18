@@ -1,6 +1,6 @@
 # Contributor Covenant — lightweight adoption (preview)
 
-GOD'S EYE aims at a factual, review-first culture: argue about evidence,
+Tellurion aims at a factual, review-first culture: argue about evidence,
 rights, and interfaces — not about people.
 
 ## Promise

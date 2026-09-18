@@ -8,7 +8,7 @@
 
 ## Plugin acceptance
 
-`godseye plugins validate` PASS-equivalent (no FAIL rows), offline test
+`tellurion plugins validate` PASS-equivalent (no FAIL rows), offline test
 green, licence + non-UNKNOWN rights + provenance declared, core-only
 imports, no secrets, no outbound calls. One plugin per PR.
 

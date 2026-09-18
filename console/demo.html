@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GOD'S EYE — community demo</title>
+<title>Tellurion · classic demo</title>
 <style>
 :root{
   --bg:#0b0e14; --panel:#12161f; --panel2:#181e2a; --line:#242c3d;
@@ -80,7 +80,7 @@ input,select{background:#0b0e14;color:var(--txt);border:1px solid var(--line);bo
 </head>
 <body>
 <header class="topbar">
-  <b>GOD'S EYE</b>
+  <b>Tellurion</b>
   <span class="pill demo">COMMUNITY DEMO</span>
   <span class="pill safe">SYNTHETIC DATA</span>
   <span class="pill nolive">NO LIVE EXECUTION</span>
@@ -110,10 +110,10 @@ input,select{background:#0b0e14;color:var(--txt);border:1px solid var(--line);bo
   <aside id="right" class="card" aria-label="intelligence drawer">
     <h2>Intelligence drawer</h2>
     <div id="insp"><i style="color:var(--mut)">Select an event to inspect title, time, location,
-    entities, source, confidence, evidence, relationships, blind spots, and market context.</i></div>
+    entities, source, confidence, evidence, relationships, and blind spots.</i></div>
   </aside>
   <section id="timeline" class="card" aria-label="time machine">
-    <h2>Time machine — what did GOD'S EYE know at this time?</h2>
+    <h2>Time machine — what did Tellurion know at this time?</h2>
     <div class="tm">
       <span class="mode belief" id="modetag">HISTORICAL BELIEF</span>
       <button data-off="0">NOW</button>
@@ -198,12 +198,6 @@ function inspect(sel){
     ${d.relations.map(r=>`<div class="rel"><span>${esc(r.src)}</span>
       <span class="edge">—[${esc(r.label)}]→</span><span>${esc(r.dst)}</span>
       <span class="tag">method: ${esc(r.method)} · ${esc(r.model_version)}</span></div>`).join("")}
-    <h3>Market context (synthetic replay, generic contracts)</h3>
-    <table><tr><th>t</th><th>o/h/l/c</th><th>vol</th></tr>
-    ${d.market_reaction.bars.map(b=>`<tr><td>${esc(b.t)}</td><td>${b.open}/${b.high}/${b.low}/${b.close}</td><td>${b.volume}</td></tr>`).join("")}</table>
-    <p><small>instrument ${esc(d.market_instrument.instrument_id)} @ ${esc(d.venue.venue_id)} ·
-    prediction ${esc(d.prediction_market.market_id)} YES ${d.prediction_market.yes_price} / NO ${d.prediction_market.no_price} ·
-    rights: ${esc(d.rights)}</small></p>
     <h3>Related context</h3>
     <p style="font-size:13px">Focused evidence: <b>${esc(ev.id)}</b> · ${esc(ev.kind)} · ${esc(ev.ts)} —
     <i>${esc(ev.quote)}</i></p>
@@ -222,10 +216,10 @@ function renderHealth(){
   document.getElementById("blind").innerHTML=d.blind_spots.map(b=>
     `<div class="blind"><b>${esc(b.status)}</b> — ${esc(b.area)}<br>${esc(b.evidence||"")}</div>`).join("");
   document.getElementById("sys").textContent=
-    `dataset ${d.dataset_id} · ${d.license} · venues=${DEMO.venues.n_venues} · `+
-    `live=${DEMO.safety.ALLOW_LIVE===false?"disabled":"UNKNOWN"} · localhost-only${HERO?" · HERO":""}`;
+    `dataset ${d.dataset_id} · ${d.license} · sources=${d.source_health.length} · `+
+    `localhost-only${HERO?" · HERO":""}`;
   document.getElementById("sysstat").textContent=
-    `dataset ${d.dataset_id} · sources ${d.source_health.length} UP · live disabled`;
+    `dataset ${d.dataset_id} · sources ${d.source_health.length} UP`;
 }
 function applyMode(){
   const mode=document.getElementById("tmode").value;
@@ -241,7 +235,7 @@ function applyMode(){
 async function loadDemo(){
   try{DEMO=await jget("/api/demo");}
   catch(e){try{DEMO=await jget("http://127.0.0.1:8765/api/demo");}
-    catch(e2){document.getElementById("feed").textContent="demo API unavailable (serve via godseye demo)";return;}}
+    catch(e2){document.getElementById("feed").textContent="demo API unavailable (serve via tellurion demo)";return;}}
   renderFeed(); renderHealth(); drawWorld(); applyMode();
   if(HERO){ASOF=document.getElementById("asof").value; inspect(0);}
 }

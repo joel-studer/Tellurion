@@ -15,16 +15,16 @@ PUBLIC / LICENSED SOURCES
         |
    TIME MACHINE  (HISTORICAL BELIEF vs CURRENT REPLAY, as-of any date)
         |
-   UI / APIs  (/api/demo, /api/health, demo console)
+   CHANGE DETECTION  (what is different from the last observation:
+     EONET lifecycle, GDACS transitions, USGS seismic episodes)
         |
- generic optional: MARKET CONTEXT / EXECUTION REPLAY / PORTFOLIO
-   (venue contracts over synthetic replay data; no live execution)
+   UI / APIs  (/api/world/now, /api/world/changes, /api/demo, consoles)
 ```
 
 Cross-cutting: source health + blind spots (coverage honesty),
-rights-first gating (UNKNOWN never qualifies), localhost-only demo,
-`ALLOW_LIVE=false` enforced in code.
+rights-first gating (UNKNOWN never qualifies), localhost-only serving.
 
-What is NOT here: trading strategies, ranking or allocation policy, and
-credentials. Downstream layers plug in through the plugin SDK and
-extension slots (see `docs/OPEN_CORE_BOUNDARY.md`).
+What is NOT here: any trading, execution, venue, portfolio or market
+surface, and credentials. `tellurion doctor` and `release-check` both fail
+if such a module reappears (`boundary.trading_surface_hits`). Downstream
+layers plug in through the plugin SDK (see `docs/OPEN_CORE_BOUNDARY.md`).

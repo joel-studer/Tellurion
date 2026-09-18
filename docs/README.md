@@ -6,6 +6,8 @@
 | [Open-core boundary](OPEN_CORE_BOUNDARY.md) | what belongs here and how it is enforced |
 | [Tech stack](TECH_STACK.md) | standard-library Python core, dependency-free web UI |
 | [Governance](GOVERNANCE.md) | roles, plugin acceptance, breaking changes |
+| [Brand naming study](brand/BRAND_NAMING_STUDY.md) | how the public name was chosen |
+| [Identity](brand/IDENTITY.md) | symbol, colour, typography, motion |
 
 ## Guides
 
@@ -22,6 +24,7 @@
 
 ## Design
 
+- [Product design audit](design/PRODUCT_DESIGN_AUDIT.md)
 - [Ultra design system](design/ultra-design-system.md)
 - [World renderer decision](design/world-renderer-decision.md)
 - [MapLibre vs Leaflet](design/maplibre-vs-leaflet.md)

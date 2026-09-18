@@ -7,7 +7,7 @@ about: Something in the community preview behaves wrong
 
 **Steps to reproduce (commands + expected vs actual)**
 
-**Environment (`godseye doctor` verdict + Python/OS)**
+**Environment (`tellurion doctor` verdict + Python/OS)**
 
 **Rights/data involved (synthetic fixture or rights-cleared source?)**
 

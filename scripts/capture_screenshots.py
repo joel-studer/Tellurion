@@ -10,7 +10,7 @@ Captures (default out: docs/screenshots):
   entity-graph.png    entity neighbourhood (drawer scrolled to relations)
   time-machine.png    as-of applied in HISTORICAL BELIEF mode
   source-health.png   source health + blind spots column
-  plugin-system.png   real `godseye plugins list` output rendered as text
+  plugin-system.png   real `tellurion plugins list` output rendered as text
 
 With --frames-only, captures numbered demo frames for the 30-second
 video pipeline (see docs/SCREENSHOTS.md for the ffmpeg command).
@@ -72,10 +72,10 @@ def _plugin_html() -> str:
     rep = cmd_plugins(None)
     body = html.escape(json.dumps(rep, indent=1))[:6000]
     return ("<!doctype html><meta charset=utf-8>"
-            "<title>godseye plugins</title>"
+            "<title>tellurion plugins</title>"
             "<body style='background:#0b0e14;color:#e8edf5;"
             "font:13px/1.5 monospace;padding:24px'>"
-            "<h1 style='font-size:15px'>godseye plugins list "
+            "<h1 style='font-size:15px'>tellurion plugins list "
             "(explicit discovery only)</h1>"
             f"<pre>{body}</pre>")
 

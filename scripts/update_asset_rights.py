@@ -26,10 +26,38 @@ from gods_eye.future import boundary  # noqa: E402
 RENDER_BASIS = (
     "Rendered by the project maintainer from the bundled synthetic CC0 demo "
     "(procedural geography; no third-party map tiles, imagery, or fonts).")
+REAL_CAPTURE_BASIS = (
+    "Local screen capture of the running open-source app rendering "
+    "qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS "
+    "metadata, GDELT with citation, adsb.lol ODbL); the capture "
+    "composition is project-owned while underlying data stays under "
+    "per-source rights with in-app attribution. No persons, no private "
+    "data, no fake emergency.")
 
 RULES = (
+    ("docs/screenshots/world-now-*.png", "PROJECT-OWNED", REAL_CAPTURE_BASIS),
+    ("docs/screenshots/change-*.png", "PROJECT-OWNED", REAL_CAPTURE_BASIS),
+    ("docs/screenshots/replay-no-live-change-leak.png", "PROJECT-OWNED",
+     REAL_CAPTURE_BASIS),
+    ("docs/screenshots/aviation-*.png", "PROJECT-OWNED", REAL_CAPTURE_BASIS),
+    ("docs/screenshots/movement-hero.png", "PROJECT-OWNED", REAL_CAPTURE_BASIS),
+    ("docs/screenshots/hero-world-now.png", "PROJECT-OWNED", REAL_CAPTURE_BASIS),
     ("docs/screenshots/*", "PROJECT-OWNED", RENDER_BASIS),
     ("docs/media/*", "PROJECT-OWNED", RENDER_BASIS),
+    ("docs/brand/*", "PROJECT-OWNED",
+     "Tellurion identity assets drawn for this project (original SVG geometry)."),
+    ("console/brand/*", "PROJECT-OWNED",
+     "Tellurion identity assets drawn for this project (original SVG geometry)."),
+    ("console/media/*", "PROJECT-OWNED", RENDER_BASIS),
+    ("console/vendor/maplibre/*", "BSD-3-Clause",
+     "MapLibre GL JS 6.10.0 upstream npm release; licence text shipped as "
+     "console/vendor/maplibre/MAPLIBRE_LICENSE.txt."),
+    ("console/vendor/fonts/*", "OFL-1.1",
+     "Inter 5.3.0 variable font (Fontsource packaging); SIL Open Font License "
+     "1.1 shipped as console/vendor/fonts/INTER_OFL_LICENSE.txt."),
+    ("console/data/*", "ISC",
+     "world-atlas 2.0.2 TopoJSON (ISC) derived from Natural Earth 1:50m "
+     "(public domain); licence text console/data/WORLD_ATLAS_LICENSE.txt."),
     ("console/vendor/*", "BSD-2-Clause",
      "Leaflet 1.9.4 upstream release; licence text shipped as "
      "console/vendor/LEAFLET_LICENSE.txt."),
