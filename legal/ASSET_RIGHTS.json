@@ -253,6 +253,42 @@
    "sha256": "2fbcd51e7207b8b628b3cbc836bc1c82fe95123b042957a1629c502c4bd5afb7"
   },
   {
+   "path": "docs/screenshots/live-earth-daily-global.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Local screen capture of the running open-source app rendering qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS metadata, GDELT with citation, adsb.lol ODbL); the capture composition is project-owned while underlying data stays under per-source rights with in-app attribution. No persons, no private data, no fake emergency.",
+   "sha256": "8e1715e549daab1310592432b8370a3b9fee82f9186918be66e60b8781483a3a"
+  },
+  {
+   "path": "docs/screenshots/live-earth-global.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Local screen capture of the running open-source app rendering qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS metadata, GDELT with citation, adsb.lol ODbL); the capture composition is project-owned while underlying data stays under per-source rights with in-app attribution. No persons, no private data, no fake emergency.",
+   "sha256": "02c049926ef87fabd830e0914042f7a48b98052fe6e7954bdb0825dcd7c8f31b"
+  },
+  {
+   "path": "docs/screenshots/live-earth-goes-americas.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Local screen capture of the running open-source app rendering qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS metadata, GDELT with citation, adsb.lol ODbL); the capture composition is project-owned while underlying data stays under per-source rights with in-app attribution. No persons, no private data, no fake emergency.",
+   "sha256": "4d22c2935f981349ce7f61d35f1f0128770fd9abed23d2da6840fbdbf485edea"
+  },
+  {
+   "path": "docs/screenshots/live-earth-himawari-pacific.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Local screen capture of the running open-source app rendering qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS metadata, GDELT with citation, adsb.lol ODbL); the capture composition is project-owned while underlying data stays under per-source rights with in-app attribution. No persons, no private data, no fake emergency.",
+   "sha256": "8febba0d6489d9105ed51acb0faf4b6a6ae1cf14e1de86ff767471d97c73fc4f"
+  },
+  {
+   "path": "docs/screenshots/live-earth-stale-fallback.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Local screen capture of the running open-source app rendering qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS metadata, GDELT with citation, adsb.lol ODbL); the capture composition is project-owned while underlying data stays under per-source rights with in-app attribution. No persons, no private data, no fake emergency.",
+   "sha256": "0953c0c5edb00c306f1b6eb6711b5e97784a4d184ede3556818e10a1e4896fab"
+  },
+  {
+   "path": "docs/screenshots/live-earth-with-change-pins.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Local screen capture of the running open-source app rendering qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS metadata, GDELT with citation, adsb.lol ODbL); the capture composition is project-owned while underlying data stays under per-source rights with in-app attribution. No persons, no private data, no fake emergency.",
+   "sha256": "252e35b9edc96cff1b9e285fb6b1fe1881ce2ee67eacf324eea649c07ff34627"
+  },
+  {
    "path": "docs/screenshots/relations.png",
    "license": "PROJECT-OWNED",
    "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
@@ -266,6 +302,12 @@
   },
   {
    "path": "docs/screenshots/replay-no-live-change-leak.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Local screen capture of the running open-source app rendering qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS metadata, GDELT with citation, adsb.lol ODbL); the capture composition is project-owned while underlying data stays under per-source rights with in-app attribution. No persons, no private data, no fake emergency.",
+   "sha256": "553321a179a8078f07f7c9a0a15242011f9e96b3131ee3b4ead727413aa8c411"
+  },
+  {
+   "path": "docs/screenshots/replay-no-live-earth.png",
    "license": "PROJECT-OWNED",
    "basis": "Local screen capture of the running open-source app rendering qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS metadata, GDELT with citation, adsb.lol ODbL); the capture composition is project-owned while underlying data stays under per-source rights with in-app attribution. No persons, no private data, no fake emergency.",
    "sha256": "553321a179a8078f07f7c9a0a15242011f9e96b3131ee3b4ead727413aa8c411"

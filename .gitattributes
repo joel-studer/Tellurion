@@ -3,7 +3,18 @@
 *.cmd text eol=crlf
 *.png binary
 *.jpg binary
+*.jpeg binary
 *.gif binary
 *.mp4 binary
+*.webm binary
 *.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.parquet binary
+*.pyc binary
 console/vendor/** linguist-vendored

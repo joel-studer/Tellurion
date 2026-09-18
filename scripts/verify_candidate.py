@@ -76,8 +76,7 @@ def main() -> int:
     p = _run([sys.executable, "-c",
               "import gods_eye, gods_eye.cli, gods_eye.demo, "
               "gods_eye.future.validator, gods_eye.future.release_check, "
-              "gods_eye.plugins, gods_eye.demo, gods_eye.market, "
-              "gods_eye.execution, gods_eye.portfolio, gods_eye.core; "
+              "gods_eye.plugins, gods_eye.core; "
               "print(gods_eye.__file__)"])
     origin = (p.stdout or "").strip()
     check("imports (canonical + alias)",

@@ -29,7 +29,9 @@ def main() -> int:
         health = json.load(urllib.request.urlopen(
             base + "/api/health", timeout=5))
         assert health["ok"] is True, health
-        assert health["allow_live"] is False, health
+        # Beta contract: no allow_live key on /api/health (live mode is
+        # declared once, in /api/demo safety.ALLOW_LIVE=false below).
+        assert "allow_live" not in health, health
         assert health["community_mode"] is True, health
         payload = json.load(urllib.request.urlopen(
             base + "/api/demo", timeout=5))

@@ -67,6 +67,10 @@ PUBLIC_INCLUDE_FILES: Tuple[str, ...] = (
     "python/gods_eye/future/world_air.py",
     # Tellurion change engine V1 (generic public change detection sidecar)
     "python/gods_eye/future/world_change.py",
+    # Tellurion satellite evidence V2.1 (Sentinel-2 before/after sidecar)
+    "python/gods_eye/future/world_imagery.py",
+    # Tellurion LIVE EARTH V2.2 (GIBS freshness layer sidecar)
+    "python/gods_eye/future/world_earth.py",
     # public UI (demo + landing + ultra + gallery; ops console stays private)
     "console/demo.html",
     "console/landing.html",
@@ -106,6 +110,14 @@ PUBLIC_INCLUDE_FILES: Tuple[str, ...] = (
     "docs/screenshots/change-satellite-before-after.png",
     "docs/screenshots/change-satellite-cloud-limited.png",
     "docs/screenshots/change-satellite-no-observation.png",
+    # LIVE EARTH V2.2 visual acceptance (NASA GIBS, local renders)
+    "docs/screenshots/live-earth-global.png",
+    "docs/screenshots/live-earth-goes-americas.png",
+    "docs/screenshots/live-earth-himawari-pacific.png",
+    "docs/screenshots/live-earth-daily-global.png",
+    "docs/screenshots/live-earth-stale-fallback.png",
+    "docs/screenshots/live-earth-with-change-pins.png",
+    "docs/screenshots/replay-no-live-earth.png",
     # Release-evidence captures (Phase-8 visual gate, local renders)
     # hero loop (V18.5, 960px GIF rendered locally, scan-skipped binary)
     # public docs
@@ -135,6 +147,7 @@ PUBLIC_INCLUDE_FILES: Tuple[str, ...] = (
     # public docs (V17; shipped only where present in this repo)
     "docs/TECH_STACK.md",
     "docs/ARCHITECTURE.md",
+    "docs/RELEASE_NOTES_v1.0.0-beta.2.md",
     "docs/SCREENSHOTS.md",
     "docs/README.md",
     "docs/GOVERNANCE.md",
@@ -274,6 +287,10 @@ PUBLIC_INCLUDE_FILES: Tuple[str, ...] = (
     "tests/test_world_now_ui.py",
     # CHANGE ENGINE V1 contract (detectors, idempotency, schema gates)
     "tests/test_world_change_v22.py",
+    # SATELLITE EVIDENCE V2.1 contract (selection, rights, API, drawer)
+    "tests/test_world_imagery_v23.py",
+    # LIVE EARTH V2.2 contract (selection, freshness, API, mode)
+    "tests/test_world_earth_v24.py",
     # SATELLITE EVIDENCE V2.1 contract (selection, rights, API, drawer)
     # SATELLITE EVIDENCE V2.1 contract (selection, rights, API, drawer)
     # Tellurion public source docs (terms evidence, decisions, demos)

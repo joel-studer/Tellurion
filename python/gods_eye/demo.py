@@ -48,6 +48,8 @@ def demo_payload() -> dict:
         "community_mode": True,
         "network": "localhost-only; no external fetch",
         "credentials": "none required; none accepted",
+        "safety": {"ALLOW_LIVE": False,
+                   "mode": "local replay only; no live execution"},
     }
 
 
@@ -433,6 +435,72 @@ class _Handler(http.server.BaseHTTPRequestHandler):
                            "truth_label": "WORLD CHANGE (unavailable)",
                            "changes": [], "cursor": "", "counts": {},
                            "sources": {}}
+            self._send(json.dumps(payload, indent=1).encode(),
+                       "application/json")
+        elif path.startswith("/api/world/changes/") and path.endswith(
+                "/imagery"):
+            from urllib.parse import unquote
+            from gods_eye.future import world_imagery as _img
+            cid = unquote(path[len("/api/world/changes/"):-len("/imagery")],
+                          errors="replace")[:200]
+            change = _img.load_change(cid)
+            if change is None:
+                payload = {"change_id": cid,
+                           "status": "NO_SUITABLE_OBSERVATION",
+                           "before": None, "after": None,
+                           "generated_at": _img.utcnow(),
+                           "truth_label": _img.TRUTH_LABEL,
+                           "live": False, "real_data": True,
+                           "note": f"unknown change id: {cid}"}
+            else:
+                try:
+                    payload = _img.get_imagery(change)
+                except Exception as e:
+                    payload = {"change_id": cid,
+                               "status": "SOURCE_UNAVAILABLE",
+                               "before": None, "after": None,
+                               "generated_at": _img.utcnow(),
+                               "truth_label": _img.TRUTH_LABEL,
+                               "live": False, "real_data": True,
+                               "error": f"{type(e).__name__}: "
+                                        f"{str(e)[:200]}"}
+            self._send(json.dumps(payload, indent=1).encode(),
+                       "application/json")
+        elif path.startswith("/api/world/imagery/thumb/"):
+            from gods_eye.future import world_imagery as _img
+            key = path[len("/api/world/imagery/thumb/"):]
+            if key.endswith(".jpg"):
+                key = key[:-4]
+            blob = _img.read_thumb(key) if len(key) == 16 and key.isalnum() \
+                else None
+            if blob is None:
+                self._send(json.dumps(
+                    {"error": "unknown thumbnail",
+                     "truth_label": _img.TRUTH_LABEL}).encode(),
+                    "application/json")
+            else:
+                self._send(blob, "image/jpeg")
+        elif path == "/api/world/imagery/status":
+            from gods_eye.future import world_earth as _earth
+            try:
+                lat = float((query.get("lat") or [""])[0])
+            except ValueError:
+                lat = None
+            try:
+                lon = float((query.get("lon") or [""])[0])
+            except ValueError:
+                lon = None
+            try:
+                payload = _earth.get_status(lat=lat, lon=lon)
+            except Exception as e:
+                payload = {"generated_at": _earth.utcnow(),
+                           "live": False, "real_data": False,
+                           "truth_label": "LIVE EARTH (unavailable)",
+                           "error": f"{type(e).__name__}: "
+                                    f"{str(e)[:200]}",
+                           "layers": [], "selected": None,
+                           "current_source_by_region": [],
+                           "freshness_summary": {}}
             self._send(json.dumps(payload, indent=1).encode(),
                        "application/json")
         elif path == "/api/world/presets":

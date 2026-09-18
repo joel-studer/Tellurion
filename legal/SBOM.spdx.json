@@ -3,13 +3,13 @@
  "dataLicense": "CC0-1.0",
  "SPDXID": "SPDXRef-DOCUMENT",
  "name": "tellurion",
- "documentNamespace": "urn:tellurion:sbom:1.0.0-beta.1",
+ "documentNamespace": "urn:tellurion:sbom:1.0.0-beta.2",
  "creationInfo": {
-  "created": "2026-09-18T09:38:22+00:00",
+  "created": "2026-09-18T20:00:00+00:00",
   "creators": [
    "Tool: Tellurion final release pass (manual inventory, verified against the built candidate)"
   ],
-  "comment": "Regenerated 2026-09-18 for the v1.0.0-beta.1 release candidate: every CONTAINS package matches the vendored files and legal/THIRD_PARTY_NOTICES.md; MapLibre GL JS confirmed at runtime via maplibregl.getVersion() = 6.10.0. Project licence is MIT, decided by the maintainer; no external counsel review was performed. The optional market extra and its packages were removed with the trading surface."
+  "comment": "Regenerated 2026-09-18 for the v1.0.0-beta.2 release candidate: every CONTAINS package matches the vendored files and legal/THIRD_PARTY_NOTICES.md; MapLibre GL JS confirmed at runtime via maplibregl.getVersion() = 6.10.0. Project licence is MIT, decided by the maintainer; no external counsel review was performed. The optional market extra and its packages were removed with the trading surface."
  },
  "published": false,
  "signOff": "OBTAINED (maintainer decision 2026-09-18; see legal/LICENSE_SIGNOFF.md)",
@@ -18,8 +18,8 @@
   {
    "SPDXID": "SPDXRef-tellurion",
    "name": "tellurion",
-   "version": "1.0.0-beta.1",
-   "versionInfo": "1.0.0-beta.1",
+   "version": "1.0.0-beta.2",
+   "versionInfo": "1.0.0-beta.2",
    "license": "MIT",
    "licenseDeclared": "MIT",
    "licenseConcluded": "MIT",

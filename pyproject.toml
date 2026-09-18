@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gods-eye"
-version = "1.0.0b1"  # public tag: v1.0.0-beta.1
+version = "1.0.0b2"  # public tag: v1.0.0-beta.2
 description = "Tellurion: open-source, local-first world intelligence. A globe you can interrogate: sensor plugins, evidence trails, entity graph, and a time machine."
 readme = "README.md"
 requires-python = ">=3.13"
@@ -16,7 +16,6 @@ keywords = ["world-intelligence", "osint", "geospatial", "situational-awareness"
             "earthquakes", "ai-agent", "command-center", "plugins"]
 classifiers = [
     "Development Status :: 4 - Beta",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.13",
     "Operating System :: OS Independent",

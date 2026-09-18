@@ -138,6 +138,7 @@ const state = {
   related: new Set(), cache: new Map(), paletteItems: [], paletteIndex: 0,
   now: null, airNow: null, importantV2: null, nowError: null,
   changes: [], changeById: {},
+  liveEarth: { mode: "standard", layer: null, status: null },
   visible: { night: true, cities: true, graticule: false, aircraft: true, vessels: true, seismic: true,
     wildfire: true, satellite: true, storm: true, weather: true, infra: true, roads: true, cameras: true,
     notices: true, blind: false, coverage: true },
@@ -1606,6 +1607,162 @@ function featureAt(point) {
 }
 
 
+/* ------------------------------------------------------- LIVE EARTH —
+   GIBS freshness layer (WORLD NOW only). Single active raster source
+   under all overlays; STANDARD vector basemap stays the default.
+   Imagery is context: it never touches event truth, Important Now,
+   changes, or Sentinel evidence. Replay never reaches this code. */
+
+async function loadLiveEarth() {
+  // NOW-only entry point: replay returns before any imagery status,
+  // tile URL, or layer can load. STANDARD is the default; the user
+  // opts into LIVE EARTH explicitly (toolbar or E key).
+  if (!MODE_NOW) return false;
+  return true;
+}
+
+// NOTE: tile URLs arrive exclusively from /api/world/imagery/status
+// (verified dates, rights-checked). This file must contain no remote
+// tile endpoint literal: the offline UI contract forbids it, and the
+// backend stays the single URL source.
+function earthAgeText(ageSeconds) {
+  if (ageSeconds == null) return "age unknown";
+  const h = ageSeconds / 3600;
+  if (h < 1) return `${Math.max(1, Math.round(h * 60))} min old`;
+  if (h < 48) return `${h.toFixed(1)} h old`;
+  return `${(h / 24).toFixed(1)} days old`;
+}
+
+function earthClassLabel(cls) {
+  return { VERY_FRESH: "very fresh", FRESH: "fresh", AGING: "aging",
+    STALE: "stale", NO_COVERAGE: "no coverage" }[cls] || "unknown";
+}
+
+function renderEarthInfo() {
+  const box = $("earthInfo");
+  const live = state.liveEarth;
+  if (!MODE_NOW || live.mode !== "live") { box.hidden = true; box.innerHTML = ""; return; }
+  if (live.outage) {
+    box.hidden = false;
+    box.innerHTML = `<span class="hudchip"><i class="dot" style="background:#ff8a5b"></i>LIVE EARTH \u00b7 imagery source unavailable \u2014 vector basemap</span>`;
+    box.title = "The imagery provider failed repeatedly just now; the standard vector globe is shown instead. Overlays are unaffected.";
+    return;
+  }
+  const rec = live.layer;
+  if (!rec || rec.rights_status !== "ATTRIBUTION_REQUIRED" || !rec.tile_url) {
+    box.hidden = false;
+    box.innerHTML = `<span class="hudchip"><i class="dot" style="background:#8a93a6"></i>LIVE EARTH · no current imagery — vector basemap</span>`;
+    box.title = "No imagery layer verified right now; the standard vector globe is shown instead. No coverage is faked.";
+    return;
+  }
+  const cls = rec.freshness_class || "NO_COVERAGE";
+  const dot = { VERY_FRESH: "#3fe0b0", FRESH: "#3fe0b0", AGING: "#ffc857", STALE: "#ff8a5b", NO_COVERAGE: "#8a93a6" }[cls] || "#8a93a6";
+  box.hidden = false;
+  box.innerHTML = `<span class="hudchip"><i class="dot" style="background:${dot}"></i>LIVE EARTH · ${esc(rec.dataset || rec.layer)} · ${esc(earthClassLabel(cls)).toUpperCase()} · ${esc(earthAgeText(rec.age_seconds))} · NASA GIBS</span>`;
+  box.title = `${rec.dataset || rec.layer} · captured ${rec.captured_at} (${earthAgeText(rec.age_seconds)}) · ~${rec.resolution_m ?? "?"} m/px · ${earthClassLabel(cls)} · ${rec.rights?.attribution || "NASA GIBS"}`;
+  announce(`Live Earth: ${rec.dataset || rec.layer}, ${earthClassLabel(cls)}, ${earthAgeText(rec.age_seconds)}.`);
+}
+
+function applyEarthPaint() {
+  if (!map.getLayer("liveearth-raster")) return;
+  const cls = state.liveEarth.layer?.freshness_class || "NO_COVERAGE";
+  // MapLibre saturation is an OFFSET (-1..1, 0 = unchanged): never boost.
+  const paint = { VERY_FRESH: [0, 1], FRESH: [0, 1], AGING: [-0.25, 1], STALE: [-0.55, 0.92], NO_COVERAGE: [0, 0] }[cls] || [0, 0];
+  map.setPaintProperty("liveearth-raster", "raster-saturation", paint[0]);
+  map.setPaintProperty("liveearth-raster", "raster-opacity", paint[1]);
+}
+
+function setLiveEarthSource(rec) {
+  state.liveEarth.layer = rec || null;
+  if (rec) state.liveEarth.outage = false;
+  for (const id of ["land-fill", "country-border", "coastline"]) {
+    if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", rec ? "none" : "visible");
+  }
+  if (map.getLayer("liveearth-raster")) map.removeLayer("liveearth-raster");
+  if (map.getSource("liveearth")) map.removeSource("liveearth");
+  if (rec && rec.rights_status === "ATTRIBUTION_REQUIRED" && rec.tile_url) {
+    map.addSource("liveearth", { type: "raster", tiles: [rec.tile_url], tileSize: 256, maxzoom: rec.matrix?.includes("Level9") ? 9 : 7, attribution: "NASA GIBS" });
+    map.addLayer({ id: "liveearth-raster", type: "raster", source: "liveearth",
+      paint: { "raster-saturation": 0, "raster-opacity": 1 } }, "night-fill");
+    applyEarthPaint();
+  }
+  renderEarthInfo();
+  document.querySelector('[data-camera="earth"]')?.setAttribute("aria-pressed", state.liveEarth.mode === "live" ? "true" : "false");
+}
+
+async function refreshLiveEarth(reason) {
+  if (!MODE_NOW || state.liveEarth.mode !== "live" || !map) return;
+  try {
+    const c = map.getCenter();
+    const st = await getJSON(`/api/world/imagery/status?lat=${c.lat.toFixed(2)}&lon=${c.lng.toFixed(2)}`);
+    state.liveEarth.status = st;
+    const rec = (st.layers || []).find((l) => l.layer === st.selected) || null;
+    const changed = (rec?.layer || null) !== (state.liveEarth.layer?.layer || null)
+      || (rec?.captured_at || null) !== (state.liveEarth.layer?.captured_at || null);
+    if (changed || reason === "toggle") setLiveEarthSource(rec);
+    else renderEarthInfo();
+  } catch (_) {
+    setLiveEarthSource(null);
+  }
+}
+
+function toggleLiveEarth() {
+  if (!MODE_NOW) return;
+  state.liveEarth.mode = state.liveEarth.mode === "live" ? "standard" : "live";
+  if (state.liveEarth.mode === "live") {
+    announce("Live Earth imagery on. Standard vector basemap off.");
+    refreshLiveEarth("toggle");
+  } else {
+    setLiveEarthSource(null);
+    announce("Standard vector basemap. Live Earth imagery off.");
+  }
+}
+
+let earthTileErrors = 0;
+let earthTileWindow = 0;
+function noteEarthTileError() {
+  // Single bad tiles (swath edges) are noise; sustained failure
+  // (5 errors inside 30 s) falls back to the vector basemap.
+  const t = Date.now();
+  if (t - earthTileWindow > 30000) { earthTileErrors = 0; earthTileWindow = t; }
+  earthTileErrors += 1;
+  if (earthTileErrors < 5 || state.liveEarth.mode !== "live") return;
+  earthTileErrors = 0;
+  state.liveEarth.outage = true;
+  setLiveEarthSource(null);
+  state.liveEarth.outage = true;
+  renderEarthInfo();
+  announce("Live Earth imagery source unavailable. Vector basemap shown.");
+}
+
+function showEarthPopup(event) {
+  const rec = state.liveEarth.layer;
+  const tip = $("tooltip");
+  if (!rec || rec.rights_status !== "ATTRIBUTION_REQUIRED" || !rec.tile_url) {
+    tip.innerHTML = `<b>Live Earth</b>No verified imagery here right now — vector basemap shown. No coverage is faked.`;
+  } else {
+    tip.innerHTML = `<b>${esc(rec.dataset || rec.layer)}</b>${esc(rec.source)} · captured ${esc(rec.captured_at || "UNKNOWN")} (${esc(earthAgeText(rec.age_seconds))}) · ~${rec.resolution_m ?? "?"} m/px · ${esc(earthClassLabel(rec.freshness_class))}<br><span class="chip real">NASA GIBS · public domain</span>`;
+  }
+  tip.style.left = `${event.originalEvent.clientX + 14}px`;
+  tip.style.top = `${event.originalEvent.clientY + 14}px`;
+  tip.hidden = false;
+  clearTimeout(showEarthPopup._t);
+  showEarthPopup._t = setTimeout(() => { tip.hidden = true; }, 6000);
+}
+
+function wireLiveEarth() {
+  // NOW-only wiring: moveend reselects the single active source
+  // (debounced; backend capabilities are TTL-cached). Replay never
+  // calls this, so replay can never load provider-hosted imagery.
+  if (!MODE_NOW || !map) return;
+  let timer = null;
+  map.on("moveend", () => {
+    if (state.liveEarth.mode !== "live") return;
+    clearTimeout(timer);
+    timer = setTimeout(() => refreshLiveEarth("move"), 1000);
+  });
+}
+
 function wireMap() {
   let pending = null;
   map.on("mousemove", (event) => {
@@ -1628,6 +1785,7 @@ function wireMap() {
   map.on("click", async (event) => {
     const feature = featureAt(event.point);
     if (!feature) {
+      if (MODE_NOW && state.liveEarth.mode === "live") showEarthPopup(event);
       return;
     }
     if (feature.properties.point_count) {
@@ -1669,9 +1827,11 @@ function wireChrome() {
   document.querySelectorAll("#camera [data-camera]").forEach((b) => {
     b.innerHTML = svgIcon(cameraIcons[b.dataset.camera], "currentColor", 17);
     if (b.dataset.camera === "earth" && !MODE_NOW) { b.style.display = "none"; return; }
+    if (b.dataset.camera === "earth" && !MODE_NOW) { b.style.display = "none"; return; }
     b.onclick = () => {
       if (b.dataset.camera === "world") applyPreset("world", 1800);
       else if (b.dataset.camera === "event") flyToTarget(state.selected || state.events[0]);
+      else if (b.dataset.camera === "earth") toggleLiveEarth();
       else toggleFocus();
     };
   });
@@ -1704,6 +1864,7 @@ function onKey(event) {
   else if (key === "[") setTick(state.tick - 1);
   else if (key === "]") setTick(state.tick + 1);
   else if (key === "r") applyPreset("world", 1800);
+  else if (key === "e" && MODE_NOW) toggleLiveEarth();
   else if (key === "i" && state.selected) setInvestigation(!state.investigating);
 }
 
@@ -2119,6 +2280,7 @@ function nowDrawer(target, data) {
         </div>
       </div>
       <div class="drawer-body" id="drawerBody">
+        <section class="dsec"><h3>Satellite evidence</h3><div id="satEvidence"><p class="muted">Loading Sentinel-2 evidence\u2026</p></div></section>
         <section class="dsec"><h3>Before / after</h3>${delta}<p class="note">Only source-stated values. Area is shown only when a source states it.</p></section>
         <section class="dsec"><h3>Why flagged?</h3>${why}<p class="note">Public-interest ranking: ${esc(c.rank?.label || "")} (${esc(String(c.rank?.score ?? ""))}) · severity, freshness, corroboration, rarity, scope. Worth investigating — never financial advice.</p></section>
         <section class="dsec"><h3>Evidence (${esc(String((c.evidence || []).length))})</h3>${evd}</section>
@@ -2127,6 +2289,7 @@ function nowDrawer(target, data) {
         </dl><p class="note">${esc((c.rights || {}).note || "")}</p></section>
       </div>`;
     wireNowDrawer(target, data);
+    loadSatEvidence(target.id);
     return;
   }
   const ev = data.evidence, f = ev.fields || {};
@@ -2162,6 +2325,59 @@ function nowDrawer(target, data) {
       <section class="dsec"><h3>Rights</h3><div>${esc(ev.rights || "")}</div><div class="note">${esc(ev.attribution || "")}</div></section>
     </div>`;
   wireNowDrawer(target, data);
+}
+
+function satSideHTML(side) {
+  if (!side || !side.thumbnail) return "";
+  const t = side.thumbnail;
+  const res = side.resolution_m != null
+    ? `~${Math.round(side.resolution_m)} m/px preview \u00b7 ${side.native_resolution_m ?? 10} m source`
+    : "resolution not stated";
+  return `<figure class="satfig">
+    <figcaption><b>${esc(side.role)}</b> \u2014 ${esc(side.product_id || "")}</figcaption>
+    <img src="/api/world/imagery/thumb/${esc(t.ref)}.jpg" alt="${esc(side.role)} Sentinel-2 view" loading="lazy">
+    <dl class="kv">
+      <dt>Captured</dt><dd class="mono" title="${esc(side.captured_at ?? "UNKNOWN")}">${esc(utcLabel(side.captured_at))} \u00b7 ${esc(ageLabel(side.captured_at))}</dd>
+      <dt>Cloud</dt><dd>${side.cloud_cover_pct != null ? `${side.cloud_cover_pct}% \u00b7 ${esc(side.cloud_state || "")}` : esc(side.cloud_state || "UNKNOWN")}</dd>
+      <dt>Resolution</dt><dd>${esc(res)}</dd>
+      <dt>Freshness</dt><dd>${esc(side.cloud_state === "CLOUD_LIMITED" ? "usable with caution" : (side.cloud_state || "").toLowerCase() || "unknown")}</dd>
+      <dt>Rights</dt><dd>${esc((side.rights || {}).attribution || "")}</dd>
+    </dl>
+    ${side.source_url ? `<div><a href="${esc(side.source_url)}" target="_blank" rel="noopener">OPEN SOURCE</a> <span class="muted">catalog record, not a portal screenshot</span></div>` : ""}
+  </figure>`;
+}
+
+function satEvidenceHTML(p) {
+  const status = p.status || "NO_SUITABLE_OBSERVATION";
+  if (status === "NOT_ELIGIBLE") {
+    return `<p class="muted">No satellite evidence for this kind of change. ${esc(p.note || "")}</p>`;
+  }
+  if (status === "SOURCE_UNAVAILABLE" || status === "RATE_LIMITED") {
+    return `<p class="muted">Satellite catalog unreachable (${esc(status)}). ${esc(p.note || "The change itself is unaffected.")}</p>`;
+  }
+  if (status === "NO_SUITABLE_OBSERVATION" || (!p.before && !p.after)) {
+    return `<p class="muted">No suitable Sentinel-2 observation in the search windows. ${esc(p.note || "")}</p>`;
+  }
+  const limited = ((p.before || {}).cloud_state === "CLOUD_LIMITED") || ((p.after || {}).cloud_state === "CLOUD_LIMITED");
+  return `${limited ? `<div class="blindcard"><b>Limited view</b>Satellite evidence limited by cloud cover. Do not infer hidden surface changes.</div>` : ""}
+    <div class="satpair">${satSideHTML(p.before)}${satSideHTML(p.after)}</div>
+    ${!p.before || !p.after ? `<p class="muted">${esc(!p.before ? "No clear BEFORE scene." : "No clear AFTER scene yet.")} ${esc(p.note || "")}</p>` : ""}
+    <p class="note">Same Sentinel-2 tile where possible \u2014 directly comparable. Imagery is evidence, not a conclusion.</p>`;
+}
+
+async function loadSatEvidence(changeId) {
+  const box = $("satEvidence");
+  if (!box) return;
+  try {
+    const p = await getJSON(`/api/world/changes/${encodeURIComponent(changeId)}/imagery`);
+    if (!document.body.contains(box)) return;
+    if (state.selected?.id !== changeId) return;
+    box.innerHTML = satEvidenceHTML(p);
+  } catch (error) {
+    if (document.body.contains(box)) {
+      box.innerHTML = `<p class="muted">Satellite evidence unavailable (${esc(error.message)}).</p>`;
+    }
+  }
 }
 
 function wireNowDrawer(target, data) {  $("backToEvents").onclick = () => closeDrawer({ keepSelection: true });
@@ -2298,7 +2514,19 @@ async function main() {
     location.replace(`/ultra/classic${location.search}`);
     return;
   }
-  map.on("error", (event) => { if (!map.loaded()) showFatal(event.error || new Error("renderer error")); });
+  map.on("error", (event) => {
+    // Provider-hosted live-earth tiles fail independently of the app:
+    // they degrade to the vector basemap, never to the fatal dialog.
+    // liveearth is the app's only raster source: any tile error while
+    // LIVE EARTH is active is an imagery delivery failure, matched
+    // without embedding any provider hostname (offline UI contract).
+    if ((event && event.sourceId === "liveearth") ||
+        (event && event.tile && state.liveEarth.mode === "live")) {
+      noteEarthTileError();
+      return;
+    }
+    if (!map.loaded()) showFatal(event.error || new Error("renderer error"));
+  });
   map.on("load", async () => {
     try { map.setProjection?.({ type: "globe" }); } catch (_) { /* style projection already applied */ }
     try { map.setSky?.({ "sky-color": "#0a1726", "horizon-color": "#15304c", "fog-color": "#0a1726", "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, 0.55, 5, 0.25, 8, 0] }); } catch (_) { /* optional */ }
@@ -2308,6 +2536,8 @@ async function main() {
     if (MODE_NOW) addNowLayers();
     map.setPadding(chromePadding());
     wireMap();
+    await loadLiveEarth();
+    wireLiveEarth();
     renderNav();
     renderEvents();
     renderTimeline();

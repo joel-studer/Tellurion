@@ -24,6 +24,29 @@ Rights and content hashes for every file: `legal/ASSET_RIGHTS.json`.
 | `world-now-coverage.png` | source health: state, latency, next refresh, rights per source | `/ultra?mode=now&open=sources` |
 | `world-now-region.png` | region intelligence and blind spots for Austria | `/ultra?mode=now&region=Austria` |
 
+## CHANGE_DETECTED (real public feeds)
+
+| File | View | URL |
+|---|---|---|
+| `world-now-change-global.png` | globe with lime change rings among event rings | `/ultra?mode=now` |
+| `world-now-change-drawer.png` | change drawer: before/after, why flagged, evidence | `/ultra?mode=now&event=<chg-key>` |
+| `change-before-after.png` | regional framing of a selected change | `/ultra?mode=now&event=<chg-key>` |
+| `change-satellite-before-after.png` | Sentinel-2 BEFORE/AFTER pair with capture times, cloud, rights | change drawer → Satellite evidence |
+| `change-satellite-cloud-limited.png` | cloud-limited pair with honesty banner | change drawer → Satellite evidence |
+| `change-satellite-no-observation.png` | honest empty state (no suitable scene) | change drawer → Satellite evidence |
+
+## LIVE EARTH (NASA GIBS, captured 2026-09-18)
+
+| File | View | URL |
+|---|---|---|
+| `live-earth-global.png` | GOES true color over the Americas + LIVE EARTH freshness chip | `/ultra?mode=now`, then LIVE EARTH toggle |
+| `live-earth-goes-americas.png` | regional GOES view | `/ultra?mode=now&lat=30&lon=-95&zoom=2.5` |
+| `live-earth-himawari-pacific.png` | Pacific region (VIIRS fallback; no qualified Himawari true-color path) | `/ultra?mode=now&lat=20&lon=150&zoom=2.5` |
+| `live-earth-daily-global.png` | VIIRS daily mosaic over Europe/Africa, AGING chip | `/ultra?mode=now&lat=25&lon=15&zoom=2` |
+| `live-earth-stale-fallback.png` | provider outage: vector basemap + outage chip, no fatal dialog | LIVE EARTH with tile host blocked |
+| `live-earth-with-change-pins.png` | change rings and events over live imagery | `/ultra?mode=now` |
+| `replay-no-live-earth.png` | replay has no imagery mode (button hidden) | `/ultra?capture=world` |
+
 ## DEMO REPLAY (synthetic, deterministic)
 
 | File | View |

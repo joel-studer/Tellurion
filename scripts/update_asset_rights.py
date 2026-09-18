@@ -37,6 +37,9 @@ REAL_CAPTURE_BASIS = (
 RULES = (
     ("docs/screenshots/world-now-*.png", "PROJECT-OWNED", REAL_CAPTURE_BASIS),
     ("docs/screenshots/change-*.png", "PROJECT-OWNED", REAL_CAPTURE_BASIS),
+    ("docs/screenshots/live-earth-*.png", "PROJECT-OWNED", REAL_CAPTURE_BASIS),
+    ("docs/screenshots/replay-no-live-earth.png", "PROJECT-OWNED",
+     REAL_CAPTURE_BASIS),
     ("docs/screenshots/replay-no-live-change-leak.png", "PROJECT-OWNED",
      REAL_CAPTURE_BASIS),
     ("docs/screenshots/aviation-*.png", "PROJECT-OWNED", REAL_CAPTURE_BASIS),
