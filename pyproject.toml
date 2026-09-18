@@ -25,7 +25,7 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
-capture = ["playwright>=1.50"]
+capture = ["playwright>=1.63.0"]
 dev = ["pytest>=8.3"]
 
 [project.scripts]
