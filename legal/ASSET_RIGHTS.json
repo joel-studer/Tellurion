@@ -205,10 +205,40 @@
    "sha256": "242379b8d3dfe31eb2b3992e40b7cebfd314b543aab86f9e35c99793d916910b"
   },
   {
+   "path": "docs/screenshots/command-fresh-imagery.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "b5af8392e81f543b647780c6ef4682153cf04e2effab3c7602316a3a710b0e6f"
+  },
+  {
+   "path": "docs/screenshots/command-nearest-aircraft.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "cb6ed19fd0952f388835a112c325df8aae5ac9c04648c26198dba3ac9d175608"
+  },
+  {
    "path": "docs/screenshots/command-palette.png",
    "license": "PROJECT-OWNED",
    "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
    "sha256": "be1d84b84101767189a12404cf221f0308e6b84b302938412ed888ca641f875d"
+  },
+  {
+   "path": "docs/screenshots/command-radar-evidence.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "b4b9dfdac9abe1bffd6d2689bea92d9e9c7b5887aa44703804d81f0bec8cdd8f"
+  },
+  {
+   "path": "docs/screenshots/command-replay-6h.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "80c52ee60a031fe4e42f36c87e7ef730e6b44e1e679e5a4539f65e7b46e81252"
+  },
+  {
+   "path": "docs/screenshots/command-show-changes.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "0814ac89c00f01363097c0dee58b8a4f159e5c388db2ad0159ef7c9801775f77"
   },
   {
    "path": "docs/screenshots/earth-story.png",

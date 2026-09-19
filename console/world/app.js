@@ -1469,7 +1469,9 @@ function searchItems(query) {
     .filter((c) => !(MODE_NOW && /^Story:/.test(c.label))) // demo stories select synthetic objects
     .map((c) => ({ kind: "command", label: c.label, hint: c.hint ?? "Command", icon: c.icon, run: c.run, prefix: c.prefix }));
   const matches = (item) => !term || item.label.toLowerCase().includes(term) || String(item.hint).toLowerCase().includes(term);
-  return [...commands.filter(matches), ...items.filter(matches)].slice(0, 40);
+  const out = [...commands.filter(matches), ...items.filter(matches)].slice(0, 40);
+  if (term && !scope) out.unshift({ kind: "ask", label: `Ask: ${query.trim()}`, hint: "run as a world command", icon: "command", run: () => runToolCommand(query.trim()) });
+  return out;
 }
 
 function renderPalette() {
@@ -1492,6 +1494,7 @@ function runPaletteItem(index) {
   const item = state.paletteItems[index];
   if (!item) return;
   if (item.prefix) { $("paletteInput").value = item.prefix; state.paletteIndex = 0; renderPalette(); return; }
+  if (item.kind === "ask") { item.run?.(); return; }
   closeDialog("palette");
   item.run?.();
 }
@@ -1501,6 +1504,162 @@ function openPalette() {
   $("paletteInput").value = "";
   state.paletteIndex = 0;
   renderPalette();
+  $("paletteInput").focus();
+}
+
+/* First run only: one small hint bar, dismissed forever. */
+function maybeFirstRun() {
+  let seen = false;
+  try { seen = localStorage.getItem("tellurion_seen") === "1"; } catch (_) { seen = true; }
+  if (seen || !MODE_NOW) return;
+  const bar = document.createElement("div");
+  bar.id = "firstrun";
+  bar.setAttribute("role", "note");
+  bar.setAttribute("aria-label", "First run suggestions");
+  const suggestions = ["Show me what changed today", "Show the freshest Earth imagery", "Find nearby aircraft", "Rewind six hours"];
+  bar.innerHTML = `<span><b>Try asking Tellurion</b> (Ctrl+K):</span>${suggestions.map((s) => `<button class="btn ghost" type="button" data-q="${esc(s)}">${esc(s)}</button>`).join("")}<button class="icon-btn close" type="button" aria-label="Dismiss suggestions">${svgIcon("close")}</button>`;
+  bar.querySelectorAll("[data-q]").forEach((b) => { b.onclick = () => { dismiss(); openPalette(); $("paletteInput").value = b.dataset.q; state.paletteIndex = 0; renderPalette(); }; });
+  const dismiss = () => { try { localStorage.setItem("tellurion_seen", "1"); } catch (_) { /* private mode */ } bar.remove(); };
+  bar.querySelector(".close").onclick = dismiss;
+  document.body.appendChild(bar);
+  setTimeout(dismiss, 90000);
+}
+
+/* --------------------------------------- JARVIS tool commands (V2.4) */
+
+function toolContext() {
+  const c = map.getCenter();
+  const layers = Object.entries(state.visible || {}).filter(([, on]) => on).map(([k]) => k).join(",");
+  const sel = state.selected || {};
+  return { mode: MODE_NOW ? "now" : "replay", lat: +c.lat.toFixed(2), lon: +c.lng.toFixed(2), zoom: Math.round(map.getZoom() * 10) / 10,
+    selected: sel.id || "", selected_change: String(sel.id || "").startsWith("chg:") ? sel.id : "",
+    tick: state.tick, layers };
+}
+
+function toolActionSummary(res) {
+  const d = res.data || {};
+  const a = d.action;
+  if (a === "fly" || a === "set_time" || a === "enter_replay" || a === "return_to_now" || a === "select" || a === "track" || a === "stop_tracking" || a === "toggle_layer" || a === "open_evidence" || a === "set_time") return a.replace(/_/g, " ").toUpperCase();
+  if (res.tool && res.tool.startsWith("query_")) return "ANSWER";
+  return "RESULT";
+}
+
+function toolFreshness(res) {
+  try {
+    const d = res.data || {};
+    const stamps = [];
+    for (const c of (d.changes || []).concat(d.contacts || [])) {
+      const t = Date.parse(c.last_observed || c.captured_at || "");
+      if (Number.isFinite(t)) stamps.push(t);
+    }
+    if (!stamps.length && d.point) return "live snapshot";
+    if (!stamps.length) return String(res.generated_at || "").slice(0, 19);
+    const ageH = (Date.now() - Math.max(...stamps)) / 3600000;
+    if (ageH < 1) return `${Math.max(1, Math.round(ageH * 60))} min old`;
+    if (ageH < 48) return `${Math.round(ageH)} h old`;
+    return `STALE (${Math.round(ageH / 24)} d)`;
+  } catch (_) { return ""; }
+}
+
+function toolResultHTML(input, payload) {
+  const results = payload.results || [];
+  const cards = results.map((res) => {
+    const d = res.data || {};
+    const rows = [];
+    const push = (k, v) => { if (v == null || v === "") v = "—"; rows.push(`<div class="fact"><span class="k">${esc(k)}</span><span class="v">${esc(String(v))}</span></div>`); };
+    if (res.tool === "query_changes") (d.changes || []).slice(0, 8).forEach((c, i) => push(`${i + 1}. ${c.title || c.id}`, `${c.severity || ""} · ${c.last_observed || ""}`));
+    else if (res.tool === "query_contacts") (d.contacts || []).slice(0, 8).forEach((c) => push(`${c.class || ""} ${c.callsign || c.title || c.id || ""}`, c.note || (c.distance_km != null ? `${c.distance_km} km` : "")));
+    else if (res.tool === "query_imagery_freshness") (d.layers || []).slice(0, 6).forEach((l) => push(`${l.source || ""}`, `${l.freshness_class || ""}${l.age_hours != null ? ` · ${l.age_hours} h` : ""}`));
+    else if (res.tool === "query_observations") push("Modalities", (d.modalities || []).join(" + ") || "none"), push("Agreement", d.agreement || "");
+    else if (res.tool === "query_region") { push("Changes", d.here?.changes); push("Moving aircraft", d.here?.moving_aircraft); }
+    else if (res.tool === "query_important") (d.important || []).slice(0, 6).forEach((it) => push(`${it.class || ""}`, it.summary ? JSON.stringify(it.summary).slice(0, 80) : (it.title || it.id || "")));
+    else if (res.tool === "open_evidence" && d.summary) (d.summary.why_flagged || []).slice(0, 5).forEach((w) => push("Flagged", w));
+    if (!rows.length) push("Detail", res.note || payload.note || "no rows returned");
+    const freshness = toolFreshness(res);
+    return `<div class="toolcard" role="status" aria-label="Tool result ${esc(res.tool)} ${esc(res.status)}">
+      <div class="toolhead"><b>${esc(toolActionSummary(res))}</b><span class="mono muted">${esc(res.tool)}</span><span class="chip ${res.status === "SUCCESS" ? "real" : ""}">${esc(res.status)}</span></div>
+      ${rows.join("")}
+      <dl class="kv"><dt>Truth</dt><dd>${esc(res.truth_mode || "")}</dd><dt>Sources</dt><dd>${esc(String(res.source_count ?? ""))}</dd><dt>Freshness</dt><dd class="mono">${esc(String(freshness).slice(0, 19))}</dd></dl>
+      ${(res.warnings || []).map((w) => `<p class="note">${esc(w)}</p>`).join("")}
+      ${res.note && rows.length ? `<p class="note">${esc(res.note)}</p>` : ""}
+      <div class="actions" data-tool="${esc(res.tool)}" data-payload='${esc(JSON.stringify(d))}'>
+        ${d.action === "fly" || d.action === "select" || d.action === "track" ? `<button class="btn" type="button" data-act="fly">Fly to</button>` : ""}
+        ${(d.entity && d.entity.id) || d.summary?.entity?.id ? `<button class="btn" type="button" data-act="evidence">Open evidence</button>` : ""}
+        ${["enter_replay", "return_to_now", "stop_tracking", "set_time", "toggle_layer"].includes(d.action) ? `<button class="btn" type="button" data-act="run">Run</button>` : ""}
+      </div>
+    </div>`;
+  }).join("");
+  return `<div class="toolresults" aria-live="polite"><p class="muted">“${esc(input)}” — ${results.length ? results.map((r) => `${esc(r.tool)}: ${esc(r.status)}`).join(" · ") : esc(payload.note || payload.unparsed ? "no parse" : "no result")}</p>${cards || `<p class="muted">${esc(payload.note || "Try a place name, 'show changes today', 'nearest aircraft', 'replay 6h', or 'return to now'.")}</p>`}</div>`;
+}
+
+function applyToolAction(tool, data) {
+  const action = data.action;
+  if (action === "fly" && data.lat != null) {
+    map.flyTo({ center: [data.lon, data.lat], zoom: data.zoom ?? 5, essential: true, duration: REDUCED_MOTION ? 0 : 1800 });
+    closeDialog("palette");
+  } else if (action === "select" || action === "track") {
+    const ent = data.entity || {};
+    closeDialog("palette");
+    if (ent.id && ent.id.startsWith("chg:")) { openChangeById(ent.id); }
+    else if (ent.id && ent.id.startsWith("AIR:")) { selectNowTarget(ent.id); if (action === "track") toggleFollow({ id: ent.id, title: ent.title || ent.id }); }
+    else if (data.lat != null) { map.flyTo({ center: [data.lon, data.lat], zoom: 7, essential: true }); }
+  } else if (action === "stop_tracking") { if (state.following) toggleFollow({ id: state.following }); closeDialog("palette"); }
+  else if (action === "toggle_layer") { setVisible(data.layer, data.on ?? !(state.visible || {})[data.layer]); }
+  else if (action === "open_evidence") {
+    const id = data.summary?.entity?.id || data.entity?.id;
+    closeDialog("palette");
+    if (id) openChangeById(id);
+  } else if (action === "enter_replay") { closeDialog("palette"); enterReplayHours(data.hours_ago ?? 6); }
+  else if (action === "return_to_now") { closeDialog("palette"); returnToNow(); }
+  else if (action === "set_time") { if (data.tick != null) setTick(data.tick, { animate: false }); }
+}
+
+async function openChangeById(id) {
+  if (id.startsWith("chg:")) {
+    const ev = (state.events || []).find((e) => e.id === id);
+    if (ev) { selectTarget(ev); return; }
+  }
+  try {
+    const data = await nowEvidence(id);
+    if (data) nowDrawer({ id, title: id, kind: data.kind }, data);
+  } catch (_) { /* evidence drawer is best-effort */ }
+}
+
+function enterReplayHours(hours) {
+  if (MODE_NOW) { location.href = `${location.pathname}?view=world`; return; }
+  // Demo replay is a 12-minute scenario (1 tick = 1 minute): rewinding
+  // past its start lands on T0. Archive-hour replay is future work.
+  setTick(Math.max(0, MAX_TICK - Math.round(hours * 60)));
+}
+
+function returnToNow() {
+  if (!MODE_NOW) { location.href = `${location.pathname}?mode=now&view=world`; return; }
+  setMode("current");
+}
+
+async function runToolCommand(text) {
+  const box = $("paletteList");
+  box.innerHTML = `<li class="group" aria-live="polite">Asking Tellurion…</li>`;
+  const ctx = toolContext();
+  const params = new URLSearchParams({ q: text, ...Object.fromEntries(Object.entries(ctx).filter(([, v]) => v !== "" && v != null).map(([k, v]) => [k, String(v)])) });
+  let payload;
+  try {
+    payload = await getJSON(`/api/world/tools?${params.toString()}`);
+  } catch (error) {
+    payload = { input: text, results: [], note: `tool layer unreachable (${error.message})` };
+  }
+  box.innerHTML = toolResultHTML(text, payload);
+  box.querySelectorAll(".toolcard .actions").forEach((bar) => {
+    const data = JSON.parse(bar.dataset.payload || "{}");
+    const tool = bar.dataset.tool;
+    bar.querySelectorAll("button").forEach((btn) => {
+      btn.onclick = () => {
+        if (btn.dataset.act === "fly") applyToolAction(tool, { ...data, action: data.lat != null ? "fly" : data.action });
+        else if (btn.dataset.act === "evidence") applyToolAction(tool, { action: "open_evidence", summary: { entity: data.entity || data.summary?.entity }, entity: data.entity || data.summary?.entity });
+        else if (btn.dataset.act === "run") applyToolAction(tool, data);
+      };
+    });
+  });
   $("paletteInput").focus();
 }
 
@@ -1907,10 +2066,14 @@ async function openingNow() {
   // Deep-link camera first (numbers only, validated ranges).
   try {
     const la = parseFloat(QS.get("lat") || ""), lo = parseFloat(QS.get("lon") || ""),
-      z = parseFloat(QS.get("zoom") || "");
+      z = parseFloat(QS.get("zoom") || ""), b = parseFloat(QS.get("bearing") || ""), p = parseFloat(QS.get("pitch") || "");
     if (isFinite(la) && isFinite(lo) && Math.abs(la) <= 90 && Math.abs(lo) <= 180)
-      map.jumpTo({ center: [lo, la], zoom: (isFinite(z) && z >= 1 && z <= 12) ? z : 2 });
+      map.jumpTo({ center: [lo, la], zoom: (isFinite(z) && z >= 1 && z <= 12) ? z : 2,
+        bearing: (isFinite(b) && Math.abs(b) <= 180) ? b : 0, pitch: (isFinite(p) && p >= 0 && p <= 60) ? p : 0 });
+    const layers = (QS.get("layers") || "").split(",").map((s) => s.trim()).filter(Boolean).slice(0, 24);
+    if (layers.length) for (const key of layers) { try { if (key in (state.visible || {})) setVisible(key, true); } catch (_) { /* unknown layer ignored */ } }
   } catch (_) { /* default globe view */ }
+  maybeFirstRun();
   map.on("moveend", () => {
     try {
       const c = map.getCenter();
@@ -1918,6 +2081,9 @@ async function openingNow() {
       q.set("mode", "now");
       q.set("lat", c.lat.toFixed(2)); q.set("lon", c.lng.toFixed(2));
       q.set("zoom", String(Math.round(map.getZoom() * 10) / 10));
+      q.set("bearing", String(Math.round(map.getBearing() * 10) / 10)); q.set("pitch", String(Math.round(map.getPitch() * 10) / 10));
+      q.set("layers", Object.entries(state.visible || {}).filter(([, on]) => on).map(([k]) => k).join(","));
+      q.set("tick", String(state.tick));
       history.replaceState(null, "", `${location.pathname}?${q.toString()}`);
     } catch (_) { /* share URL is best-effort */ }
   });
@@ -2495,6 +2661,10 @@ function writeDeepLink() {
     }
     const c = map.getCenter();
     q.set("lat", c.lat.toFixed(2)); q.set("lon", c.lng.toFixed(2)); q.set("zoom", String(Math.round(map.getZoom() * 10) / 10));
+    q.set("bearing", String(Math.round(map.getBearing() * 10) / 10)); q.set("pitch", String(Math.round(map.getPitch() * 10) / 10));
+    q.set("layers", Object.entries(state.visible || {}).filter(([, on]) => on).map(([k]) => k).join(","));
+    q.set("tick", String(state.tick));
+    // Never serialized: credentials, auth material, private state (none exist client-side).
     history.replaceState(null, "", `${location.pathname}?${q.toString()}`);
   } catch (_) { /* share URL is best-effort */ }
 }

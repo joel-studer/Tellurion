@@ -76,6 +76,8 @@ PUBLIC_INCLUDE_FILES: Tuple[str, ...] = (
     # Sentinel-1 SAR corroboration sidecar)
     "python/gods_eye/future/earth_observation.py",
     "python/gods_eye/future/world_sar.py",
+    # JARVIS text tool layer V2.4 (provider-neutral world tools)
+    "python/gods_eye/future/world_tools.py",
     # public UI (demo + landing + ultra + gallery; ops console stays private)
     "console/demo.html",
     "console/landing.html",
@@ -130,6 +132,12 @@ PUBLIC_INCLUDE_FILES: Tuple[str, ...] = (
     "docs/screenshots/sar-orbit-mismatch-warning.png",
     "docs/screenshots/sar-no-after.png",
     "docs/screenshots/replay-no-sar-live-leak.png",
+    # JARVIS TEXT TOOLS V2.4 visual acceptance (command cards, local renders)
+    "docs/screenshots/command-show-changes.png",
+    "docs/screenshots/command-nearest-aircraft.png",
+    "docs/screenshots/command-radar-evidence.png",
+    "docs/screenshots/command-replay-6h.png",
+    "docs/screenshots/command-fresh-imagery.png",
     # Release-evidence captures (Phase-8 visual gate, local renders)
     # hero loop (V18.5, 960px GIF rendered locally, scan-skipped binary)
     # public docs
@@ -306,6 +314,8 @@ PUBLIC_INCLUDE_FILES: Tuple[str, ...] = (
     "tests/test_world_earth_v24.py",
     # SAR CORROBORATION V2.3 contract (search, orbit, rights, API, drawer)
     "tests/test_world_sar_v25.py",
+    # JARVIS TEXT TOOLS V2.4 contract (tools, parser, palette, share)
+    "tests/test_world_tools_v26.py",
     # SATELLITE EVIDENCE V2.1 contract (selection, rights, API, drawer)
     # SATELLITE EVIDENCE V2.1 contract (selection, rights, API, drawer)
     # Tellurion public source docs (terms evidence, decisions, demos)

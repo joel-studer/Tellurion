@@ -29,7 +29,7 @@ import json
 import socket
 import webbrowser
 from pathlib import Path
-from typing import Any, Tuple
+from typing import Any, Dict, Tuple
 
 HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
@@ -533,7 +533,30 @@ class _Handler(http.server.BaseHTTPRequestHandler):
                     "live": False, "real_data": True}
             self._send(json.dumps(payload, indent=1).encode(),
                        "application/json")
-        elif path.startswith("/api/world/sar/thumb/"):
+        elif path == "/api/world/tools":
+            from gods_eye.future import world_tools as _tools
+            text = (query.get("q") or [""])[0][:500]
+            ctx: Dict[str, Any] = {"mode": (query.get("mode") or [""])[
+                0][:16]}
+            for key in ("lat", "lon", "zoom", "tick"):
+                try:
+                    raw = (query.get(key) or [""])[0]
+                    ctx[key] = float(raw) if raw != "" else None
+                except ValueError:
+                    ctx[key] = None
+            for key in ("selected", "selected_change", "layers"):
+                raw = (query.get(key) or [""])[0][:400]
+                if raw:
+                    ctx[key] = raw
+            try:
+                payload = _tools.run_command(text, ctx)
+            except Exception as e:
+                payload = {"input": text, "calls": [], "results": [],
+                           "unparsed": text,
+                           "note": f"tool layer error: "
+                                   f"{type(e).__name__}"}
+            self._send(json.dumps(payload, indent=1).encode(),
+                       "application/json")
             from gods_eye.future import world_sar as _sar
             key = path[len("/api/world/sar/thumb/"):]
             if key.endswith(".png"):
