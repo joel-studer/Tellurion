@@ -466,6 +466,87 @@ class _Handler(http.server.BaseHTTPRequestHandler):
                                         f"{str(e)[:200]}"}
             self._send(json.dumps(payload, indent=1).encode(),
                        "application/json")
+        elif path.startswith("/api/world/changes/") and path.endswith(
+                "/observations"):
+            from urllib.parse import unquote
+            from gods_eye.future import earth_observation as _eo
+            from gods_eye.future import world_imagery as _img
+            from gods_eye.future import world_sar as _sar
+            cid = unquote(
+                path[len("/api/world/changes/"):-len("/observations")],
+                errors="replace")[:200]
+            change = _img.load_change(cid)
+            if change is None:
+                payload = {"change_id": cid,
+                           "status": "NO_SUITABLE_OBSERVATION",
+                           "observations": [], "modalities": [],
+                           "agreement": "SINGLE",
+                           "agreement_note": f"unknown change id: {cid}",
+                           "generated_at": _img.utcnow(),
+                           "truth_label": "EARTH OBSERVATIONS (multi-sensor)",  # noqa: E501
+                           "live": False, "real_data": True}
+            else:
+                try:
+                    optical = _img.get_imagery(change)
+                except Exception as e:
+                    optical = {"status": "SOURCE_UNAVAILABLE",
+                               "before": None, "after": None,
+                               "error": f"{type(e).__name__}: "
+                                        f"{str(e)[:200]}"}
+                try:
+                    radar = _sar.get_observations(change)
+                except Exception as e:
+                    radar = {"status": "SOURCE_UNAVAILABLE",
+                             "before": None, "after": None,
+                             "comparability": {},
+                             "error": f"{type(e).__name__}: "
+                                      f"{str(e)[:200]}"}
+                observations = []
+                for side in (optical.get("before"),
+                             optical.get("after")):
+                    if side:
+                        observations.append({**side,
+                                             "supports_change": bool(
+                                                 optical.get("status")
+                                                 == "AVAILABLE")})
+                for side in (radar.get("before"), radar.get("after")):
+                    if side:
+                        observations.append({**side,
+                                             "supports_change": bool(
+                                                 radar.get("status")
+                                                 == "AVAILABLE")})
+                state, note = _eo.agreement(observations)
+                payload = {
+                    "change_id": cid,
+                    "status": ("AVAILABLE" if observations
+                               else "NO_SUITABLE_OBSERVATION"),
+                    "observations": observations,
+                    "modalities": sorted(
+                        {str(o.get("modality") or "UNKNOWN")
+                         for o in observations}),
+                    "agreement": state, "agreement_note": note,
+                    "optical_status": optical.get("status"),
+                    "radar_status": radar.get("status"),
+                    "radar_comparability": radar.get("comparability", {}),
+                    "generated_at": _img.utcnow(),
+                    "truth_label": "EARTH OBSERVATIONS (multi-sensor)",
+                    "live": False, "real_data": True}
+            self._send(json.dumps(payload, indent=1).encode(),
+                       "application/json")
+        elif path.startswith("/api/world/sar/thumb/"):
+            from gods_eye.future import world_sar as _sar
+            key = path[len("/api/world/sar/thumb/"):]
+            if key.endswith(".png"):
+                key = key[:-4]
+            blob = _sar.read_thumb(key) if len(key) == 16 and key.isalnum() \
+                else None
+            if blob is None:
+                self._send(json.dumps(
+                    {"error": "unknown thumbnail",
+                     "truth_label": _sar.TRUTH_LABEL}).encode(),
+                    "application/json")
+            else:
+                self._send(blob, "image/png")
         elif path.startswith("/api/world/imagery/thumb/"):
             from gods_eye.future import world_imagery as _img
             key = path[len("/api/world/imagery/thumb/"):]

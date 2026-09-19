@@ -72,6 +72,10 @@ PUBLIC_INCLUDE_FILES: Tuple[str, ...] = (
     "python/gods_eye/future/world_imagery.py",
     # Tellurion LIVE EARTH V2.2 (GIBS freshness layer sidecar)
     "python/gods_eye/future/world_earth.py",
+    # Tellurion multi-sensor V2.3 (generic observation model +
+    # Sentinel-1 SAR corroboration sidecar)
+    "python/gods_eye/future/earth_observation.py",
+    "python/gods_eye/future/world_sar.py",
     # public UI (demo + landing + ultra + gallery; ops console stays private)
     "console/demo.html",
     "console/landing.html",
@@ -119,6 +123,13 @@ PUBLIC_INCLUDE_FILES: Tuple[str, ...] = (
     "docs/screenshots/live-earth-stale-fallback.png",
     "docs/screenshots/live-earth-with-change-pins.png",
     "docs/screenshots/replay-no-live-earth.png",
+    # SAR CORROBORATION V2.3 visual acceptance (real quicklook bytes,
+    # local renders; mismatch/no-after states staged from live scenes)
+    "docs/screenshots/sar-flood-before-after.png",
+    "docs/screenshots/optical-plus-sar-evidence.png",
+    "docs/screenshots/sar-orbit-mismatch-warning.png",
+    "docs/screenshots/sar-no-after.png",
+    "docs/screenshots/replay-no-sar-live-leak.png",
     # Release-evidence captures (Phase-8 visual gate, local renders)
     # hero loop (V18.5, 960px GIF rendered locally, scan-skipped binary)
     # public docs
@@ -293,6 +304,8 @@ PUBLIC_INCLUDE_FILES: Tuple[str, ...] = (
     "tests/test_world_imagery_v23.py",
     # LIVE EARTH V2.2 contract (selection, freshness, API, mode)
     "tests/test_world_earth_v24.py",
+    # SAR CORROBORATION V2.3 contract (search, orbit, rights, API, drawer)
+    "tests/test_world_sar_v25.py",
     # SATELLITE EVIDENCE V2.1 contract (selection, rights, API, drawer)
     # SATELLITE EVIDENCE V2.1 contract (selection, rights, API, drawer)
     # Tellurion public source docs (terms evidence, decisions, demos)

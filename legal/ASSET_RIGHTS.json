@@ -289,6 +289,12 @@
    "sha256": "252e35b9edc96cff1b9e285fb6b1fe1881ce2ee67eacf324eea649c07ff34627"
   },
   {
+   "path": "docs/screenshots/optical-plus-sar-evidence.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "8d9fb912e32184708216495e638ee02d643dc1f3883791e7d974335a65141d41"
+  },
+  {
    "path": "docs/screenshots/relations.png",
    "license": "PROJECT-OWNED",
    "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
@@ -311,6 +317,30 @@
    "license": "PROJECT-OWNED",
    "basis": "Local screen capture of the running open-source app rendering qualified public feeds (USGS/NWS/SWPC public domain, EONET/GDACS metadata, GDELT with citation, adsb.lol ODbL); the capture composition is project-owned while underlying data stays under per-source rights with in-app attribution. No persons, no private data, no fake emergency.",
    "sha256": "553321a179a8078f07f7c9a0a15242011f9e96b3131ee3b4ead727413aa8c411"
+  },
+  {
+   "path": "docs/screenshots/replay-no-sar-live-leak.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "841f250094b655038904d7d07f9d89701038ee4eac55dc104465de46de18f48f"
+  },
+  {
+   "path": "docs/screenshots/sar-flood-before-after.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "567ba2f1c6afa1fc5a67b077b939fdb4f58496815f80812765cf9f2d81e9823a"
+  },
+  {
+   "path": "docs/screenshots/sar-no-after.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "df2917b636606d4838ca5cf4297bbe76839b1793e4fd21747404d8b39ae35697"
+  },
+  {
+   "path": "docs/screenshots/sar-orbit-mismatch-warning.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "3b160e27c380ba22ce13bc9ac98f5cf27ea9766bc3e03380dafb4cd7433f3173"
   },
   {
    "path": "docs/screenshots/source-health.png",

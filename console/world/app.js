@@ -2280,7 +2280,7 @@ function nowDrawer(target, data) {
         </div>
       </div>
       <div class="drawer-body" id="drawerBody">
-        <section class="dsec"><h3>Satellite evidence</h3><div id="satEvidence"><p class="muted">Loading Sentinel-2 evidence\u2026</p></div></section>
+        <section class="dsec"><h3>Satellite evidence</h3><div id="satEvidence"><p class="muted">Loading Sentinel-2 evidence\u2026</p></div></section><section class="dsec"><h3>Earth observations — radar</h3><div id="radarEvidence"><p class="muted">Loading Sentinel-1 evidence\u2026</p></div></section>
         <section class="dsec"><h3>Before / after</h3>${delta}<p class="note">Only source-stated values. Area is shown only when a source states it.</p></section>
         <section class="dsec"><h3>Why flagged?</h3>${why}<p class="note">Public-interest ranking: ${esc(c.rank?.label || "")} (${esc(String(c.rank?.score ?? ""))}) · severity, freshness, corroboration, rarity, scope. Worth investigating — never financial advice.</p></section>
         <section class="dsec"><h3>Evidence (${esc(String((c.evidence || []).length))})</h3>${evd}</section>
@@ -2290,6 +2290,7 @@ function nowDrawer(target, data) {
       </div>`;
     wireNowDrawer(target, data);
     loadSatEvidence(target.id);
+    loadEarthObservations(target.id);
     return;
   }
   const ev = data.evidence, f = ev.fields || {};
@@ -2376,6 +2377,78 @@ async function loadSatEvidence(changeId) {
   } catch (error) {
     if (document.body.contains(box)) {
       box.innerHTML = `<p class="muted">Satellite evidence unavailable (${esc(error.message)}).</p>`;
+    }
+  }
+}
+
+function sarSideHTML(side) {
+  if (!side || !side.thumbnail) return "";
+  const t = side.thumbnail;
+  const res = side.spatial_resolution_m != null
+    ? `~${Math.round(side.spatial_resolution_m)} m source`
+    : "resolution not stated";
+  return `<figure class="satfig">
+    <figcaption><b>${esc(side.role)}</b> — ${esc(side.product_id || "")}</figcaption>
+    <img src="/api/world/sar/thumb/${esc(t.ref)}.png" alt="${esc(side.role)} Sentinel-1 radar view" loading="lazy">
+    <dl class="kv">
+      <dt>Sensor</dt><dd>${esc(side.sensor || "Sentinel-1")} · ${esc(side.platform || "")} · ${esc(side.orbit_direction || "")} orbit</dd>
+      <dt>Captured</dt><dd class="mono" title="${esc(side.captured_at ?? "UNKNOWN")}">${esc(utcLabel(side.captured_at))} · ${esc(ageLabel(side.captured_at))}</dd>
+      <dt>Resolution</dt><dd>${esc(res)}</dd>
+      <dt>Polarisation</dt><dd class="mono">${esc(side.polarisation || "UNKNOWN")}</dd>
+      <dt>Orbit direction</dt><dd>${esc(side.orbit_direction || "UNKNOWN")}${side.relative_orbit != null ? ` · relative orbit ${esc(String(side.relative_orbit))}` : ""}</dd>
+      <dt>Day/night capable</dt><dd>yes — radar needs no sunlight</dd>
+      <dt>Cloud-independent</dt><dd>yes — C-band backscatter, not photography</dd>
+      <dt>Processing level</dt><dd>${esc(side.processing_level || "GRD")} · preview is DERIVED_RENDER</dd>
+      <dt>Rights</dt><dd>${esc((side.rights || {}).attribution || "")}</dd>
+    </dl>
+    ${side.source_url ? `<div><a href="${esc(side.source_url)}" target="_blank" rel="noopener">OPEN SOURCE</a> <span class="muted">catalog record, not a portal screenshot</span></div>` : ""}
+  </figure>`;
+}
+
+function obsEvidenceHTML(p) {
+  const status = p.status || "NO_SUITABLE_OBSERVATION";
+  if (status === "NOT_ELIGIBLE") {
+    return `<p class="muted">No radar evidence for this kind of change. ${esc(p.note || "")}</p>`;
+  }
+  if (status === "SOURCE_UNAVAILABLE" || status === "RATE_LIMITED") {
+    return `<p class="muted">Radar catalog unreachable (${esc(status)}). ${esc(p.note || "The change itself is unaffected.")}</p>`;
+  }
+  if (status === "NEEDS_CREDENTIALS" || status === "AUTH_REQUIRED") {
+    return `<p class="muted">Radar quicklooks need no account, but the full-product path does. ${esc(p.note || "Operator credentials are not configured.")}</p>`;
+  }
+  const comp = p.radar_comparability || p.comparability || {};
+  const warn = comp.warning ? `<div class="blindcard"><b>Geometry note</b>${esc(comp.warning)}</div>` : "";
+  const agree = p.agreement && p.agreement !== "SINGLE"
+    ? `<p class="note">Multi-sensor agreement: <b>${esc(p.agreement)}</b> — ${esc(p.agreement_note || "")}</p>`
+    : "";
+  if (status === "NO_SUITABLE_OBSERVATION" || (!p.before && !p.after)) {
+    return `<p class="muted">No Sentinel-1 acquisition in the search windows. ${esc(p.note || "")}</p>`;
+  }
+  return `${warn}
+    <div class="satpair">${sarSideHTML(p.before)}${sarSideHTML(p.after)}</div>
+    ${!p.before || !p.after ? `<p class="muted">${esc(!p.before ? "No BEFORE acquisition." : "No AFTER acquisition yet.")} ${esc(p.note || "")}</p>` : ""}
+    ${agree}
+    <p class="note">Radar imagery is not optical photography. Backscatter differs where surface water, roughness, or structure changed — cause is never inferred from radar alone.</p>`;
+}
+
+async function loadEarthObservations(changeId) {
+  const box = $("radarEvidence");
+  if (!box) return;
+  try {
+    const p = await getJSON(`/api/world/changes/${encodeURIComponent(changeId)}/observations`);
+    if (!document.body.contains(box)) return;
+    if (state.selected?.id !== changeId) return;
+    const radar = { status: p.radar_status || p.status, before: null, after: null, note: "", radar_comparability: p.radar_comparability || {}, agreement: p.agreement, agreement_note: p.agreement_note };
+    for (const o of (p.observations || [])) {
+      if (o.modality !== "SAR") continue;
+      if (o.role === "BEFORE") radar.before = o;
+      if (o.role === "AFTER") radar.after = o;
+    }
+    if (!radar.before && !radar.after && radar.status === "AVAILABLE") radar.status = "NO_SUITABLE_OBSERVATION";
+    box.innerHTML = obsEvidenceHTML(radar);
+  } catch (error) {
+    if (document.body.contains(box)) {
+      box.innerHTML = `<p class="muted">Radar evidence unavailable (${esc(error.message)}).</p>`;
     }
   }
 }
