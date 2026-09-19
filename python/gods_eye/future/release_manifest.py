@@ -149,6 +149,7 @@ PUBLIC_INCLUDE_FILES: Tuple[str, ...] = (
     "docs/TECH_STACK.md",
     "docs/ARCHITECTURE.md",
     "docs/RELEASE_NOTES_v1.0.0-beta.2.md",
+    "docs/RELEASE_NOTES_v1.0.0-beta.3.md",
     "docs/SCREENSHOTS.md",
     "docs/README.md",
     "docs/GOVERNANCE.md",
