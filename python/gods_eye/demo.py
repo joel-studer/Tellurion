@@ -372,8 +372,11 @@ class _Handler(http.server.BaseHTTPRequestHandler):
                 # Map positions only: exactly what the globe draws, nothing
                 # more (no registration, squawk or history). Keeps the light
                 # payload small while every counted aircraft stays visible.
+                # position_age_s rides along: source-stated fix age for
+                # honest freshness without a second fetch.
                 fields = ("icao24", "lat", "lon", "track_deg", "callsign",
-                          "type", "baro_alt_ft", "gs_kt")
+                          "type", "baro_alt_ft", "gs_kt",
+                          "position_age_s")
                 slim["positions"] = [
                     {k: s.get(k) for k in fields}
                     for s in payload.get("states", [])
@@ -548,8 +551,40 @@ class _Handler(http.server.BaseHTTPRequestHandler):
                 raw = (query.get(key) or [""])[0][:400]
                 if raw:
                     ctx[key] = raw
+            direct = (query.get("tool") or [""])[0][:64]
             try:
-                payload = _tools.run_command(text, ctx)
+                if direct:
+                    # Explicit provider-neutral tool call (agent
+                    # contract): scalar args only, validated inside.
+                    args: Dict[str, Any] = {}
+                    for key in ("lat", "lon", "zoom", "tick",
+                                "radius_km", "hours_ago", "limit"):
+                        raw = (query.get(key) or [""])[0]
+                        if raw == "":
+                            continue
+                        try:
+                            args[key] = float(raw)
+                        except ValueError:
+                            pass
+                    for key in ("id", "entity_id", "change_id",
+                                "region", "place", "category",
+                                "severity", "layer", "intent",
+                                "modality", "sort", "camera_mode",
+                                "since"):
+                        raw = (query.get(key) or [""])[0][:200]
+                        if raw:
+                            args[key] = raw
+                    raw_on = (query.get("on") or [""])[0].lower()
+                    if raw_on:
+                        args["on"] = raw_on
+                    payload = {"input": text,
+                               "calls": [{"tool": direct,
+                                          "args": args}],
+                               "results": [_tools.execute(
+                                   direct, args, ctx)],
+                               "unparsed": "", "note": ""}
+                else:
+                    payload = _tools.run_command(text, ctx)
             except Exception as e:
                 payload = {"input": text, "calls": [], "results": [],
                            "unparsed": text,

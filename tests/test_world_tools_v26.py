@@ -358,11 +358,13 @@ def test_public_private_boundary():
     from gods_eye.future import world_tools as t
     assert set(t.TOOLS) <= {"fly_to", "set_view", "select_entity",
                             "track_entity", "stop_tracking",
+                            "set_camera_mode", "track_nearest",
                             "toggle_layer", "query_region",
                             "query_contacts", "query_changes",
                             "query_important", "query_observations",
                             "query_imagery_freshness", "open_evidence",
                             "set_time", "enter_replay", "return_to_now"}
+    assert {"set_camera_mode", "track_nearest"} <= set(t.TOOLS)
 
 
 def test_replay_isolation():

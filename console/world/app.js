@@ -1261,10 +1261,71 @@ function flyToTarget(target, zoom = null) {
 }
 
 function toggleFollow(target) {
+  // V2.4b: follow is one face of the unified track state.
+  if (state.following === target.id && trackState.active) { stopTrack(); return; }
+  if (target.kind === "aircraft" || String(target.id || "").startsWith("AIR:")) {
+    startTrack(target.id, trackState.camera_mode || "FOLLOW");
+    return;
+  }
   state.following = state.following === target.id ? null : target.id;
   $("followBtn")?.setAttribute("aria-pressed", String(state.following === target.id));
   if (state.following) followSelected();
   announce(state.following ? `Following ${target.title}` : "Stopped following");
+}
+
+/* --------------------------------------- contacts panel (V2.4b) ---
+Nearby real contacts for the tracked object (or map center), served
+by the JARVIS query_contacts tool. SATELLITES / VESSELS / CAMERAS
+appear only when an enabled source serves them — never faked.
+*/
+const CONTACT_RADII = [50, 100, 250, 500];
+const CONTACT_SORTS = ["NEAREST", "NEWEST", "IMPORTANT"];
+const contactState = { radius: 250, sort: "NEAREST" };
+
+function toggleContactsPanel(force) {
+  const panel = $("contactsPanel");
+  const show = typeof force === "boolean" ? force : panel.hidden;
+  panel.hidden = !show;
+  if (show) loadContactsPanel();
+}
+
+async function loadContactsPanel() {
+  const panel = $("contactsPanel");
+  const pos = trackState.last_position;
+  const c = pos ? { lat: pos.lat, lon: pos.lon } : map.getCenter();
+  const lat = pos ? pos.lat : c.lat, lon = pos ? pos.lon : c.lng;
+  panel.innerHTML = `<div class="track-top"><b>Contacts</b><span class="chip">query_contacts</span>
+    <button class="icon-btn close" type="button" id="contactsClose" aria-label="Close contacts">${svgIcon("close")}</button></div>
+    <div class="actions" role="group" aria-label="Contact radius">${CONTACT_RADII.map((r) => `<button class="btn${contactState.radius === r ? "" : " ghost"}" type="button" data-radius="${r}" aria-pressed="${contactState.radius === r}">${r} km</button>`).join("")}</div>
+    <div class="actions" role="group" aria-label="Contact sorting">${CONTACT_SORTS.map((s) => `<button class="btn${contactState.sort === s ? "" : " ghost"}" type="button" data-sort="${s}" aria-pressed="${contactState.sort === s}">${s}</button>`).join("")}</div>
+    <div id="contactsList" aria-live="off"><p class="muted">Loading contacts…</p></div>`;
+  $("contactsClose").onclick = () => toggleContactsPanel(false);
+  panel.querySelectorAll("[data-radius]").forEach((b) => { b.onclick = () => { contactState.radius = +b.dataset.radius; loadContactsPanel(); }; });
+  panel.querySelectorAll("[data-sort]").forEach((b) => { b.onclick = () => { contactState.sort = b.dataset.sort; loadContactsPanel(); }; });
+  try {
+    const r = await getJSON(`/api/world/tools?${new URLSearchParams({ tool: "query_contacts", lat: String(lat), lon: String(lon), radius_km: String(contactState.radius), sort: contactState.sort }).toString()}`);
+    const contacts = r.results?.[0]?.data?.contacts || [];
+    const list = $("contactsList");
+    if (!list) return;
+    list.innerHTML = contacts.slice(0, 20).map((ct, i) => {
+      const label = ct.callsign || ct.title || ct.id || ct.class || "";
+      const sub = ct.note || [ct.distance_km != null ? `${ct.distance_km} km` : "", ct.severity || "", "live"].filter(Boolean).join(" · ");
+      const canTrack = ct.class === "AIRCRAFT" && ct.id;
+      return `<div class="rel" data-i="${i}"><b>${esc(label)}</b><span class="muted">${esc(sub)}</span><br>
+        <button class="btn ghost" type="button" data-act="select">Select</button>
+        ${canTrack ? `<button class="btn ghost" type="button" data-act="track">Track</button>` : ""}
+        ${ct.class === "CHANGE" || ct.class === "EVENT" ? `<button class="btn ghost" type="button" data-act="evidence">Evidence</button>` : ""}</div>`;
+    }).join("") || `<p class="muted">No contacts in range.</p>`;
+    list.querySelectorAll(".rel").forEach((row) => {
+      const ct = contacts[+row.dataset.i];
+      row.querySelector('[data-act="select"]').onclick = () => { if (ct.class === "AIRCRAFT" && ct.id) selectNowTarget(ct.id); else if (ct.id) openChangeById(ct.id); };
+      row.querySelector('[data-act="track"]') && (row.querySelector('[data-act="track"]').onclick = () => startTrack(ct.id, trackState.camera_mode || "FOLLOW"));
+      row.querySelector('[data-act="evidence"]') && (row.querySelector('[data-act="evidence"]').onclick = () => openChangeById(ct.id));
+    });
+  } catch (_) {
+    const list = $("contactsList");
+    if (list) list.innerHTML = `<p class="muted">Contacts unavailable.</p>`;
+  }
 }
 
 function followSelected() {
@@ -1272,6 +1333,422 @@ function followSelected() {
   if (!found) return;
   const options = { center: [found.lon, found.lat], padding: chromePadding() };
   if (REDUCED_MOTION) map.jumpTo(options); else map.easeTo({ ...options, duration: 900 });
+}
+
+/* ------------------------------------------- V2.4b track mode ----
+One canonical track state for every entity type. Camera modes FOLLOW /
+ORBIT / CHASE / OVERVIEW with a bounded transition grammar. Positions
+are interpolated ONLY between valid fixes and freeze honestly on STALE.
+*/
+const TRACK = { STALE_AFTER_S: 120, TRAIL_MAX_PTS: 40, TRANSITION_MIN_MS: 500, TRANSITION_MAX_MS: 2000,
+  CAMERA_MODES: ["FOLLOW", "ORBIT", "CHASE", "OVERVIEW"] };
+const trackState = { active: false, entity_type: "", entity_id: "", source: "", acquired_at: "", last_position: null,
+  last_update: "", freshness: "", camera_mode: "FOLLOW", fix_state: "UNKNOWN", pre_track_view: null, fixes: [], tick_count: 0 };
+let trackTimer = null, orbitRaf = 0, orbitBearing = 0, trackContextTimer = 0;
+
+function trackTransitionDuration(distKm) {
+  if (!Number.isFinite(distKm)) return 1200;
+  return Math.max(TRACK.TRANSITION_MIN_MS, Math.min(TRACK.TRANSITION_MAX_MS, 500 + distKm * 1.5));
+}
+
+function trackCameraOptions(mode, lon, lat, heading) {
+  const zoom = map.getZoom();
+  if (mode === "OVERVIEW") return { center: [lon, lat], zoom: Math.max(2, zoom - 2), pitch: 30, bearing: map.getBearing() };
+  if (mode === "CHASE") return { center: [lon, lat], zoom: Math.min(12, Math.max(zoom, 7)), pitch: 65, bearing: Number.isFinite(heading) ? heading : map.getBearing() };
+  if (mode === "ORBIT") return { center: [lon, lat], zoom: Math.min(12, Math.max(zoom, 6)), pitch: 50, bearing: map.getBearing() };
+  return { center: [lon, lat], zoom: Math.min(12, Math.max(zoom, 6)), pitch: 45, bearing: map.getBearing() };
+}
+
+function applyTrackCamera(mode, lon, lat, heading, distKm, transition) {
+  const options = { ...trackCameraOptions(mode, lon, lat, heading), padding: chromePadding(), essential: true };
+  if (REDUCED_MOTION) { map.jumpTo(options); return; }
+  const duration = transition === "TARGET_TO_TARGET" ? Math.min(900, trackTransitionDuration(distKm)) : trackTransitionDuration(distKm);
+  map.easeTo({ ...options, duration });
+}
+
+function fixAgeS(fix) {
+  // Source-stated age first (honest freshness); wall-clock fallback
+  // only when the fix carries its own timestamp; NaN when neither.
+  // NOTE: JSON null must stay missing (+null would read as 0 s old).
+  const raw = fix?.position_age_s;
+  const stated = (raw === null || raw === undefined || raw === "")
+    ? NaN : +raw;
+  if (Number.isFinite(stated) && stated >= 0) return stated;
+  const t = fix?.position_time || fix?.t;
+  if (!t) return NaN;
+  const age = (Date.now() - Date.parse(t)) / 1000;
+  return Number.isFinite(age) ? Math.max(0, age) : NaN;
+}
+
+function trackFixState(ageS, hasPair) {
+  if (!Number.isFinite(ageS)) return "UNKNOWN";
+  if (ageS <= 30) return "LIVE FIX";
+  if (ageS <= TRACK.STALE_AFTER_S) return hasPair ? "INTERPOLATED" : "LIVE FIX";
+  return "STALE";
+}
+
+function interpolateFix(prev, latest, nowMs) {
+  // Bounded interpolation between two valid fixes; never extrapolates.
+  if (!prev || !latest) return latest;
+  const t0 = Date.parse(prev.t), t1 = Date.parse(latest.t);
+  if (!Number.isFinite(t0) || !Number.isFinite(t1) || t1 <= t0) return latest;
+  const k = Math.max(0, Math.min(1, (nowMs - t0) / (t1 - t0)));
+  return { ...latest, lat: prev.lat + (latest.lat - prev.lat) * k, lon: prev.lon + (latest.lon - prev.lon) * k, interpolated: k > 0 && k < 1 };
+}
+
+function currentTrackFix() {
+  const id = trackState.entity_id;
+  if (MODE_NOW && id.startsWith("AIR:")) {
+    const hex = id.slice(4).toLowerCase();
+    return (state.airNow?.states || state.airNow?.positions || []).find((x) => x.icao24 === hex) || null;
+  }
+  if (!MODE_NOW) {
+    const found = findObject(id);
+    return found ? { ...found.obj, lat: found.lat, lon: found.lon } : null;
+  }
+  return null;
+}
+
+function startTrack(id, cameraMode = "FOLLOW") {
+  stopTrackLoop();
+  ensureTrackLayers();
+  const mode = TRACK.CAMERA_MODES.includes(cameraMode) ? cameraMode : "FOLLOW";
+  const nowIso = new Date().toISOString();
+  if (MODE_NOW && !(typeof id === "string" && id.startsWith("AIR:"))) { trackUnavailable(id, "tracking supports live aircraft in WORLD NOW"); return false; }
+  if (!MODE_NOW && typeof id === "string" && (id.startsWith("AIR:") || id.startsWith("chg:"))) { trackUnavailable(id, "replay tracks replay entities only"); return false; }
+  const fix = currentTrackFixFor(id);
+  if (!fix || fix.lat == null) { trackUnavailable(id, "target not in the current snapshot"); return false; }
+  const prev = map.getCenter();
+  const distKm = haversineKm(prev.lat, prev.lng, fix.lat, fix.lon);
+  trackState.active = true; trackState.entity_id = id;
+  trackState.full_fix = null; trackState._fullTimeUsed = false;
+  trackState.entity_type = MODE_NOW ? "AIRCRAFT" : "REPLAY_ENTITY";
+  trackState.source = MODE_NOW ? "adsb.lol" : "replay";
+  trackState.acquired_at = nowIso; trackState.camera_mode = mode;
+  trackState.last_position = { lat: fix.lat, lon: fix.lon };
+  // Never invent a timestamp: an unknown fix time stays unknown and
+  // the stated source age (position_age_s) drives freshness instead.
+  trackState.last_update = fix.position_time || fix.t || null;
+  const initAgeS = fixAgeS(fix);
+  trackState.fix_state = trackFixState(Number.isFinite(initAgeS) ? initAgeS : NaN, false);
+  trackState.freshness = Number.isFinite(initAgeS) ? (initAgeS <= 30 ? `${Math.max(0, Math.round(initAgeS))}s` : `${Math.round(initAgeS / 60)}m`) : "UNKNOWN";
+  trackState.fixes = trackState.last_update
+    ? [{ lat: fix.lat, lon: fix.lon, t: trackState.last_update }] : [];
+  trackState.pre_track_view = { center: [prev.lng, prev.lat], zoom: map.getZoom(), bearing: map.getBearing(), pitch: map.getPitch() };
+  state.following = id;
+  applyTrackCamera(mode, fix.lon, fix.lat, fix.track_deg ?? fix.heading, distKm, "WORLD_TO_TARGET");
+  if (mode === "ORBIT") startOrbitLoop();
+  renderTrackHud(fix);
+  refreshTrackFullFix();
+  updateTrackTrail(true);
+  trackTimer = setInterval(trackTick, 1000);
+  scheduleTrackContext();
+  announce(`Tracking ${fix.callsign || id}. ${mode} camera.`);
+  writeDeepLink();
+  return true;
+}
+
+function currentTrackFixFor(id) {
+  if (MODE_NOW && id.startsWith("AIR:")) {
+    const hex = id.slice(4).toLowerCase();
+    return (state.airNow?.states || state.airNow?.positions || []).find((x) => x.icao24 === hex) || null;
+  }
+  if (!MODE_NOW) {
+    const found = findObject(id);
+    return found ? { ...found.obj, lat: found.lat, lon: found.lon } : null;
+  }
+  return null;
+}
+
+function trackUnavailable(id, reason) {
+  trackState.active = false;
+  const box = $("trackHud");
+  if (box) { box.hidden = false; box.innerHTML = `<div class="track-top"><span class="chip">TARGET UNAVAILABLE</span></div><p class="muted">${esc(reason)} — location and context preserved.</p><div class="actions"><button class="btn" type="button" id="trackBack">Back to world</button></div>`;
+    $("trackBack").onclick = () => { box.hidden = true; }; }
+  announce(`Target unavailable. ${reason}.`);
+}
+
+function stopTrackLoop() {
+  if (trackTimer) { clearInterval(trackTimer); trackTimer = null; }
+  if (orbitRaf) { cancelAnimationFrame(orbitRaf); orbitRaf = 0; }
+  if (trackContextTimer) { clearTimeout(trackContextTimer); trackContextTimer = 0; }
+}
+
+function stopTrack(returnHome = true) {
+  stopTrackLoop();
+  const was = trackState.active;
+  trackState.active = false; trackState.entity_id = ""; trackState.fixes = []; trackState.fix_state = "UNKNOWN";
+  trackState.full_fix = null; trackState._fullTimeUsed = false;
+  try { delete $("trackHud").dataset.built; } catch (_) { /* hud optional */ }
+  state.following = null;
+  $("trackHud").hidden = true; $("contactsPanel").hidden = true;
+  try { map.getSource("tracktrail")?.setData({ type: "FeatureCollection", features: [] }); map.getSource("trackring")?.setData({ type: "FeatureCollection", features: [] }); } catch (_) { /* layers optional */ }
+  if (returnHome && was && trackState.pre_track_view) {
+    const v = trackState.pre_track_view;
+    if (REDUCED_MOTION) map.jumpTo({ ...v, padding: chromePadding() });
+    else map.easeTo({ ...v, padding: chromePadding(), essential: true, duration: 1200 });
+  }
+  $("followBtn")?.setAttribute("aria-pressed", "false");
+  announce("Stopped tracking.");
+  writeDeepLink();
+}
+
+function setTrackCameraMode(mode) {
+  if (!trackState.active) return false;
+  if (!TRACK.CAMERA_MODES.includes(mode)) return false;
+  trackState.camera_mode = mode;
+  if (orbitRaf) { cancelAnimationFrame(orbitRaf); orbitRaf = 0; }
+  const pos = trackState.last_position;
+  if (pos) {
+    const fix = currentTrackFix();
+    applyTrackCamera(mode, pos.lon, pos.lat, fix?.track_deg ?? fix?.heading, 0, "TARGET_TO_OVERVIEW");
+    if (mode === "ORBIT") startOrbitLoop();
+  }
+  renderTrackHud(currentTrackFix());
+  scheduleTrackContext();
+  writeDeepLink();
+  return true;
+}
+
+function startOrbitLoop() {
+  if (REDUCED_MOTION || orbitRaf) return;
+  orbitBearing = map.getBearing();
+  let last = performance.now();
+  const step = (now) => {
+    if (!trackState.active || trackState.camera_mode !== "ORBIT") { orbitRaf = 0; return; }
+    const dt = Math.min(100, now - last); last = now;
+    orbitBearing = (orbitBearing + dt * 0.008) % 360;
+    try { map.rotateTo(orbitBearing, { duration: 0 }); } catch (_) { /* rotation unsupported */ }
+    orbitRaf = requestAnimationFrame(step);
+  };
+  orbitRaf = requestAnimationFrame(step);
+}
+
+function trackTick() {
+  if (!trackState.active) return;
+  trackState.tick_count += 1;
+  const fix = currentTrackFix();
+  const nowMs = Date.now();
+  if (fix && fix.lat != null) {
+    const t = fix.position_time || fix.t
+      || (trackState.full_fix || {}).position_time || null;
+    if (t) {
+      trackState.last_update = t;
+      const last = trackState.fixes[trackState.fixes.length - 1];
+      if (!last || last.lat !== fix.lat || last.lon !== fix.lon) {
+        trackState.fixes.push({ lat: fix.lat, lon: fix.lon, t });
+        while (trackState.fixes.length > TRACK.TRAIL_MAX_PTS) trackState.fixes.shift();
+      }
+    }
+    const ageS = fixAgeS(fix);
+    const n = trackState.fixes.length;
+    const shown = (n >= 2 && ageS <= TRACK.STALE_AFTER_S) ? interpolateFix(trackState.fixes[n - 2], trackState.fixes[n - 1], nowMs) : { lat: fix.lat, lon: fix.lon };
+    trackState.last_position = { lat: shown.lat, lon: shown.lon };
+    trackState.last_update = t;
+    trackState.fix_state = trackFixState(ageS, n >= 2);
+    trackState.freshness = !Number.isFinite(ageS) ? "UNKNOWN" : (ageS <= 30 ? `${Math.max(0, Math.round(ageS))}s` : `${Math.round(ageS / 60)}m`);
+    if (trackState.fix_state !== "STALE") {
+      const c = map.getCenter();
+      map.easeTo({ center: [shown.lon, shown.lat], duration: 900, essential: true });
+      void c;
+    }
+    updateTrackRing(shown);
+    updateTrackTrail(false);
+    renderTrackHud(fix);
+  } else {
+    trackState.fix_state = "STALE";
+    renderTrackHud(null);
+  }
+}
+
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const r = (d) => d * Math.PI / 180;
+  const h = Math.sin(r(lat2 - lat1) / 2) ** 2 + Math.cos(r(lat1)) * Math.cos(r(lat2)) * Math.sin(r(lon2 - lon1) / 2) ** 2;
+  return 6371 * 2 * Math.asin(Math.sqrt(h));
+}
+
+function fmtNum(v, digits = 0) {
+  return v == null || !Number.isFinite(+v) ? "—" : (+v).toLocaleString("en-US", { maximumFractionDigits: digits });
+}
+
+function mergedTrackFix(fix) {
+  // Display-only detail (vrate, squawk, source…) comes from the full
+  // snapshot when the map runs on the light payload; positions always
+  // come from the live fix.
+  const full = trackState.full_fix || {};
+  return { ...(fix || {}), vrate_fpm: fix?.vrate_fpm ?? full.vrate_fpm,
+    squawk: fix?.squawk ?? full.squawk, type: fix?.type ?? full.type,
+    source: fix?.source ?? full.source,
+    position_time: fix?.position_time ?? full.position_time };
+}
+
+function trackHudRows(fix) {
+  const callsign = fix?.callsign && fix.callsign !== "UNKNOWN" ? fix.callsign : trackState.entity_id;
+  return { callsign, rows: [
+    ["Altitude", fix?.baro_alt_ft != null ? `${fmtNum(fix.baro_alt_ft)} ft${fix?.on_ground ? " · ON GROUND" : ""}` : "—"],
+    ["Speed", fix?.gs_kt != null ? `${fmtNum(fix.gs_kt)} kt` : "—"],
+    ["Heading", fix?.track_deg != null ? `${String(Math.round(fix.track_deg)).padStart(3, "0")}°` : (fix?.heading != null ? `${fmtNum(fix.heading)}° (derived)` : "—")],
+    ["Vertical rate", fix?.vrate_fpm != null ? `${fix.vrate_fpm >= 0 ? "+" : ""}${fmtNum(fix.vrate_fpm)} fpm` : "—"],
+    ["Source", esc(trackState.source || "")],
+    ["Updated", esc(trackState.last_update ? String(trackState.last_update).slice(11, 19) : "—")],
+    ["Freshness", esc(trackState.freshness || trackState.fix_state)],
+    ["Truth", MODE_NOW ? "REAL" : "REPLAY"],
+    ...((fix?.squawk && fix.squawk !== "UNKNOWN") ? [["Squawk", esc(fix.squawk)]] : []),
+    ...((fix?.type && fix.type !== "UNKNOWN") ? [["Type", esc(fix.type)]] : []),
+  ] };
+}
+
+function updateTrackHudValues(fix) {
+  const box = $("trackHud");
+  if (!box) return;
+  const { callsign, rows } = trackHudRows(mergedTrackFix(fix));
+  const title = box.querySelector(".track-top b");
+  if (title) title.textContent = callsign || "";
+  const chip = box.querySelector(".track-top .chip:nth-child(3)");
+  if (chip) { chip.textContent = trackState.fix_state; chip.classList.toggle("real", trackState.fix_state !== "STALE"); }
+  const staleBox = box.querySelector(".track-stale");
+  if (staleBox) {
+    const stale = trackState.fix_state === "STALE";
+    staleBox.innerHTML = stale ? `<div class="blindcard"><b>Stale position.</b> Last fix ${esc(trackState.freshness || "")} old — frozen, not extrapolated.</div>` : "";
+  }
+  const dl = box.querySelector("dl.kv");
+  if (dl) dl.innerHTML = rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd class="mono">${v}</dd>`).join("");
+  const modeBtns = box.querySelectorAll("[data-mode]");
+  modeBtns.forEach((b) => {
+    const on = trackState.camera_mode === b.dataset.mode;
+    b.classList.toggle("ghost", !on);
+    b.setAttribute("aria-pressed", String(on));
+  });
+}
+
+function renderTrackHud(fix) {
+  const box = $("trackHud");
+  if (!box || !trackState.active) return;
+  box.hidden = false;
+  // Static shell is built once per entity+mode (buttons keep stable
+  // DOM nodes across ticks); per-second updates only touch values.
+  const shellKey = `${trackState.entity_id}|${trackState.camera_mode}`;
+  if (box.dataset.built === shellKey) {
+    updateTrackHudValues(fix);
+    return;
+  }
+  box.dataset.built = shellKey;
+  const merged = mergedTrackFix(fix);
+  const { callsign, rows } = trackHudRows(merged);
+  const stale = trackState.fix_state === "STALE";
+  box.innerHTML = `
+    <div class="track-top"><span class="chip ${MODE_NOW ? "real" : "syn"}">${MODE_NOW ? "TRACKING" : "TRACKING · REPLAY"}</span>
+      <b>${esc(callsign || "")}</b>
+      <span class="chip ${stale ? "" : "real"}">${esc(trackState.fix_state)}</span>
+      <button class="icon-btn close" type="button" id="trackStop" aria-label="Stop tracking">${svgIcon("close")}</button></div>
+    <div class="track-stale"></div>
+    <dl class="kv">${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd class="mono">${v}</dd>`).join("")}</dl>
+    <p class="muted" id="trailInfo"></p>
+    <div class="actions" role="group" aria-label="Tracking camera modes">
+      ${TRACK.CAMERA_MODES.map((m) => `<button class="btn${trackState.camera_mode === m ? "" : " ghost"}" type="button" data-mode="${m}" aria-pressed="${trackState.camera_mode === m}">${m}</button>`).join("")}
+    </div>
+    <div class="actions" role="group" aria-label="Tracking actions">
+      <button class="btn ghost" type="button" id="trackContacts">Contacts</button>
+      <button class="btn ghost" type="button" id="trackStopBtn">Stop</button>
+    </div>
+    <div id="trackContext" aria-live="off"></div>`;
+  box.querySelectorAll("[data-mode]").forEach((b) => { b.onclick = () => setTrackCameraMode(b.dataset.mode); });
+  $("trackStop").onclick = () => stopTrack();
+  $("trackStopBtn").onclick = () => stopTrack();
+  $("trackContacts").onclick = () => toggleContactsPanel();
+  updateTrackHudValues(fix);
+}
+
+async function refreshTrackFullFix() {
+  if (!trackState.active || !trackState.entity_id.startsWith("AIR:")) return;
+  try {
+    const r = await getJSON(`/api/world/now/aviation?norefresh=1`);
+    const hex = trackState.entity_id.slice(4).toLowerCase();
+    const full = (r.states || []).find((x) => x.icao24 === hex);
+    if (full && trackState.active) {
+      trackState.full_fix = full;
+      if (full.position_time && !trackState._fullTimeUsed) {
+        trackState._fullTimeUsed = true;
+        trackState.last_update = full.position_time;
+      }
+      renderTrackHud(currentTrackFix());
+    }
+  } catch (_) { /* detail merge is best-effort */ }
+}
+
+function scheduleTrackContext() {
+  if (trackContextTimer) clearTimeout(trackContextTimer);
+  const load = async () => {
+    if (!trackState.active) return;
+    try {
+      const pos = trackState.last_position;
+      const r = await getJSON(`/api/world/tools?${new URLSearchParams({ q: "what is here", lat: String(pos?.lat ?? ""), lon: String(pos?.lon ?? "") }).toString()}`);
+      const d = r.results?.[0]?.data;
+      const box = $("trackContext");
+      if (box && d) box.innerHTML = `<p class="muted">${esc(String(d.here?.changes ?? 0))} changes · ${esc(String(d.here?.moving_aircraft ?? 0))} moving · imagery: ${esc((d.can_see_it || []).slice(0, 2).join(" · "))}</p>`;
+    } catch (_) { /* context badges are best-effort */ }
+    if (trackState.active) trackContextTimer = setTimeout(load, 60000);
+  };
+  trackContextTimer = setTimeout(load, 1500);
+}
+
+async function updateTrackTrail(forceFetch) {
+  try {
+    if (!trackState.entity_id.startsWith("AIR:") || !MODE_NOW) return;
+    const cacheKey = trackState.entity_id;
+    if (forceFetch || updateTrackTrail.cacheKey !== cacheKey) {
+      const r = await getJSON(`/api/world/now/trail?hex=${encodeURIComponent(trackState.entity_id.slice(4))}`);
+      updateTrackTrail.cache = (r.trail || []).filter((p) => p.lat != null).slice(-TRACK.TRAIL_MAX_PTS);
+      updateTrackTrail.cacheKey = cacheKey;
+    }
+    const pts = updateTrackTrail.cache || [];
+    const recent = pts.filter((p) => Date.now() - Date.parse(p.t) < 10 * 60000);
+    const older = pts.filter((p) => Date.now() - Date.parse(p.t) >= 10 * 60000);
+    const line = (list) => ({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: list.map((p) => [p.lon, p.lat]) } });
+    map.getSource("tracktrail")?.setData({ type: "FeatureCollection", features: [line(recent)] });
+    map.getSource("tracktrail-old")?.setData({ type: "FeatureCollection", features: [line(older)] });
+    const box = $("trackHud");
+    const el = box?.querySelector("#trailInfo");
+    if (el && pts.length) { const newest = Math.max(...pts.map((p) => Date.parse(p.t))); el.textContent = `trail ${pts.length} pts · newest ${Math.max(0, Math.round((Date.now() - newest) / 1000))}s`; }
+  } catch (_) { /* trail is best-effort */ }
+}
+
+function updateTrackRing(pos) {
+  try {
+    map.getSource("trackring")?.setData({ type: "FeatureCollection", features: [{ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [pos.lon, pos.lat] } }] });
+  } catch (_) { /* ring is best-effort */ }
+}
+
+function ensureTrackLayers() {
+  // Read-only handle for automated tests and the local tool layer.
+  // Exposes a snapshot (never live references, never setters).
+    try {
+    window.__tellurionTrack = () => ({
+      active: trackState.active, entity_type: trackState.entity_type,
+      entity_id: trackState.entity_id, source: trackState.source,
+      acquired_at: trackState.acquired_at,
+      last_position: trackState.last_position,
+      last_update: trackState.last_update,
+      freshness: trackState.freshness,
+      camera_mode: trackState.camera_mode,
+      fix_state: trackState.fix_state, fixes: trackState.fixes.length,
+      tick_count: trackState.tick_count,
+    });
+  } catch (_) { /* non-DOM context */ }
+  try {
+    if (!map.getSource("tracktrail")) {
+      map.addSource("tracktrail", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+      map.addLayer({ id: "tracktrail-line", type: "line", source: "tracktrail", paint: { "line-color": "#ffd166", "line-width": 2.4, "line-opacity": 0.9 } });
+    }
+    if (!map.getSource("tracktrail-old")) {
+      map.addSource("tracktrail-old", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+      map.addLayer({ id: "tracktrail-old-line", type: "line", source: "tracktrail-old", paint: { "line-color": "#8a93a6", "line-width": 1.6, "line-opacity": 0.45 } });
+    }
+    if (!map.getSource("trackring")) {
+      map.addSource("trackring", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+      map.addLayer({ id: "trackring-circle", type: "circle", source: "trackring", paint: { "circle-radius": 14, "circle-color": "rgba(0,0,0,0)", "circle-stroke-color": "#ffd166", "circle-stroke-width": 2.5 } });
+    }
+  } catch (_) { /* layers attach on next tick */ }
 }
 
 function toggleFocus(force) {
@@ -1583,7 +2060,8 @@ function toolResultHTML(input, payload) {
       ${(res.warnings || []).map((w) => `<p class="note">${esc(w)}</p>`).join("")}
       ${res.note && rows.length ? `<p class="note">${esc(res.note)}</p>` : ""}
       <div class="actions" data-tool="${esc(res.tool)}" data-payload='${esc(JSON.stringify(d))}'>
-        ${d.action === "fly" || d.action === "select" || d.action === "track" ? `<button class="btn" type="button" data-act="fly">Fly to</button>` : ""}
+        ${d.action === "fly" || ((d.action === "select" || d.action === "track") && d.lat != null) ? `<button class="btn" type="button" data-act="fly">Fly to</button>` : ""}
+        ${d.action === "track" ? `<button class="btn" type="button" data-act="track">Track</button>` : ""}
         ${(d.entity && d.entity.id) || d.summary?.entity?.id ? `<button class="btn" type="button" data-act="evidence">Open evidence</button>` : ""}
         ${["enter_replay", "return_to_now", "stop_tracking", "set_time", "toggle_layer"].includes(d.action) ? `<button class="btn" type="button" data-act="run">Run</button>` : ""}
       </div>
@@ -1602,6 +2080,7 @@ function applyToolAction(tool, data) {
     closeDialog("palette");
     if (ent.id && ent.id.startsWith("chg:")) { openChangeById(ent.id); }
     else if (ent.id && ent.id.startsWith("AIR:")) { selectNowTarget(ent.id); if (action === "track") toggleFollow({ id: ent.id, title: ent.title || ent.id }); }
+    else if (ent.id && ent.id.startsWith("SYN-")) { if (action === "track") startTrack(ent.id, data.camera_mode || trackState.camera_mode || "FOLLOW"); }
     else if (data.lat != null) { map.flyTo({ center: [data.lon, data.lat], zoom: 7, essential: true }); }
   } else if (action === "stop_tracking") { if (state.following) toggleFollow({ id: state.following }); closeDialog("palette"); }
   else if (action === "toggle_layer") { setVisible(data.layer, data.on ?? !(state.visible || {})[data.layer]); }
@@ -1655,6 +2134,7 @@ async function runToolCommand(text) {
     bar.querySelectorAll("button").forEach((btn) => {
       btn.onclick = () => {
         if (btn.dataset.act === "fly") applyToolAction(tool, { ...data, action: data.lat != null ? "fly" : data.action });
+        else if (btn.dataset.act === "track") applyToolAction(tool, data);
         else if (btn.dataset.act === "evidence") applyToolAction(tool, { action: "open_evidence", summary: { entity: data.entity || data.summary?.entity }, entity: data.entity || data.summary?.entity });
         else if (btn.dataset.act === "run") applyToolAction(tool, data);
       };
@@ -2094,6 +2574,16 @@ async function openingNow() {
   const hex = (QS.get("aircraft") || "").toLowerCase();
   if (/^[0-9a-f]{6}$/.test(hex) && findNowObject("AIR:" + hex)) {
     selectNowTarget("AIR:" + hex);
+    if (QS.get("track") === "1") {
+      const cam = (QS.get("camera") || "FOLLOW").toUpperCase();
+      startTrack("AIR:" + hex, TRACK.CAMERA_MODES.includes(cam) ? cam : "FOLLOW");
+    }
+    await finish();
+    return;
+  }
+  if (/^[0-9a-f]{6}$/.test(hex) || QS.get("track") === "1") {
+    // Valid deep link, unknown target: preserve location, say so.
+    trackUnavailable(QS.get("aircraft") || QS.get("event") || "target", "TARGET UNAVAILABLE — not in the current snapshot");
     await finish();
     return;
   }
@@ -2393,6 +2883,7 @@ function nowDrawer(target, data) {
           <button class="btn" type="button" id="flyBtn">${svgIcon("pin")} Fly to</button>
           <button class="btn" type="button" id="followBtn" aria-pressed="${state.following === target.id}">${svgIcon("follow")} Follow</button>
           <button class="btn" type="button" id="trailBtn">Play recorded track</button>
+          <button class="btn" type="button" id="trackBtn">Track</button>
         </div>
       </div>
       <div class="drawer-body" id="drawerBody">
@@ -2623,6 +3114,7 @@ function wireNowDrawer(target, data) {  $("backToEvents").onclick = () => closeD
   $("closeDrawer").onclick = () => closeDrawer();
   $("flyBtn").onclick = () => flyToTarget(target);
   if ($("followBtn")) $("followBtn").onclick = () => toggleFollow(target);
+  if ($("trackBtn")) $("trackBtn").onclick = () => startTrack(target.id, trackState.camera_mode || "FOLLOW");
   const trailBtn = $("trailBtn");
   if (trailBtn) trailBtn.onclick = () => replayNowTrail(data);
   writeDeepLink();
@@ -2664,6 +3156,10 @@ function writeDeepLink() {
     q.set("bearing", String(Math.round(map.getBearing() * 10) / 10)); q.set("pitch", String(Math.round(map.getPitch() * 10) / 10));
     q.set("layers", Object.entries(state.visible || {}).filter(([, on]) => on).map(([k]) => k).join(","));
     q.set("tick", String(state.tick));
+    if (trackState.active && trackState.entity_id.startsWith("AIR:")) {
+      q.set("aircraft", trackState.entity_id.slice(4).toLowerCase()); q.delete("event");
+      q.set("track", "1"); q.set("camera", trackState.camera_mode);
+    } else { q.delete("track"); q.delete("camera"); }
     // Never serialized: credentials, auth material, private state (none exist client-side).
     history.replaceState(null, "", `${location.pathname}?${q.toString()}`);
   } catch (_) { /* share URL is best-effort */ }

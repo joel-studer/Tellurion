@@ -138,6 +138,16 @@ PUBLIC_INCLUDE_FILES: Tuple[str, ...] = (
     "docs/screenshots/command-radar-evidence.png",
     "docs/screenshots/command-replay-6h.png",
     "docs/screenshots/command-fresh-imagery.png",
+    # TRACK MODE V2.4b visual acceptance (mocked ADS-B snapshot +
+    # recorded trail bytes in-process; staged ages for STALE state)
+    "docs/screenshots/track-aircraft-follow.png",
+    "docs/screenshots/track-aircraft-orbit.png",
+    "docs/screenshots/track-aircraft-chase.png",
+    "docs/screenshots/track-aircraft-contacts.png",
+    "docs/screenshots/track-aircraft-trail.png",
+    "docs/screenshots/track-aircraft-stale.png",
+    "docs/screenshots/replay-track-mode.png",
+    "docs/screenshots/track-mobile.png",
     # Release-evidence captures (Phase-8 visual gate, local renders)
     # hero loop (V18.5, 960px GIF rendered locally, scan-skipped binary)
     # public docs
@@ -316,6 +326,8 @@ PUBLIC_INCLUDE_FILES: Tuple[str, ...] = (
     "tests/test_world_sar_v25.py",
     # JARVIS TEXT TOOLS V2.4 contract (tools, parser, palette, share)
     "tests/test_world_tools_v26.py",
+    # TRACK MODE V2.4b contract (state, camera, trail, contacts, HUD)
+    "tests/test_track_mode_v27.py",
     # SATELLITE EVIDENCE V2.1 contract (selection, rights, API, drawer)
     # SATELLITE EVIDENCE V2.1 contract (selection, rights, API, drawer)
     # Tellurion public source docs (terms evidence, decisions, demos)

@@ -258,6 +258,13 @@ def _resolve_entity(eid: str) -> Tuple[Optional[Dict[str, Any]], str]:
                         "source": s.get("source") or "adsb.lol",
                         "truth_mode": "DELAYED"}, "ok"
         return None, f"aircraft not in current snapshot: {eid}"
+    if eid.startswith("SYN-"):
+        # Deterministic replay entity: the frontend owns its motion
+        # from replay state; the backend only names it (truth REPLAY,
+        # no live coordinates claimed).
+        return {"id": eid, "kind": "replay_entity", "title": eid,
+                "lat": None, "lon": None,
+                "truth_mode": "REPLAY"}, "ok"
     return None, f"unsupported entity id: {eid}"
 
 
@@ -291,8 +298,12 @@ def tool_track_entity(args: Dict[str, Any],
             trail_ok = bool(trail)
         except Exception:  # noqa: BLE001
             trail_ok = False
+        camera_mode = str(args.get("camera_mode") or "FOLLOW").upper()
+        if camera_mode not in ("FOLLOW", "ORBIT", "CHASE", "OVERVIEW"):
+            camera_mode = "FOLLOW"
         return envelope("track_entity", "SUCCESS",
                         {"action": "track", "entity": ent,
+                         "camera_mode": camera_mode,
                          "trail_available": trail_ok},
                         truth_mode="DELAYED", source_count=1)
     if ent["kind"] == "change":
@@ -300,6 +311,15 @@ def tool_track_entity(args: Dict[str, Any],
                         {"entity": ent},
                         note="changes are pinned, not tracked; "
                              "use open_evidence instead")
+    if ent["kind"] == "replay_entity":
+        camera_mode = str(args.get("camera_mode") or "FOLLOW").upper()
+        if camera_mode not in ("FOLLOW", "ORBIT", "CHASE", "OVERVIEW"):
+            camera_mode = "FOLLOW"
+        return envelope("track_entity", "SUCCESS",
+                        {"action": "track", "entity": ent,
+                         "camera_mode": camera_mode,
+                         "trail_available": False},
+                        truth_mode="REPLAY", source_count=1)
     return envelope("track_entity", "UNAVAILABLE", {"entity": ent},
                     note=f"tracking not supported for {ent['kind']}")
 
@@ -308,6 +328,68 @@ def tool_stop_tracking(args: Dict[str, Any],
                        ctx: Dict[str, Any]) -> Dict[str, Any]:
     return envelope("stop_tracking", "SUCCESS",
                     {"action": "stop_tracking"}, truth_mode="STATIC")
+
+
+def tool_set_camera_mode(args: Dict[str, Any],
+                         ctx: Dict[str, Any]) -> Dict[str, Any]:
+    mode = str(args.get("camera_mode") or args.get("mode") or ""
+               ).upper().strip()
+    if mode not in ("FOLLOW", "ORBIT", "CHASE", "OVERVIEW"):
+        return envelope("set_camera_mode", "FAILED", {},
+                        note="camera_mode must be FOLLOW, ORBIT, "
+                             "CHASE, or OVERVIEW")
+    return envelope("set_camera_mode", "SUCCESS",
+                    {"action": "set_camera_mode",
+                     "camera_mode": mode}, truth_mode="STATIC")
+
+
+def tool_track_nearest(args: Dict[str, Any],
+                       ctx: Dict[str, Any]) -> Dict[str, Any]:
+    lat = args.get("lat", ctx.get("lat"))
+    lon = args.get("lon", ctx.get("lon"))
+    try:
+        lat = float(lat)
+        lon = float(lon)
+    except (TypeError, ValueError):
+        return envelope("track_nearest", "FAILED", {},
+                        note="track_nearest needs lat/lon or map "
+                             "context")
+    try:
+        radius = max(10.0, min(2000.0, float(args.get(
+            "radius_km", 500.0))))
+    except (TypeError, ValueError):
+        radius = 500.0
+    from gods_eye.future import world_air as air
+    try:
+        snap = air.get_aviation(refresh=False)
+        states = snap.get("states", [])
+    except Exception:  # noqa: BLE001
+        return envelope("track_nearest", "UNAVAILABLE", {},
+                        note="aircraft leg unavailable")
+    best = None
+    best_km = None
+    for s in states:
+        try:
+            km = _haversine_km(float(s.get("lat")), float(s.get("lon")),
+                               lat, lon)
+        except (TypeError, ValueError):
+            continue
+        if km <= radius and (best_km is None or km < best_km):
+            best, best_km = s, km
+    if best is None:
+        return envelope("track_nearest", "PARTIAL",
+                        {"point": {"lat": lat, "lon": lon,
+                                   "radius_km": radius}},
+                        note=f"no aircraft within {radius:g} km; "
+                             "nothing tracked")
+    eid = "AIR:" + str(best.get("icao24") or "")
+    tracked = tool_track_entity({"id": eid}, ctx)
+    if tracked["status"] != "SUCCESS":
+        return tracked
+    data = dict(tracked["data"])
+    data["distance_km"] = round(best_km, 1)
+    return envelope("track_nearest", "SUCCESS", data,
+                    truth_mode="DELAYED", source_count=1)
 
 
 def tool_toggle_layer(args: Dict[str, Any],
@@ -460,6 +542,11 @@ def tool_query_contacts(args: Dict[str, Any],
     if sort == "NEWEST":
         contacts.sort(key=lambda c: str(c.get("last_observed") or ""),
                       reverse=True)
+    elif sort == "IMPORTANT":
+        rank = {"CRITICAL": 0, "ALERT": 1, "WATCH": 2, "INFO": 3}
+        contacts.sort(key=lambda c: (
+            rank.get(str(c.get("severity") or "INFO").upper(), 4),
+            -(c.get("distance_km") or 0)))
     else:
         contacts.sort(key=lambda c: (c.get("distance_km") is None,
                                      c.get("distance_km") or 0))
@@ -764,6 +851,12 @@ TOOLS: Dict[str, Dict[str, Any]] = {
                      "description": "track a trackable entity"},
     "stop_tracking": {"handler": tool_stop_tracking,
                       "description": "stop tracking"},
+    "set_camera_mode": {"handler": tool_set_camera_mode,
+                        "description": "FOLLOW/ORBIT/CHASE/OVERVIEW "
+                                       "camera for tracking"},
+    "track_nearest": {"handler": tool_track_nearest,
+                      "description": "track the nearest aircraft "
+                                     "atomically"},
     "toggle_layer": {"handler": tool_toggle_layer,
                      "description": "show/hide a map layer"},
     "query_region": {"handler": tool_query_region,
@@ -892,7 +985,32 @@ def parse_intent(text: str, context: Optional[Dict[str, Any]] = None,
     if re.search(r"\bstop tracking\b|\buntrack\b", low):
         return {"calls": [{"tool": "stop_tracking", "args": {}}],
                 "provider": provider, "unparsed": ""}
-    if re.search(r"\btrack\b", low):
+    if re.search(r"\breturn to (world|globe)\b", low):
+        return {"calls": [{"tool": "stop_tracking", "args": {}},
+                           {"tool": "set_view",
+                            "args": {"lat": 34.0, "lon": -28.0,
+                                     "zoom": 1.45}}],
+                "provider": provider, "unparsed": ""}
+    if re.search(r"\borbit\b", low):
+        return {"calls": [{"tool": "set_camera_mode",
+                            "args": {"camera_mode": "ORBIT"}}],
+                "provider": provider, "unparsed": ""}
+    if re.search(r"\btrack nearest\b|\bnearest.*track\b", low):
+        argsn: Dict[str, Any] = {"radius_km": 500.0}
+        if context.get("lat") is not None:
+            argsn["lat"], argsn["lon"] = (context["lat"],
+                                          context["lon"])
+        return {"calls": [{"tool": "track_nearest", "args": argsn}],
+                "provider": provider, "unparsed": ""}
+    if re.search(r"\bnearby contacts\b|\bshow.*contacts\b|\bcontacts\b",
+                 low):
+        argsc: Dict[str, Any] = {"sort": "NEAREST", "radius_km": 250.0}
+        if context.get("lat") is not None:
+            argsc["lat"], argsc["lon"] = (context["lat"],
+                                          context["lon"])
+        return {"calls": [{"tool": "query_contacts", "args": argsc}],
+                "provider": provider, "unparsed": ""}
+    if re.search(r"\btrack\b|\bfollow\b", low):
         eid = context.get("selected") or ""
         m = re.search(r"track\s+([A-Za-z0-9:_-]+)", raw)
         if m and m.group(1).lower() not in ("selected", "this", "it"):

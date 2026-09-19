@@ -355,6 +355,12 @@
    "sha256": "841f250094b655038904d7d07f9d89701038ee4eac55dc104465de46de18f48f"
   },
   {
+   "path": "docs/screenshots/replay-track-mode.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "a58f65846ad2580a72550eff64e3ad59bdc2d0c9db99232faaa61ee2e13221a6"
+  },
+  {
    "path": "docs/screenshots/sar-flood-before-after.png",
    "license": "PROJECT-OWNED",
    "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
@@ -407,6 +413,48 @@
    "license": "PROJECT-OWNED",
    "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
    "sha256": "9784f4f285514782ea692d81a86f2f16aa50e5d37e1a6152b424c13b401827f8"
+  },
+  {
+   "path": "docs/screenshots/track-aircraft-chase.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "aec046b2f21e5364bf41316f51dcfa6ad48b46b75bd0d22bc2893c1779068f71"
+  },
+  {
+   "path": "docs/screenshots/track-aircraft-contacts.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "5959d41d654fad5ba2bdfaa520bed34973b4d6a7bff3871c84f149a2d7df8d68"
+  },
+  {
+   "path": "docs/screenshots/track-aircraft-follow.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "e098703ed76902bb7efe101742e52a3af7122e786e0b4d16a224df2e181309b8"
+  },
+  {
+   "path": "docs/screenshots/track-aircraft-orbit.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "5866ae701318b22f8b319c56327b36edc85d1e31e8fcae407c1c64c0d6c96897"
+  },
+  {
+   "path": "docs/screenshots/track-aircraft-stale.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "775dd6d0f70b2e0b2f5c119536c5356d31b124fad9e79230a4c615ad45d36555"
+  },
+  {
+   "path": "docs/screenshots/track-aircraft-trail.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "4170bcaafd93d2ae9c10bf8b3e096b60c04833393378a26f94a2785d8a54ceb9"
+  },
+  {
+   "path": "docs/screenshots/track-mobile.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "fb144edaacd0b33b99d51930fde0967ea82c67df4086568f70edd05aba2d4a5f"
   },
   {
    "path": "docs/screenshots/world-globe.png",

@@ -346,4 +346,17 @@ body:not([data-truth-synced]) #scenario { visibility: hidden; }
 .satfig .kv { margin-top: 8px; }
 .satfig a { font-size: 12px; font-weight: 600; }
 
+/* V2.4b track mode: compact HUD bottom-center, contacts docked right. */
+#trackHud { position: fixed; left: 50%; transform: translateX(-50%); bottom: 118px; z-index: 40; width: min(430px, calc(100vw - 32px)); max-height: 46vh; overflow: auto; }
+#trackHud .track-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+#trackHud .track-top b { font-size: 15px; }
+#trackHud .actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+#contactsPanel { position: fixed; right: 372px; top: 120px; z-index: 40; width: min(330px, calc(100vw - 32px)); max-height: 60vh; overflow: auto; }
+#contactsPanel .track-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+#contactsPanel .rel { border-top: 1px solid var(--line); padding: 6px 0; }
+@media (max-width: 900px) {
+  #trackHud { bottom: 150px; width: calc(100vw - 20px); }
+  #contactsPanel { right: 10px; left: 10px; top: auto; bottom: 210px; width: auto; max-height: 34vh; }
+}
+
 /* Satellite evidence: paired BEFORE/AFTER figures, same grid as facts. */

@@ -437,10 +437,12 @@ def test_aviation_endpoints_mocked(isolated_air):
             assert light["source_rollup"]["source_id"] == "adsb-lol-live"
             # The globe draws from light positions: present, positioned,
             # and limited to render fields (no registration/squawk/owner).
+            # position_age_s rides along for honest fix freshness.
             pos = light["positions"]
             assert 1 <= len(pos) <= light["counts"]["total"]
             assert set(pos[0]) == {"icao24", "lat", "lon", "track_deg",
-                                   "callsign", "type", "baro_alt_ft", "gs_kt"}
+                                   "callsign", "type", "baro_alt_ft",
+                                   "gs_kt", "position_age_s"}
             assert all(p["lat"] is not None and p["lon"] is not None
                        for p in pos)
             imp = get("/api/world/now/important")
