@@ -599,20 +599,41 @@ function buildNowData() {
 }
 
 function addNowLayers() {
-  if (!map.getSource("coverage")) {
-    addSource("coverage", fc([]));
-    addSource("nowtrail", fc([]));
-    addSource("nowsel", fc([]));
-    map.addLayer({ id: "coverage-fill", type: "fill", source: "coverage",
+  // Idempotent: safe to run once per map. Sources and layers are added
+  // individually so one bad definition can never blank the rest.
+  for (const [sid, data] of [["coverage", fc([])], ["nowtrail", fc([])], ["nowsel", fc([])], ["liveSat", fc([])], ["liveSatTrack", fc([])]]) {
+    if (!map.getSource(sid)) {
+      try { addSource(sid, data); } catch (_) { /* source optional */ }
+    }
+  }
+  for (const layer of [
+    { id: "coverage-fill", type: "fill", source: "coverage",
       paint: { "fill-color": ["match", ["get", "state"], "GOOD", "#3fe0b0", "PARTIAL", "#ffc857", "RATE LIMITED", "#ff6b6b", "#8a93a6"],
-        "fill-opacity": 0.06 } });
-    map.addLayer({ id: "coverage-line", type: "line", source: "coverage",
+        "fill-opacity": 0.06 } },
+    { id: "coverage-line", type: "line", source: "coverage",
       paint: { "line-color": ["match", ["get", "state"], "GOOD", "#3fe0b0", "PARTIAL", "#ffc857", "RATE LIMITED", "#ff6b6b", "#8a93a6"],
-        "line-width": 1.2, "line-dasharray": [5, 5], "line-opacity": 0.8 } });
-    map.addLayer({ id: "nowtrail-line", type: "line", source: "nowtrail",
-      paint: { "line-color": "#6aa8ff", "line-width": 1.6, "line-opacity": 0.8 } });
-    map.addLayer({ id: "nowsel-ring", type: "circle", source: "nowsel",
-      paint: { "circle-radius": 14, "circle-color": "rgba(0,0,0,0)", "circle-stroke-color": "#ffb547", "circle-stroke-width": 2 } });
+        "line-width": 1.2, "line-dasharray": [5, 5], "line-opacity": 0.8 } },
+    { id: "nowtrail-line", type: "line", source: "nowtrail",
+      paint: { "line-color": "#6aa8ff", "line-width": 1.6, "line-opacity": 0.8 } },
+    { id: "nowsel-ring", type: "circle", source: "nowsel",
+      paint: { "circle-radius": 14, "circle-color": "rgba(0,0,0,0)", "circle-stroke-color": "#ffb547", "circle-stroke-width": 2 } },
+    // Live orbital objects (V2.4c): quiet markers at globe zoom, names
+    // from regional zoom; selected object emphasized via nowsel ring.
+    { id: "livesat-point", type: "circle", source: "liveSat",
+      paint: { "circle-radius": ["interpolate", ["linear"], ["zoom"], 1, 1.6, 6, 2.6, 10, 4],
+        "circle-color": ["match", ["get", "orbit"], "GEO", "#7fd4c1", "MEO", "#9cc2e2", "#b79cff"],
+        "circle-opacity": ["interpolate", ["linear"], ["zoom"], 1, 0.55, 6, 0.85],
+        "circle-stroke-color": "#0a1018", "circle-stroke-width": 0.6 } },
+    { id: "livesat-label", type: "symbol", source: "liveSat", minzoom: 4.5,
+      layout: { "text-field": ["get", "label"], "text-size": 10, "text-offset": [0, 1.1],
+        "text-allow-overlap": false, "text-max-width": 12 },
+      paint: { "text-color": "#c9d4e2", "text-halo-color": "#0a1018", "text-halo-width": 1 } },
+    { id: "livesat-track", type: "line", source: "liveSatTrack",
+      paint: { "line-color": "#b79cff", "line-width": 1.4, "line-opacity": 0.75, "line-dasharray": [1.5, 1.5] } },
+  ]) {
+    if (!map.getLayer(layer.id)) {
+      try { map.addLayer(layer); } catch (_) { /* layer optional */ }
+    }
   }
   tuneNowLod();
 }
@@ -758,8 +779,8 @@ const NAV = [
       // Count only what the map draws: EONET events in a wildfire category.
       count: () => nowCount(() => state.ultra.wildfire.length, () => (state.now.objects?.["nasa-eonet"] || [])
         .filter((e) => e.lat != null && /wildfire/i.test((e.fields?.categories || []).join(","))).length), layers: ["fire-point"] },
-    { key: "satellite", label: "Satellite", sub: MODE_NOW ? "No qualified live source" : "Ground track, swath, scenes", icon: "sat", color: CATEGORY.SPACE.color,
-      count: () => nowOn() ? "—" : 1 + state.ultra.satellite.length, layers: ["sat-track", "sat-swath-fill", "sat-swath-line", "scene-line", "sat-pos"] } ] },
+    { key: "satellite", label: "Satellite", sub: MODE_NOW ? "Live orbital objects (CelesTrak + SGP4)" : "Ground track, swath, scenes", icon: "sat", color: CATEGORY.SPACE.color,
+      count: () => nowOn() ? (state.sats ? state.sats.count : "…") : 1 + state.ultra.satellite.length, layers: ["sat-track", "sat-swath-fill", "sat-swath-line", "scene-line", "sat-pos", "livesat-point", "livesat-label", "livesat-track"] } ] },
   { id: "weather", title: "Weather", icon: "cloud", rows: [
     { key: "storm", label: MODE_NOW ? "Space weather" : "Storm system", sub: MODE_NOW ? "NOAA SWPC alerts, not a weather model" : "Rain bands and track", icon: "storm", color: CATEGORY.WEATHER.color,
       count: () => nowOn() ? (state.now.objects?.["noaa-swpc"] || []).length : 1, layers: ["storm-fill", "storm-track"] },
@@ -1095,6 +1116,7 @@ function renderDrawerLoading(target) {
 function closeDrawer({ keepSelection = false } = {}) {
   $("drawer").hidden = true;
   $("events").hidden = false;
+  try { map.getSource("liveSatTrack")?.setData({ type: "FeatureCollection", features: [] }); } catch (_) { /* ground track belongs to the drawer selection */ }
   if (!keepSelection) {
     state.selected = null;
     state.following = null;
@@ -1263,7 +1285,7 @@ function flyToTarget(target, zoom = null) {
 function toggleFollow(target) {
   // V2.4b: follow is one face of the unified track state.
   if (state.following === target.id && trackState.active) { stopTrack(); return; }
-  if (target.kind === "aircraft" || String(target.id || "").startsWith("AIR:")) {
+  if (target.kind === "aircraft" || target.kind === "satellite" || String(target.id || "").startsWith("AIR:") || String(target.id || "").startsWith("SAT:")) {
     startTrack(target.id, trackState.camera_mode || "FOLLOW");
     return;
   }
@@ -1309,8 +1331,8 @@ async function loadContactsPanel() {
     if (!list) return;
     list.innerHTML = contacts.slice(0, 20).map((ct, i) => {
       const label = ct.callsign || ct.title || ct.id || ct.class || "";
-      const sub = ct.note || [ct.distance_km != null ? `${ct.distance_km} km` : "", ct.severity || "", "live"].filter(Boolean).join(" · ");
-      const canTrack = ct.class === "AIRCRAFT" && ct.id;
+      const sub = ct.note || [ct.class, ct.distance_km != null ? `${ct.distance_km} km` : "", ct.severity || "", "live"].filter(Boolean).join(" · ");
+      const canTrack = (ct.class === "AIRCRAFT" || ct.class === "SATELLITE") && ct.id;
       return `<div class="rel" data-i="${i}"><b>${esc(label)}</b><span class="muted">${esc(sub)}</span><br>
         <button class="btn ghost" type="button" data-act="select">Select</button>
         ${canTrack ? `<button class="btn ghost" type="button" data-act="track">Track</button>` : ""}
@@ -1402,6 +1424,14 @@ function currentTrackFix() {
     const hex = id.slice(4).toLowerCase();
     return (state.airNow?.states || state.airNow?.positions || []).find((x) => x.icao24 === hex) || null;
   }
+  if (MODE_NOW && id.startsWith("SAT:")) {
+    // Freshest propagated fix wins: in-flight poll beats the 60 s layer
+    // cache; the layer cache is the fallback.
+    if (trackState.sat_fix) return trackState.sat_fix;
+    const norad = parseInt(id.slice(4), 10);
+    const o = (state.sats?.objects || []).find((x) => x.norad_id === norad);
+    return o ? { ...o, lat: o.latitude, lon: o.longitude } : null;
+  }
   if (!MODE_NOW) {
     const found = findObject(id);
     return found ? { ...found.obj, lat: found.lat, lon: found.lon } : null;
@@ -1409,12 +1439,29 @@ function currentTrackFix() {
   return null;
 }
 
+async function pollTrackSatellite(force = false) {
+  // Single-object propagation poll (5 s cadence): cheap localhost fetch
+  // against cached elements; interpolation below smooths between fixes.
+  if (!trackState.active || !trackState.entity_id.startsWith("SAT:")) return;
+  const nowMs = Date.now();
+  if (!force && trackState._satFetchAt && nowMs - trackState._satFetchAt < 5000) return;
+  trackState._satFetchAt = nowMs;
+  try {
+    const r = await getJSON(`/api/world/satellites?norad=${encodeURIComponent(trackState.entity_id.slice(4))}`);
+    const o = (r.objects || [])[0];
+    if (o && o.latitude != null && trackState.active) {
+      trackState.sat_fix = { ...o, lat: o.latitude, lon: o.longitude };
+      trackState.sat_obj = o;
+    }
+  } catch (_) { /* poll is best-effort; cached fix stands */ }
+}
+
 function startTrack(id, cameraMode = "FOLLOW") {
   stopTrackLoop();
   ensureTrackLayers();
   const mode = TRACK.CAMERA_MODES.includes(cameraMode) ? cameraMode : "FOLLOW";
   const nowIso = new Date().toISOString();
-  if (MODE_NOW && !(typeof id === "string" && id.startsWith("AIR:"))) { trackUnavailable(id, "tracking supports live aircraft in WORLD NOW"); return false; }
+  if (MODE_NOW && !(typeof id === "string" && (id.startsWith("AIR:") || id.startsWith("SAT:")))) { trackUnavailable(id, "tracking supports live aircraft and satellites in WORLD NOW"); return false; }
   if (!MODE_NOW && typeof id === "string" && (id.startsWith("AIR:") || id.startsWith("chg:"))) { trackUnavailable(id, "replay tracks replay entities only"); return false; }
   const fix = currentTrackFixFor(id);
   if (!fix || fix.lat == null) { trackUnavailable(id, "target not in the current snapshot"); return false; }
@@ -1422,8 +1469,9 @@ function startTrack(id, cameraMode = "FOLLOW") {
   const distKm = haversineKm(prev.lat, prev.lng, fix.lat, fix.lon);
   trackState.active = true; trackState.entity_id = id;
   trackState.full_fix = null; trackState._fullTimeUsed = false;
-  trackState.entity_type = MODE_NOW ? "AIRCRAFT" : "REPLAY_ENTITY";
-  trackState.source = MODE_NOW ? "adsb.lol" : "replay";
+  trackState.sat_fix = null; trackState.sat_obj = null; trackState._satFetchAt = 0;
+  trackState.entity_type = MODE_NOW ? (id.startsWith("SAT:") ? "SATELLITE" : "AIRCRAFT") : "REPLAY_ENTITY";
+  trackState.source = MODE_NOW ? (id.startsWith("SAT:") ? "CelesTrak" : "adsb.lol") : "replay";
   trackState.acquired_at = nowIso; trackState.camera_mode = mode;
   trackState.last_position = { lat: fix.lat, lon: fix.lon };
   // Never invent a timestamp: an unknown fix time stays unknown and
@@ -1440,6 +1488,10 @@ function startTrack(id, cameraMode = "FOLLOW") {
   if (mode === "ORBIT") startOrbitLoop();
   renderTrackHud(fix);
   refreshTrackFullFix();
+  if (id.startsWith("SAT:")) {
+    pollTrackSatellite(true).then(() => renderTrackHud(currentTrackFix())).catch(() => {});
+    loadSatGroundTrack(parseInt(id.slice(4), 10));
+  }
   updateTrackTrail(true);
   trackTimer = setInterval(trackTick, 1000);
   scheduleTrackContext();
@@ -1452,6 +1504,12 @@ function currentTrackFixFor(id) {
   if (MODE_NOW && id.startsWith("AIR:")) {
     const hex = id.slice(4).toLowerCase();
     return (state.airNow?.states || state.airNow?.positions || []).find((x) => x.icao24 === hex) || null;
+  }
+  if (MODE_NOW && id.startsWith("SAT:")) {
+    const norad = parseInt(id.slice(4), 10);
+    const o = (state.sats?.objects || []).find((x) => x.norad_id === norad);
+    if (!o || o.latitude == null) return null;
+    return { ...o, lat: o.latitude, lon: o.longitude, callsign: o.name, track_deg: null, heading: null };
   }
   if (!MODE_NOW) {
     const found = findObject(id);
@@ -1479,6 +1537,7 @@ function stopTrack(returnHome = true) {
   const was = trackState.active;
   trackState.active = false; trackState.entity_id = ""; trackState.fixes = []; trackState.fix_state = "UNKNOWN";
   trackState.full_fix = null; trackState._fullTimeUsed = false;
+  trackState.sat_fix = null; trackState.sat_obj = null; trackState._satFetchAt = 0;
   try { delete $("trackHud").dataset.built; } catch (_) { /* hud optional */ }
   state.following = null;
   $("trackHud").hidden = true; $("contactsPanel").hidden = true;
@@ -1527,10 +1586,11 @@ function startOrbitLoop() {
 function trackTick() {
   if (!trackState.active) return;
   trackState.tick_count += 1;
+  if (trackState.entity_id.startsWith("SAT:")) { pollTrackSatellite(); }
   const fix = currentTrackFix();
   const nowMs = Date.now();
   if (fix && fix.lat != null) {
-    const t = fix.position_time || fix.t
+    const t = fix.position_time || fix.t || fix.propagated_at
       || (trackState.full_fix || {}).position_time || null;
     if (t) {
       trackState.last_update = t;
@@ -1540,13 +1600,28 @@ function trackTick() {
         while (trackState.fixes.length > TRACK.TRAIL_MAX_PTS) trackState.fixes.shift();
       }
     }
-    const ageS = fixAgeS(fix);
+    // Satellites: accuracy follows ELEMENT age, not fix recency —
+    // a propagated position is always "now", but stale elements lie.
+    const ageS = trackState.entity_id.startsWith("SAT:")
+      ? (Number.isFinite(+fix.age_seconds) ? +fix.age_seconds : NaN)
+      : fixAgeS(fix);
     const n = trackState.fixes.length;
-    const shown = (n >= 2 && ageS <= TRACK.STALE_AFTER_S) ? interpolateFix(trackState.fixes[n - 2], trackState.fixes[n - 1], nowMs) : { lat: fix.lat, lon: fix.lon };
+    // Interpolation gate differs by truth: aircraft freeze past fix
+    // staleness; propagated satellite fixes are always current-time,
+    // so only the (timestamped) pair spacing gates smoothing.
+    let interpOk = ageS <= TRACK.STALE_AFTER_S;
+    if (trackState.entity_id.startsWith("SAT:")) {
+      interpOk = n >= 2 && (nowMs - Date.parse(trackState.fixes[n - 1].t)) / 1000 <= 30;
+    }
+    const shown = (n >= 2 && interpOk) ? interpolateFix(trackState.fixes[n - 2], trackState.fixes[n - 1], nowMs) : { lat: fix.lat, lon: fix.lon };
     trackState.last_position = { lat: shown.lat, lon: shown.lon };
-    trackState.last_update = t;
-    trackState.fix_state = trackFixState(ageS, n >= 2);
-    trackState.freshness = !Number.isFinite(ageS) ? "UNKNOWN" : (ageS <= 30 ? `${Math.max(0, Math.round(ageS))}s` : `${Math.round(ageS / 60)}m`);
+    if (trackState.entity_id.startsWith("SAT:")) {
+      trackState.fix_state = !Number.isFinite(ageS) ? "UNKNOWN" : (ageS < 2 * 86400 ? "PROPAGATED" : "STALE");
+      trackState.freshness = !Number.isFinite(ageS) ? "UNKNOWN" : (ageS < 3600 ? `${Math.max(1, Math.round(ageS / 60))}m element` : ageS < 86400 ? `${Math.round(ageS / 3600)}h element` : `${(ageS / 86400).toFixed(1)}d element`);
+    } else {
+      trackState.fix_state = trackFixState(ageS, n >= 2);
+      trackState.freshness = !Number.isFinite(ageS) ? "UNKNOWN" : (ageS <= 30 ? `${Math.max(0, Math.round(ageS))}s` : `${Math.round(ageS / 60)}m`);
+    }
     if (trackState.fix_state !== "STALE") {
       const c = map.getCenter();
       map.easeTo({ center: [shown.lon, shown.lat], duration: 900, essential: true });
@@ -1583,6 +1658,21 @@ function mergedTrackFix(fix) {
 }
 
 function trackHudRows(fix) {
+  if (trackState.entity_id.startsWith("SAT:")) {
+    const o = trackState.sat_obj || fix || {};
+    const callsign = o.name || trackState.entity_id;
+    return { callsign, rows: [
+      ["NORAD ID", esc(String(o.norad_id ?? ""))],
+      ["Altitude", o.altitude_km != null ? `${fmtNum(o.altitude_km)} km` : "—"],
+      ["Velocity", o.velocity_km_s != null ? `${o.velocity_km_s} km/s` : "—"],
+      ["Inclination", o.inclination_deg != null ? `${o.inclination_deg}°` : "—"],
+      ["Orbit", `${esc(o.orbit_type || "")} · ${esc(o.object_type || "")}`],
+      ["Element epoch", esc(o.epoch ? String(o.epoch).slice(0, 19) : "—")],
+      ["Element age", esc(trackState.freshness || o.freshness || "UNKNOWN")],
+      ["Source", esc(trackState.source || "")],
+      ["Truth", "PROPAGATED"],
+    ] };
+  }
   const callsign = fix?.callsign && fix.callsign !== "UNKNOWN" ? fix.callsign : trackState.entity_id;
   return { callsign, rows: [
     ["Altitude", fix?.baro_alt_ft != null ? `${fmtNum(fix.baro_alt_ft)} ft${fix?.on_ground ? " · ON GROUND" : ""}` : "—"],
@@ -1934,6 +2024,12 @@ function searchItems(query) {
         push("aircraft", o.callsign !== "UNKNOWN" ? o.callsign : o.icao24, `${o.icao24} · live ADS-B`, "plane", ((hex) => () => selectNowTarget("AIR:" + hex))(o.icao24));
       if (items.length >= 60) break;
     }
+    for (const o of state.sats?.objects || []) {
+      const hay = `${o.name || ""} ${o.norad_id || ""}`.toLowerCase();
+      if (term && hay.includes(term))
+        push("satellite", `${o.name} · NORAD ${o.norad_id}`, `${o.orbit_type || ""} · propagated`, "sat", ((id) => () => selectNowTarget(id))(o.object_id));
+      if (items.length >= 60) break;
+    }
     const sg = state.now?.static_geo || {};
     for (const kind of ["airports", "ports"]) for (const o of sg[kind] || []) {
       const hay = `${o.name || ""} ${o.city || ""} ${o.country || ""} ${o.id || ""}`.toLowerCase();
@@ -2237,7 +2333,8 @@ function openGraph(target) {
 
 /* ---------------------------------------------------------------- map UI */
 
-const INTERACTIVE = ["air-point", "sea-point", "air-cluster", "sea-cluster", "sat-pos", "quake-point", "fire-point", "road-point",
+const INTERACTIVE = ["air-point", "sea-point", "air-cluster", "sea-cluster", "sat-pos", "livesat-point",
+  "quake-point", "fire-point", "road-point",
   "camera-point", "infra-point", "notice-point", "event-core", "change-ring", "alert-fill", "cell-fill", "storm-fill", "sat-swath-fill", "blind-fill", "notice-fill"];
 
 function featureAt(point) {
@@ -2404,6 +2501,11 @@ function wireLiveEarth() {
 
 function wireMap() {
   let pending = null;
+  try {
+    const mark = () => { window.__userActed = true; };
+    window.addEventListener("pointerdown", mark, { once: true, capture: true });
+    window.addEventListener("keydown", mark, { once: true, capture: true });
+  } catch (_) { /* interaction flag optional */ }
   map.on("mousemove", (event) => {
     if (pending) return;
     pending = requestAnimationFrame(() => {
@@ -2581,8 +2683,19 @@ async function openingNow() {
     await finish();
     return;
   }
-  if (/^[0-9a-f]{6}$/.test(hex) || QS.get("track") === "1") {
+  const satParam = (QS.get("satellite") || "").replace(/\D/g, "").slice(0, 6);
+  if (satParam && findNowObject("SAT:" + satParam)) {
+    selectNowTarget("SAT:" + satParam);
+    if (QS.get("track") === "1") {
+      const cam = (QS.get("camera") || "FOLLOW").toUpperCase();
+      startTrack("SAT:" + satParam, TRACK.CAMERA_MODES.includes(cam) ? cam : "FOLLOW");
+    }
+    await finish();
+    return;
+  }
+  if ((/^[0-9a-f]{6}$/.test(hex) && !findNowObject("AIR:" + hex)) || QS.get("track") === "1") {
     // Valid deep link, unknown target: preserve location, say so.
+    // (Satellite links resolve after the shell loads; see below.)
     trackUnavailable(QS.get("aircraft") || QS.get("event") || "target", "TARGET UNAVAILABLE — not in the current snapshot");
     await finish();
     return;
@@ -2703,6 +2816,52 @@ async function loadNowData() {
   return true;
 }
 
+/* Live orbital objects (V2.4c): real elements + SGP4, loaded after
+   first paint so a cold element cache never blocks globe readiness. */
+async function loadNowSatellites(refresh = false) {
+  if (!MODE_NOW) return false;
+  try {
+    const r = await getJSON(`/api/world/satellites?limit=1500${refresh ? "&refresh=1" : ""}`);
+    state.sats = r.status === "UNAVAILABLE" ? null : r;
+    state.satsError = r.status === "UNAVAILABLE" ? (r.note || "propagator unavailable") : "";
+  } catch (_) { state.sats = null; state.satsError = "satellite catalog unreachable"; }
+  refreshLiveSatSource();
+  renderNav();
+  try { document.documentElement.dataset.sats = state.sats ? "loaded" : "empty"; } catch (_) { /* headless */ }
+  // Satellite deep links resolve here: the shell loads after globe
+  // readiness, so ?satellite= waits for it (aircraft resolve earlier).
+  // Once per page load: later refreshes must not re-open or re-toast.
+  if (!window.__satLinkDone) {
+    window.__satLinkDone = true;
+    try {
+      const params = new URLSearchParams(location.search);
+      const satParam = (params.get("satellite") || "").replace(/\D/g, "").slice(0, 6);
+      // Override only when the user has not interacted yet: at shell
+      // load time any selection is the automatic default.
+      if (satParam && !window.__userActed && findNowObject("SAT:" + satParam)) {
+        selectNowTarget("SAT:" + satParam);
+        if (params.get("track") === "1") {
+          const cam = (params.get("camera") || "FOLLOW").toUpperCase();
+          startTrack("SAT:" + satParam, TRACK.CAMERA_MODES.includes(cam) ? cam : "FOLLOW");
+        }
+      } else if (satParam && !window.__userActed) {
+        trackUnavailable(satParam, "TARGET UNAVAILABLE — not in the current snapshot");
+      }
+    } catch (_) { /* deep link is best-effort */ }
+  }
+  return !!state.sats;
+}
+
+function satPointFeatures() {
+  const objs = state.sats?.objects || [];
+  return objs.map((o) => pt(o.latitude, o.longitude, { id: o.object_id, kind: "livesat",
+    label: o.name, norad: o.norad_id, orbit: o.orbit_type, freshness: o.freshness }));
+}
+
+function refreshLiveSatSource() {
+  try { map.getSource("liveSat")?.setData(fc(satPointFeatures())); } catch (_) { /* source optional */ }
+}
+
 function nowTitle(o) {
   const f = o.fields || {};
   if (o.source === "usgs-earthquakes") return `M${f.mag ?? "?"} — ${f.place || "earthquake"}`;
@@ -2814,13 +2973,20 @@ function selectNowTarget(id) {
   const ev = state.events.find((e) => e.id === id);
   if (ev) { selectTarget(ev); return; }
   const found = findNowObject(id);
-  if (found) selectTarget({ id, kind: found.kind === "aircraft" ? "aircraft" : "event",
-    title: id, severity: "INFO", category: found.kind === "aircraft" ? "AIR" : "INTELLIGENCE",
-    lat: found.lat, lon: found.lon, t: "live", minute: MAX_TICK, sources: 1, hero: null, now: true });
+  if (found) selectTarget({ id, kind: found.kind === "aircraft" ? "aircraft" : found.kind === "satellite" ? "satellite" : "event",
+    title: found.obj?.name || id, severity: "INFO", category: found.kind === "aircraft" ? "AIR" : found.kind === "satellite" ? "SPACE" : "INTELLIGENCE",
+    lat: found.lat, lon: found.lon, t: "live", minute: MAX_TICK, sources: 1, hero: null,
+    now: true });
 }
 
 function findNowObject(id) {
   if (!id) return null;
+  if (id.startsWith("SAT:")) {
+    const norad = parseInt(id.slice(4), 10);
+    const o = (state.sats?.objects || []).find((x) => x.norad_id === norad);
+    if (o && o.latitude != null) return { kind: "satellite", obj: o, lat: o.latitude, lon: o.longitude };
+    return null;
+  }
   if (id.startsWith("AIR:")) {
     const hex = id.slice(4).toLowerCase();
     // Light boot payloads carry `positions`, not `states`; without this only
@@ -2844,6 +3010,13 @@ async function nowEvidence(id) {
     const c = state.changeById?.[id];
     return c ? { kind: "change", change: c } : null;
   }
+  if (id.startsWith("SAT:")) {
+    try {
+      const r = await getJSON(`/api/world/satellites?norad=${encodeURIComponent(id.slice(4))}`);
+      if (r.objects?.[0]) return { kind: "satellite", satellite: r.objects[0] };
+    } catch (_) { /* falls through to null */ }
+    return null;
+  }
   if (id.startsWith("AIR:")) {
     const hex = id.slice(4);
     const r = await getJSON(`/api/world/now/trail?hex=${encodeURIComponent(hex)}`);
@@ -2856,6 +3029,53 @@ async function nowEvidence(id) {
 
 function nowDrawer(target, data) {
   const drawer = $("drawer");
+  if (data.kind === "satellite") {
+    const o = data.satellite;
+    drawer.innerHTML = `
+      <div class="drawer-top">
+        <div class="drawer-nav">
+          <button class="btn ghost" type="button" id="backToEvents">${svgIcon("back")} Events</button>
+          <span class="chip real">REAL DATA</span>
+          <span class="chip">PROPAGATED</span>
+          <button class="icon-btn close" type="button" id="closeDrawer" aria-label="Close evidence">${svgIcon("close")}</button>
+        </div>
+        <h2 id="drawerTitle">${esc(o.name || target.id)}</h2>
+        <div class="facts">
+          <div class="fact"><span class="k">NORAD ID</span><span class="v mono">${esc(String(o.norad_id ?? ""))}</span></div>
+          <div class="fact"><span class="k">Altitude</span><span class="v mono">${o.altitude_km != null ? `${fmtNum(o.altitude_km)} km` : "—"}</span></div>
+          <div class="fact"><span class="k">Velocity</span><span class="v mono">${o.velocity_km_s != null ? `${o.velocity_km_s} km/s` : "—"}</span></div>
+          <div class="fact"><span class="k">Inclination</span><span class="v mono">${o.inclination_deg != null ? `${o.inclination_deg}°` : "—"}</span></div>
+          <div class="fact"><span class="k">Orbit</span><span class="v mono">${esc(o.orbit_type || "")} · ${esc(o.object_type || "")}</span></div>
+          <div class="fact"><span class="k">Element epoch</span><span class="v mono" title="${esc(o.epoch ?? "UNKNOWN")}">${esc(utcLabel(o.epoch))}</span></div>
+          <div class="fact"><span class="k">Element age</span><span class="v">${esc(o.freshness || "UNKNOWN")}${o.age_seconds != null ? ` · ${ageLabel(o.epoch)}` : ""}</span></div>
+          <div class="fact"><span class="k">Source</span><span class="v mono">${esc(o.source || "")}</span></div>
+        </div>
+        <div class="actions">
+          <button class="btn" type="button" id="flyBtn">${svgIcon("pin")} Fly to</button>
+          <button class="btn" type="button" id="trackBtn">Track</button>
+          <button class="btn" type="button" id="satTrackBtn" aria-pressed="false">Ground track</button>
+        </div>
+      </div>
+      <div class="drawer-body" id="drawerBody">
+        <section class="dsec"><h3>Position truth</h3><p class="note">PROPAGATED orbital position from published elements via SGP4 — never a live GPS observation. Element epoch and age above.</p></section>
+        <section class="dsec"><h3>Provenance and rights</h3><dl class="kv">
+          <dt>Source</dt><dd>${esc(o.source || "")} · ${esc(o.attribution || "")}</dd>
+          <dt>Rights</dt><dd>${esc((o.rights || {}).attribution || "")}</dd>
+        </dl></section>
+      </div>`;
+    wireNowDrawer(target, data);
+    if ($("satTrackBtn")) $("satTrackBtn").onclick = async () => {
+      const on = $("satTrackBtn").getAttribute("aria-pressed") !== "true";
+      $("satTrackBtn").setAttribute("aria-pressed", String(on));
+      if (!on) { try { map.getSource("liveSatTrack")?.setData(fc([])); } catch (_) {} return; }
+      try {
+        const r = await getJSON(`/api/world/satellites/track?norad=${encodeURIComponent(String(o.norad_id ?? ""))}`);
+        map.getSource("liveSatTrack")?.setData({ type: "FeatureCollection", features: r.track?.length ? [{ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: r.track } }] : [] });
+      } catch (_) { /* ground track is best-effort */ }
+    };
+    loadSatGroundTrack(o.norad_id);
+    return;
+  }
   if (data.kind === "aircraft") {
     const a = data.aircraft, fl = data.flags;
     const flags = ((fl && fl.flags) || []).map((x) => `<div class="rel flag"><b>${esc(x.label)}</b> <span class="muted">${esc(x.level)}</span><br><small class="muted">WHY: ${esc(x.why)}</small><br><code class="mono">${esc(JSON.stringify(x.evidence))}</code></div>`).join("")
@@ -3023,6 +3243,15 @@ function satEvidenceHTML(p) {
     <p class="note">Same Sentinel-2 tile where possible \u2014 directly comparable. Imagery is evidence, not a conclusion.</p>`;
 }
 
+async function loadSatGroundTrack(norad) {
+  try {
+    const r = await getJSON(`/api/world/satellites/track?norad=${encodeURIComponent(String(norad ?? ""))}`);
+    map.getSource("liveSatTrack")?.setData({ type: "FeatureCollection", features: r.track?.length ? [{ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: r.track } }] : [] });
+    const btn = $("satTrackBtn");
+    if (btn && (r.track || []).length) btn.setAttribute("aria-pressed", "true");
+  } catch (_) { /* ground track is best-effort */ }
+}
+
 async function loadSatEvidence(changeId) {
   const box = $("satEvidence");
   if (!box) return;
@@ -3157,9 +3386,16 @@ function writeDeepLink() {
     q.set("layers", Object.entries(state.visible || {}).filter(([, on]) => on).map(([k]) => k).join(","));
     q.set("tick", String(state.tick));
     if (trackState.active && trackState.entity_id.startsWith("AIR:")) {
-      q.set("aircraft", trackState.entity_id.slice(4).toLowerCase()); q.delete("event");
+      q.set("aircraft", trackState.entity_id.slice(4).toLowerCase()); q.delete("event"); q.delete("satellite");
       q.set("track", "1"); q.set("camera", trackState.camera_mode);
-    } else { q.delete("track"); q.delete("camera"); }
+    } else if (trackState.active && trackState.entity_id.startsWith("SAT:")) {
+      q.set("satellite", trackState.entity_id.slice(4)); q.delete("event"); q.delete("aircraft");
+      q.set("track", "1"); q.set("camera", trackState.camera_mode);
+    } else {
+      // A satellite deep link lingers until the shell resolves it once;
+      // tracking state owns track/camera otherwise.
+      q.delete("track"); q.delete("camera");
+    }
     // Never serialized: credentials, auth material, private state (none exist client-side).
     history.replaceState(null, "", `${location.pathname}?${q.toString()}`);
   } catch (_) { /* share URL is best-effort */ }
@@ -3176,7 +3412,7 @@ async function openNowRegion(name) {
       <button class="icon-btn close" type="button" id="closeDrawer" aria-label="Close">${svgIcon("close")}</button></div>
       <h2 id="drawerTitle">Region — ${esc(r.region)} (real)</h2>${rows}
       <div class="fact"><span class="k">Aircraft within ${esc(String(Math.round(r.movement?.radius_km ?? 0)))} km</span><span class="v mono">${esc(String(r.movement?.aircraft_tracked ?? "?"))}</span></div>
-      <div class="fact"><span class="k">Vessels / satellites</span><span class="v mono">no live source</span></div>
+        <div class="fact"><span class="k">Vessels / satellites</span><span class="v mono">vessels: no live source · satellites: live orbital layer</span></div>
       <div class="note">STATIC reference geography · missing domains listed, never synthetic fill.</div>
       ${(r.no_coverage || []).map((x) => `<div class="blindcard">${esc(x)}</div>`).join("")}
       ${(r.blind_spots || []).map((b) => `<div class="blindcard">${esc(b.region || "")}: <b>${esc(b.status || "")}</b> — ${esc(b.reason || "")}</div>`).join("")}
@@ -3288,6 +3524,12 @@ async function main() {
     await idle();
     document.documentElement.dataset.ready = "true";
     if (BENCH) runBench();
+    if (MODE_NOW) {
+      // Orbital shell loads after first paint (cold element cache must
+      // never block globe readiness); refresh on provider cadence.
+      loadNowSatellites(true).catch(() => {});
+      setInterval(() => { if (!document.hidden) loadNowSatellites(false).catch(() => {}); }, 600000);
+    }
   });
   getJSON("/api/plugins").then((plugins) => { state.plugins = plugins; updateHud(); renderNav(); }).catch(() => { state.plugins = null; updateHud(); });
 }

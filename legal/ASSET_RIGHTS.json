@@ -349,6 +349,12 @@
    "sha256": "553321a179a8078f07f7c9a0a15242011f9e96b3131ee3b4ead727413aa8c411"
   },
   {
+   "path": "docs/screenshots/replay-no-live-satellites.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "841f250094b655038904d7d07f9d89701038ee4eac55dc104465de46de18f48f"
+  },
+  {
    "path": "docs/screenshots/replay-no-sar-live-leak.png",
    "license": "PROJECT-OWNED",
    "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
@@ -377,6 +383,54 @@
    "license": "PROJECT-OWNED",
    "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
    "sha256": "3b160e27c380ba22ce13bc9ac98f5cf27ea9766bc3e03380dafb4cd7433f3173"
+  },
+  {
+   "path": "docs/screenshots/satellite-contacts.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "4ff28faad72cc9db23a3ab3e35c361cd3d5bb3ced47371ef91d3537b04677f4c"
+  },
+  {
+   "path": "docs/screenshots/satellite-ground-track.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "f890fb52cad06982f1bfb10e6a7ecba2255fc614acd80d739dbc6322f9add0b3"
+  },
+  {
+   "path": "docs/screenshots/satellite-mobile.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "0d94dd110ef99eb15bec76acf3021168043d0d55ac6df81f10532b22cf83d370"
+  },
+  {
+   "path": "docs/screenshots/satellite-selected.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "7e72994a8e8436f54c15308ef75822cd52282820b39e69611962156d704f4834"
+  },
+  {
+   "path": "docs/screenshots/satellite-stale-elements.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "b6c0b37c92bf8cbfd437bc51f77df8e123447ec18c539d9ce94409824d04b758"
+  },
+  {
+   "path": "docs/screenshots/satellite-track-follow.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "ebb46a7994280adb880714db978c3bd113c4574b084cfeccd7379374d57a381e"
+  },
+  {
+   "path": "docs/screenshots/satellite-track-orbit.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "055ff167d67c678a4d8469449bd25371497e2f6043ec306dcbac351177463022"
+  },
+  {
+   "path": "docs/screenshots/satellites-global.png",
+   "license": "PROJECT-OWNED",
+   "basis": "Rendered by the project maintainer from the bundled synthetic CC0 demo (procedural geography; no third-party map tiles, imagery, or fonts).",
+   "sha256": "a8a2a85e250b99ec1d79338dadef64cc1ce47b3ecd07cc73a9cf8323ecf69712"
   },
   {
    "path": "docs/screenshots/source-health.png",

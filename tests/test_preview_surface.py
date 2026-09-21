@@ -70,7 +70,7 @@ def test_optional_deps_core_requires_none():
         assert row["status"] in od.STATUSES, row
     assert od.probe("no_such_dep")["status"] == "UNKNOWN"
     # the catalog itself must stay free of trading or ML engines
-    assert set(od.names()) == {"playwright", "pytest"}
+    assert set(od.names()) == {"playwright", "pytest", "sgp4"}
 
 
 # --- discovery (explicit only) ----------------------------------------------

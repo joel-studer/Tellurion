@@ -25,6 +25,10 @@ _CATALOG: Dict[str, Dict[str, Any]] = {
                    "relevance": "screenshot and browser-QA scripts only"},
     "pytest": {"imports": ("pytest",), "policy": "optional dev extra",
                "relevance": "test suite"},
+    "sgp4": {"imports": ("sgp4",), "policy": "optional satellites extra",
+             "relevance": "SGP4 orbital propagation for the live "
+                          "satellite layer; absent means SATELLITES "
+                          "report UNAVAILABLE, never guessed"},
 }
 
 

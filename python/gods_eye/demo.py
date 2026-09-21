@@ -642,6 +642,79 @@ class _Handler(http.server.BaseHTTPRequestHandler):
                            "freshness_summary": {}}
             self._send(json.dumps(payload, indent=1).encode(),
                        "application/json")
+        elif path == "/api/world/satellites":
+            from gods_eye.future import world_satellites as _sat
+            def _fnum(key):
+                try:
+                    raw = (query.get(key) or [""])[0]
+                    return float(raw) if raw != "" else None
+                except (ValueError, TypeError, IndexError):
+                    return None
+            bbox = None
+            try:
+                raw = (query.get("bbox") or [""])[0]
+                if raw:
+                    x0, y0, x1, y1 = (float(v) for v in
+                                      raw.split(",")[:4])
+                    bbox = (x0, y0, x1, y1)
+            except (ValueError, TypeError, IndexError):
+                bbox = None
+            norad = (query.get("norad") or [""])[0][:16]
+            try:
+                if norad:
+                    payload = _sat.get_object(norad)
+                    payload = {"generated_at": _sat.utcnow(),
+                               "live": False, "real_data": True,
+                               "truth_label": _sat.TRUTH_LABEL,
+                               "objects": ([payload["object"]]
+                                           if payload.get("object")
+                                           else []),
+                               "count": 1 if payload.get("object")
+                               else 0,
+                               "status": payload.get("status"),
+                               "note": payload.get("note", ""),
+                               "truth_note": payload.get(
+                                   "truth_note", "")}
+                else:
+                    payload = _sat.get_satellites(
+                        refresh=(query.get("refresh") or [""])[
+                            0] == "1",
+                        bbox=bbox,
+                        region=(query.get("region") or [""])[0][:64],
+                        orbit_type=(query.get("orbit_type") or [""])[
+                            0][:16],
+                        freshness=(query.get("freshness") or [""])[
+                            0][:16],
+                        limit=int((query.get("limit") or ["500"])[
+                            0] or 500))
+            except Exception as e:
+                payload = {"generated_at": _sat.utcnow(),
+                           "live": False, "real_data": False,
+                           "truth_label": _sat.TRUTH_LABEL,
+                           "objects": [], "count": 0,
+                           "status": "SOURCE_UNAVAILABLE",
+                           "error": f"{type(e).__name__}: "
+                                    f"{str(e)[:200]}"}
+            self._send(json.dumps(payload, indent=1).encode(),
+                       "application/json")
+        elif path == "/api/world/satellites/track":
+            from gods_eye.future import world_satellites as _sat
+            norad = (query.get("norad") or [""])[0][:16]
+            try:
+                payload = _sat.get_ground_track(norad)
+                payload = {"generated_at": _sat.utcnow(),
+                           "live": False, "real_data": True,
+                           "truth_label": _sat.TRUTH_LABEL,
+                           **payload}
+            except Exception as e:
+                payload = {"generated_at": _sat.utcnow(),
+                           "live": False, "real_data": False,
+                           "objects": [], "track": [],
+                           "status": "PROPAGATION_FAILED",
+                           "error": f"{type(e).__name__}: "
+                                    f"{str(e)[:200]}"}
+            self._send(json.dumps(payload, indent=1).encode(),
+                       "application/json")
         elif path == "/api/world/presets":
             self._send(json.dumps(
                 {"presets": [

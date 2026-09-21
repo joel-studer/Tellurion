@@ -78,6 +78,8 @@ PUBLIC_INCLUDE_FILES: Tuple[str, ...] = (
     "python/gods_eye/future/world_sar.py",
     # JARVIS text tool layer V2.4 (provider-neutral world tools)
     "python/gods_eye/future/world_tools.py",
+    # LIVE SATELLITES V2.4c (CelesTrak elements + SGP4 sidecar)
+    "python/gods_eye/future/world_satellites.py",
     # public UI (demo + landing + ultra + gallery; ops console stays private)
     "console/demo.html",
     "console/landing.html",
@@ -132,6 +134,17 @@ PUBLIC_INCLUDE_FILES: Tuple[str, ...] = (
     "docs/screenshots/sar-orbit-mismatch-warning.png",
     "docs/screenshots/sar-no-after.png",
     "docs/screenshots/replay-no-sar-live-leak.png",
+    # LIVE SATELLITES V2.4c visual acceptance (real elements, local
+    # renders; stale/mobile/replay states as labeled)
+    "docs/screenshots/satellites-global.png",
+    "docs/screenshots/satellite-selected.png",
+    "docs/screenshots/satellite-track-follow.png",
+    "docs/screenshots/satellite-track-orbit.png",
+    "docs/screenshots/satellite-ground-track.png",
+    "docs/screenshots/satellite-contacts.png",
+    "docs/screenshots/satellite-stale-elements.png",
+    "docs/screenshots/satellite-mobile.png",
+    "docs/screenshots/replay-no-live-satellites.png",
     # JARVIS TEXT TOOLS V2.4 visual acceptance (command cards, local renders)
     "docs/screenshots/command-show-changes.png",
     "docs/screenshots/command-nearest-aircraft.png",
@@ -328,6 +341,8 @@ PUBLIC_INCLUDE_FILES: Tuple[str, ...] = (
     "tests/test_world_tools_v26.py",
     # TRACK MODE V2.4b contract (state, camera, trail, contacts, HUD)
     "tests/test_track_mode_v27.py",
+    # LIVE SATELLITES V2.4c contract (elements, SGP4, layer, track)
+    "tests/test_world_satellites_v28.py",
     # SATELLITE EVIDENCE V2.1 contract (selection, rights, API, drawer)
     # SATELLITE EVIDENCE V2.1 contract (selection, rights, API, drawer)
     # Tellurion public source docs (terms evidence, decisions, demos)

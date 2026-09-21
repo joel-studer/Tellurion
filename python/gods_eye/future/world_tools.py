@@ -258,6 +258,25 @@ def _resolve_entity(eid: str) -> Tuple[Optional[Dict[str, Any]], str]:
                         "source": s.get("source") or "adsb.lol",
                         "truth_mode": "DELAYED"}, "ok"
         return None, f"aircraft not in current snapshot: {eid}"
+    if eid.startswith("SAT:"):
+        from gods_eye.future import world_satellites as sats
+        try:
+            res = sats.get_object(eid[4:])
+        except Exception:  # noqa: BLE001
+            res = {"status": "UNKNOWN_OBJECT", "object": None}
+        obj = res.get("object")
+        if obj is None:
+            if res.get("status") == "UNAVAILABLE":
+                return None, "satellite propagator unavailable " \
+                    "(sgp4 not installed)"
+            return None, f"unknown satellite: {eid}"
+        return {"id": eid, "kind": "satellite",
+                "title": obj.get("name") or eid,
+                "lat": obj.get("latitude"), "lon": obj.get("longitude"),
+                "altitude": obj.get("altitude_km"),
+                "velocity": obj.get("velocity_km_s"),
+                "source": obj.get("source") or "CelesTrak",
+                "truth_mode": "PROPAGATED"}, "ok"
     if eid.startswith("SYN-"):
         # Deterministic replay entity: the frontend owns its motion
         # from replay state; the backend only names it (truth REPLAY,
@@ -311,6 +330,16 @@ def tool_track_entity(args: Dict[str, Any],
                         {"entity": ent},
                         note="changes are pinned, not tracked; "
                              "use open_evidence instead")
+    if ent["kind"] == "satellite":
+        camera_mode = str(args.get("camera_mode") or "FOLLOW").upper()
+        if camera_mode not in ("FOLLOW", "ORBIT", "CHASE", "OVERVIEW"):
+            camera_mode = "FOLLOW"
+        return envelope("track_entity", "SUCCESS",
+                        {"action": "track", "entity": ent,
+                         "camera_mode": camera_mode,
+                         "trail_available": False,
+                         "ground_track": True},
+                        truth_mode="PROPAGATED", source_count=1)
     if ent["kind"] == "replay_entity":
         camera_mode = str(args.get("camera_mode") or "FOLLOW").upper()
         if camera_mode not in ("FOLLOW", "ORBIT", "CHASE", "OVERVIEW"):
@@ -359,6 +388,9 @@ def tool_track_nearest(args: Dict[str, Any],
             "radius_km", 500.0))))
     except (TypeError, ValueError):
         radius = 500.0
+    klass = str(args.get("class") or "AIRCRAFT").upper()
+    if klass == "SATELLITE":
+        return _track_nearest_satellite(lat, lon, radius, ctx)
     from gods_eye.future import world_air as air
     try:
         snap = air.get_aviation(refresh=False)
@@ -390,6 +422,92 @@ def tool_track_nearest(args: Dict[str, Any],
     data["distance_km"] = round(best_km, 1)
     return envelope("track_nearest", "SUCCESS", data,
                     truth_mode="DELAYED", source_count=1)
+
+
+def _track_nearest_satellite(lat: float, lon: float, radius: float,
+                             ctx: Dict[str, Any]) -> Dict[str, Any]:
+    """Nearest satellite by subpoint ground distance (labeled)."""
+    from gods_eye.future import world_satellites as sats
+    try:
+        payload = sats.get_satellites(refresh=False, limit=1500)
+    except Exception:  # noqa: BLE001
+        return envelope("track_nearest", "UNAVAILABLE", {},
+                        note="satellite layer unavailable")
+    if payload.get("status") == "UNAVAILABLE":
+        return envelope("track_nearest", "UNAVAILABLE", {},
+                        note=payload.get("note", ""))
+    best, best_km = None, None
+    for obj in payload.get("objects", []):
+        try:
+            km = _haversine_km(float(obj["latitude"]),
+                               float(obj["longitude"]), lat, lon)
+        except (TypeError, ValueError, KeyError):
+            continue
+        if best_km is None or km < best_km:
+            best, best_km = obj, km
+    if best is None:
+        return envelope("track_nearest", "PARTIAL",
+                        {"point": {"lat": lat, "lon": lon}},
+                        note="no satellites in cache; refresh and retry")
+    tracked = tool_track_entity({"id": best["object_id"]}, ctx)
+    if tracked["status"] != "SUCCESS":
+        return tracked
+    data = dict(tracked["data"])
+    data["ground_distance_km"] = round(best_km, 1)
+    return envelope("track_nearest", "SUCCESS", data,
+                    truth_mode="PROPAGATED", source_count=1)
+
+
+def tool_query_satellites(args: Dict[str, Any],
+                          ctx: Dict[str, Any]) -> Dict[str, Any]:
+    """Structured satellite query (dedicated result shape)."""
+    from gods_eye.future import world_satellites as sats
+    try:
+        lat = args.get("lat", ctx.get("lat"))
+        lon = args.get("lon", ctx.get("lon"))
+        bbox = None
+        region = str(args.get("region") or "").lower().strip()
+        if region:
+            if region not in sats.supported_regions():
+                return envelope("query_satellites", "FAILED", {},
+                                note="unknown region; supported: "
+                                     + ", ".join(sats.supported_regions()))
+        if lat is not None and lon is not None:
+            try:
+                lat = float(lat)
+                lon = float(lon)
+                radius = max(10.0, min(5000.0, float(args.get(
+                    "radius_km", 2000.0))))
+                # Approximate pre-filter box (lon degrees shrink with
+                # latitude; the tool reports exact ground distances).
+                bbox = (lon - radius / 111.0, lat - radius / 111.0,
+                        lon + radius / 111.0, lat + radius / 111.0)
+            except (TypeError, ValueError):
+                bbox = None
+        payload = sats.get_satellites(
+            refresh=bool(args.get("refresh", False)),
+            bbox=bbox, region=region,
+            orbit_type=str(args.get("orbit_type") or ""),
+            freshness=str(args.get("freshness") or ""),
+            limit=int(args.get("limit", 200) or 200))
+    except Exception as e:  # noqa: BLE001
+        return envelope("query_satellites", "UNAVAILABLE", {},
+                        note=f"satellite layer failed: "
+                             f"{type(e).__name__}")
+    status = "SUCCESS" if payload.get("objects") else (
+        "PARTIAL" if payload.get("status") != "UNAVAILABLE" else
+        "UNAVAILABLE")
+    return envelope("query_satellites", status,
+                    {"objects": payload.get("objects", []),
+                     "count": payload.get("count", 0),
+                     "element_epoch_range": payload.get(
+                         "element_epoch_range", []),
+                     "groups": payload.get("groups", []),
+                     "truth_note": payload.get("truth_note", "")},
+                    truth_mode="PROPAGATED",
+                    source_count=payload.get("count", 0),
+                    warnings=payload.get("warnings", []),
+                    note=payload.get("note", ""))
 
 
 def tool_toggle_layer(args: Dict[str, Any],
@@ -536,9 +654,34 @@ def tool_query_contacts(args: Dict[str, Any],
             except (TypeError, ValueError, KeyError):
                 card["distance_km"] = None
             contacts.append(card)
+    try:
+        from gods_eye.future import world_satellites as sats
+        sat_payload = sats.get_satellites(refresh=False, limit=1500)
+        # Subpoint ground distance (labeled GROUND_DISTANCE, never
+        # 3D range); 4x ground radius keeps overhead passes visible.
+        for obj in sat_payload.get("objects", []):
+            try:
+                km = _haversine_km(float(obj["latitude"]),
+                                   float(obj["longitude"]), lat, lon)
+            except (TypeError, ValueError, KeyError):
+                continue
+            if km <= radius * 4.0:
+                contacts.append({
+                    "class": "SATELLITE",
+                    "id": obj.get("object_id"),
+                    "title": obj.get("name"),
+                    "norad_id": obj.get("norad_id"),
+                    "altitude_km": obj.get("altitude_km"),
+                    "ground_distance_km": round(km, 1),
+                    "distance_km": round(km, 1),
+                    "distance_kind": "GROUND_DISTANCE",
+                    "freshness": obj.get("freshness"),
+                    "truth_mode": "PROPAGATED"})
+    except Exception:  # noqa: BLE001
+        warnings.append("satellite leg unavailable")
     contacts.append({"class": "NOTE",
-                     "note": "SATELLITES / VESSELS / CAMERAS have no "
-                             "enabled live source; never faked"})
+                     "note": "VESSELS / CAMERAS have no enabled live "
+                             "source; never faked"})
     if sort == "NEWEST":
         contacts.sort(key=lambda c: str(c.get("last_observed") or ""),
                       reverse=True)
@@ -855,8 +998,11 @@ TOOLS: Dict[str, Dict[str, Any]] = {
                         "description": "FOLLOW/ORBIT/CHASE/OVERVIEW "
                                        "camera for tracking"},
     "track_nearest": {"handler": tool_track_nearest,
-                      "description": "track the nearest aircraft "
-                                     "atomically"},
+                      "description": "track the nearest aircraft or "
+                                     "satellite atomically"},
+    "query_satellites": {"handler": tool_query_satellites,
+                         "description": "structured satellite query "
+                                        "with filters"},
     "toggle_layer": {"handler": tool_toggle_layer,
                      "description": "show/hide a map layer"},
     "query_region": {"handler": tool_query_region,
@@ -1009,6 +1155,44 @@ def parse_intent(text: str, context: Optional[Dict[str, Any]] = None,
             argsc["lat"], argsc["lon"] = (context["lat"],
                                           context["lon"])
         return {"calls": [{"tool": "query_contacts", "args": argsc}],
+                "provider": provider, "unparsed": ""}
+    if (re.search(r"\bsatellites?\b", low) or re.search(
+            r"orbital elements?|\btle\b|\bnorad\b", low)) and not re.search(
+            r"\btrack\b|\bfollow\b|\bimagery\b", low):
+        from gods_eye.future import world_satellites as sats
+        region = None
+        for name in sorted(sats.supported_regions(), key=len,
+                           reverse=True):
+            if name in low:
+                region = name
+                break
+        m = re.search(r"track\s+satellite\s+(\d{1,6})", low)
+        if m:
+            return {"calls": [{"tool": "track_entity",
+                                "args": {"id": f"SAT:{m.group(1)}"}}],
+                    "provider": provider, "unparsed": ""}
+        if re.search(r"nearest satellite|satellite.*near|"
+                     r"above this region|above (me|here)", low):
+            argsn2: Dict[str, Any] = {"class": "SATELLITE",
+                                      "radius_km": 2000.0}
+            if context.get("lat") is not None:
+                argsn2["lat"], argsn2["lon"] = (context["lat"],
+                                                context["lon"])
+            return {"calls": [{"tool": "track_nearest",
+                                "args": argsn2}],
+                    "provider": provider, "unparsed": ""}
+        if re.search(r"fresh|element|epoch|age", low):
+            return {"calls": [{"tool": "query_satellites",
+                                "args": {"region": region,
+                                         "limit": 20}}],
+                    "provider": provider, "unparsed": ""}
+        return {"calls": [{"tool": "query_satellites",
+                            "args": {"region": region, "limit": 100}}],
+                "provider": provider, "unparsed": ""}
+    m = re.search(r"track\s+satellite\s+(\d{1,6})", low)
+    if m:
+        return {"calls": [{"tool": "track_entity",
+                            "args": {"id": f"SAT:{m.group(1)}"}}],
                 "provider": provider, "unparsed": ""}
     if re.search(r"\btrack\b|\bfollow\b", low):
         eid = context.get("selected") or ""

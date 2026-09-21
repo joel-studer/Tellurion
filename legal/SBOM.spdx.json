@@ -1,115 +1,127 @@
 {
- "spdxVersion": "SPDX-2.3",
- "dataLicense": "CC0-1.0",
  "SPDXID": "SPDXRef-DOCUMENT",
- "name": "tellurion",
- "documentNamespace": "urn:tellurion:sbom:1.0.0-beta.3",
  "creationInfo": {
+  "comment": "Regenerated 2026-09-19 for the v1.0.0-beta.3 release candidate: dependency-hygiene only since beta.2 (playwright>=1.63.0, setuptools>=84.0.0, install-probe fix, boundary rule); every CONTAINS package matches the vendored files and legal/THIRD_PARTY_NOTICES.md; MapLibre GL JS confirmed at runtime via maplibregl.getVersion() = 6.10.0. Project licence is MIT, decided by the maintainer; no external counsel review was performed. The optional market extra and its packages were removed with the trading surface.",
   "created": "2026-09-19T00:00:00+00:00",
   "creators": [
    "Tool: Tellurion final release pass (manual inventory, verified against the built candidate)"
-  ],
-  "comment": "Regenerated 2026-09-19 for the v1.0.0-beta.3 release candidate: dependency-hygiene only since beta.2 (playwright>=1.63.0, setuptools>=84.0.0, install-probe fix, boundary rule); every CONTAINS package matches the vendored files and legal/THIRD_PARTY_NOTICES.md; MapLibre GL JS confirmed at runtime via maplibregl.getVersion() = 6.10.0. Project licence is MIT, decided by the maintainer; no external counsel review was performed. The optional market extra and its packages were removed with the trading surface."
+  ]
  },
- "published": false,
- "signOff": "OBTAINED (maintainer decision 2026-09-18; see legal/LICENSE_SIGNOFF.md)",
- "runtimeDependencies": [],
+ "dataLicense": "CC0-1.0",
+ "documentNamespace": "urn:tellurion:sbom:1.0.0-beta.3",
+ "name": "tellurion",
  "packages": [
   {
    "SPDXID": "SPDXRef-tellurion",
-   "name": "tellurion",
-   "version": "1.0.0-beta.3",
-   "versionInfo": "1.0.0-beta.3",
-   "license": "MIT",
-   "licenseDeclared": "MIT",
-   "licenseConcluded": "MIT",
    "downloadLocation": "https://github.com/joel-studer/Tellurion",
+   "license": "MIT",
+   "licenseConcluded": "MIT",
+   "licenseDeclared": "MIT",
+   "name": "tellurion",
+   "relationship": "DESCRIBES",
    "source": "this repository",
-   "relationship": "DESCRIBES"
+   "version": "1.0.0-beta.3",
+   "versionInfo": "1.0.0-beta.3"
   },
   {
    "SPDXID": "SPDXRef-leaflet",
-   "name": "leaflet",
-   "version": "1.9.4",
-   "versionInfo": "1.9.4",
-   "license": "BSD-2-Clause",
-   "licenseDeclared": "BSD-2-Clause",
-   "licenseConcluded": "NOASSERTION",
    "downloadLocation": "NOASSERTION",
+   "license": "BSD-2-Clause",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "BSD-2-Clause",
+   "name": "leaflet",
+   "relationship": "CONTAINS",
    "source": "vendored: console/vendor/leaflet.js",
-   "relationship": "CONTAINS"
+   "version": "1.9.4",
+   "versionInfo": "1.9.4"
   },
   {
    "SPDXID": "SPDXRef-maplibre-gl",
-   "name": "maplibre-gl",
-   "version": "6.10.0",
-   "versionInfo": "6.10.0",
-   "license": "BSD-3-Clause",
-   "licenseDeclared": "BSD-3-Clause",
-   "licenseConcluded": "NOASSERTION",
    "downloadLocation": "NOASSERTION",
+   "license": "BSD-3-Clause",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "BSD-3-Clause",
+   "name": "maplibre-gl",
+   "relationship": "CONTAINS",
    "source": "vendored: console/vendor/maplibre/maplibre-gl.mjs",
-   "relationship": "CONTAINS"
+   "version": "6.10.0",
+   "versionInfo": "6.10.0"
   },
   {
    "SPDXID": "SPDXRef-inter",
-   "name": "inter",
-   "version": "5.3.0",
-   "versionInfo": "5.3.0 (Fontsource packaging of the Inter variable font)",
-   "license": "OFL-1.1",
-   "licenseDeclared": "OFL-1.1",
-   "licenseConcluded": "NOASSERTION",
    "downloadLocation": "NOASSERTION",
+   "license": "OFL-1.1",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "OFL-1.1",
+   "name": "inter",
+   "relationship": "CONTAINS",
    "source": "vendored: console/vendor/fonts/inter-latin-wght-normal.woff2",
-   "relationship": "CONTAINS"
+   "version": "5.3.0",
+   "versionInfo": "5.3.0 (Fontsource packaging of the Inter variable font)"
   },
   {
    "SPDXID": "SPDXRef-world-atlas",
-   "name": "world-atlas",
-   "version": "2.0.2",
-   "versionInfo": "2.0.2 (TopoJSON build of Natural Earth 1:50m; the data itself is public domain)",
-   "license": "ISC",
-   "licenseDeclared": "ISC",
-   "licenseConcluded": "NOASSERTION",
    "downloadLocation": "NOASSERTION",
+   "license": "ISC",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "ISC",
+   "name": "world-atlas",
+   "relationship": "CONTAINS",
    "source": "vendored: console/data/land-50m.json, console/data/countries-50m.json",
-   "relationship": "CONTAINS"
+   "version": "2.0.2",
+   "versionInfo": "2.0.2 (TopoJSON build of Natural Earth 1:50m; the data itself is public domain)"
   },
   {
    "SPDXID": "SPDXRef-playwright",
-   "name": "playwright",
-   "version": "1.58.0",
-   "versionInfo": "1.58.0",
-   "license": "Apache-2.0",
-   "licenseDeclared": "Apache-2.0",
-   "licenseConcluded": "NOASSERTION",
    "downloadLocation": "NOASSERTION",
+   "license": "Apache-2.0",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "Apache-2.0",
+   "name": "playwright",
+   "relationship": "OPTIONAL_DEPENDENCY_OF",
    "source": "optional extra: capture",
-   "relationship": "OPTIONAL_DEPENDENCY_OF"
+   "version": "1.58.0",
+   "versionInfo": "1.58.0"
   },
   {
    "SPDXID": "SPDXRef-pytest",
-   "name": "pytest",
-   "version": "9.0.2",
-   "versionInfo": "9.0.2",
-   "license": "MIT",
-   "licenseDeclared": "MIT",
-   "licenseConcluded": "NOASSERTION",
    "downloadLocation": "NOASSERTION",
+   "license": "MIT",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "MIT",
+   "name": "pytest",
+   "relationship": "DEV_DEPENDENCY_OF",
    "source": "optional extra: dev",
-   "relationship": "DEV_DEPENDENCY_OF"
+   "version": "9.0.2",
+   "versionInfo": "9.0.2"
   },
   {
    "SPDXID": "SPDXRef-setuptools",
-   "name": "setuptools",
-   "version": "82.0.0",
-   "versionInfo": "82.0.0",
-   "license": "MIT",
-   "licenseDeclared": "MIT",
-   "licenseConcluded": "NOASSERTION",
    "downloadLocation": "NOASSERTION",
+   "license": "MIT",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "MIT",
+   "name": "setuptools",
+   "relationship": "BUILD_DEPENDENCY_OF",
    "source": "build backend",
-   "relationship": "BUILD_DEPENDENCY_OF"
+   "version": "82.0.0",
+   "versionInfo": "82.0.0"
+  },
+  {
+   "SPDXID": "SPDXRef-sgp4",
+   "downloadLocation": "NOASSERTION",
+   "license": "MIT",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "MIT",
+   "name": "sgp4",
+   "relationship": "OPTIONAL_DEPENDENCY_OF",
+   "source": "optional extra: satellites (also dev)",
+   "version": "2.27",
+   "versionInfo": "2.27"
   }
- ]
+ ],
+ "published": false,
+ "runtimeDependencies": [],
+ "signOff": "OBTAINED (maintainer decision 2026-09-18; see legal/LICENSE_SIGNOFF.md)",
+ "spdxVersion": "SPDX-2.3"
 }
