@@ -26,7 +26,7 @@ dependencies = []
 
 [project.optional-dependencies]
 capture = ["playwright>=1.63.0"]
-dev = ["pytest>=8.3"]
+dev = ["pytest>=9.1.1"]
 
 [project.scripts]
 # Public brand and the historical command; both run the same CLI.
